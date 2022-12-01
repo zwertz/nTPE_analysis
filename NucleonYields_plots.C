@@ -11,52 +11,129 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "analysis_utility_functions.h"
+#include <vector>
+
+//read in target as well
+TCut globalcut = "";
+TString exp,kin,data_file_name,kinematic_file_name;
+int SBS_field;
+double W2_mean,W2_sigma;
+//A vector to hold run numbers as TStrings eventually
+vector<ints> runnums;
+//Make a function that parse the main config file
+void parseMainConfig(const char *setup_file_name){
+	ifstream setupfile(setup_file_name);
+	//check if there is a problem opening the file
+	 if(setupfile.fail()){
+	cout << "There was a problem with the setup file " << setup_file_name << ". Figure it out nerd!" << endl;
+	return;
+	} 
+	TString myline;
+	//Look for the line where all the runs we care about are stored
+	while(myline.ReadLine(setupfile) && !myline.BeginsWith("endrun")){
+	 if(!myline.BeginsWith("#")){
+	 TObjArray *demObjs = myline.Tokenize(" ");
+		int numObjs = demObjs.GetEntries();
+	 	for(int i=0;i < numObjs;i++){
+	 	//store the run numbers in the vector as TString
+	 	int runnum_temp = (((TObjString*) (*demObjs)[i])->GetString()).Atoi();
+	 	runnums.push_back(runnum_temp);
+		//cout << runnum_temp << " ";
+		}
+	 }
+	}  
+	while(myline.ReadLine(setupfile) && !myline.BeginsWith("endcut")){
+        if(!myline.BeginsWith("#")){
+         globalcut += myline;
+	 cout << "Applying the following global cut to all data: " <<globalcut <<endl;
+         }
+        }
+	while(myline.ReadLine(setupfile) && !myline.BeginsWith("#")){
+        TObjArray *daObjs = myline.Tokenize(" ");
+        int nObjs = daObjs.GetEntries();
+		if(nObjs >1){
+		TString key = ((TObjString*) (*daObjs)[0])->GetString();
+		TString val = ((TObjString*) (*daObjs)[1])->GetString();
+			if(key == "exp"){
+			exp = val;
+			//cout << "Experiment " << exp << endl;
+			}
+			else if(key == "kin"){
+    			kin = val;            	
+                        //cout << "Kinematic " << kin << endl;
+			}
+			else if(key == "data_map_name"){
+                	data_file_name = val;
+                        //cout << "Data File " << data_fiel_name << endl;
+			}
+			else if(key == "kinematic_name"){
+                	kinematic_file_name = val;
+                        //cout << "Kinematic File " << kinematic_file_name << endl;
+			}
+			else if(key == "SBS_field"){
+                	SBS_field = val.Atoi();
+                        //cout << "SBS Field " << SBS_field << endl;
+			}
+			else if(key == "W2_mean"){
+                	W2_mean = val.Atof();
+                        //cout << "W2 Mean " << W2_mean << endl;
+			}
+			else if(key == "W2_sigma"){
+			W2_sigma = val.Atof();
+                        //cout << "W2 Sigma " << W2_sigma << endl;
+			}
+			else{
+			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
+			cout << "Found a key that this script can't handle. Fix that!" << endl;
+			return;
+			}
+		//remove the objects to ensure a new comes through and no runaway
+		delete daObjs; 
+		}
+		else{
+		//We either got an empty line or 1 element.
+		cout << "Line does not have the right number of elements. Look at the config file!" << endl;
+		return;
+		}
+        }
+}
+
+void NucleonYields_plots( double runnum, const char *data_file_name, const char *kinematic_file_name){
+//Convert from double to char and then to TString.
+ TString runnum_string = doubleToTString(runnum);
 
 
-void NucleonYields_plots( double runnum, const char *data_file_name, const char *kinematic_file_name, double sbsfieldscale=1.0){
-//Convert from double to char and then to TString. This is just for book keeping
- stringstream ss;
- ss << runnum;
- std::string runnum_temp;
- ss >> runnum_temp;
- const char *runnum_char = runnum_temp.c_str();
- TString runnum_string(runnum_char);
- //cout << runnum_char << endl;
  //The next couple blocks of code use a iostream to read-in data from a file to properly constructed the location of the root file data. So it figures out the path for you and all you need to remember is the run number. 
- ifstream datafile(data_file_name);
+//need a check to see if file is not empty. 
+ifstream datafile(data_file_name);
  TString currentLine;
- TString datRun,pass,kinematic,target;
  bool gotRun = false;
  while(currentLine.ReadLine(datafile)){
- if(currentLine.BeginsWith("#")){
-  //Treat # as comments and ignore them
-  //cout << "Cond 1" << endl;
-    continue;
-  }
- else if(currentLine.BeginsWith(runnum_string)){
+ if(currentLine.BeginsWith(runnum_string)){
  //We found the right run number. Store the info
   TObjArray *tokens = currentLine.Tokenize(" ");
-  //Assuming ordering is runnum, pass, SBSKin, Target, sbsfieldscale
+  //Assuming ordering is runnum, pass, SBSKin, Target, sbsfield
   datRun =  ((TObjString*) (*tokens)[0])->GetString();
   pass = ((TObjString*) (*tokens)[1])->GetString();
   kinematic =  ((TObjString*) (*tokens)[2])->GetString();
   target =  ((TObjString*) (*tokens)[3])->GetString();
-
-  cout << "The run " << datRun << " The Pass " << pass << " The Kin " << kinematic << " The Target " << target << endl;
+  sbs_field = (((TObjString*) (*tokens)[4])->GetString()).Atof();
+  cout << "Run " << datRun << " Pass " << pass << " Kin " << kinematic << " Target " << target << " SBS Field  " << sbs_field << endl;
   gotRun = true;
   //cout << gotRun << endl;
  }
 
  else{
-  //Where are still searching but it's not a comment
-  //  //cout << "Cond 3" << endl; 
+  //Where are still searching but it's a comment denoted by #
+   // cout << "Cond 2" << endl; 
   continue;
   }
  }
 
   if ((datafile.eof()) && !gotRun){
   //Conditional that we checked the entire data file and did not find the runnum
-  cout << "Did not find run number: " << runnum_char << " in the data file! Quitting, figure it out!" << endl;
+  cout << "Did not find run number: " << runnum_string << " in the data file! Quitting, figure it out!" << endl;
   return;
  }
  //All of this was to have a modular input directory. So let's make it
@@ -72,34 +149,31 @@ void NucleonYields_plots( double runnum, const char *data_file_name, const char 
 
 
 //Read-in loop and conditionals to find the correct kinematic information so we don't have to remember it every time we want to call the script.
-double Ebeam,bbtheta,sbstheta,sbsdist,hcaldist;
+double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
 
 ifstream kinfile(kinematic_file_name);
  TString datLine;
  TString datKin;
  bool gotKin = false;
  while(datLine.ReadLine(kinfile)){
- if(currentLine.BeginsWith("#")){
-  //Treat # as comments and ignore them
-  //cout << "Cond 1" << endl;
-   continue;
-  }
- else if(datLine.BeginsWith(kinematic)){
+ if(datLine.BeginsWith(kinematic)){
  //We found the right kinematic. Store the info
  TObjArray *myobjs = datLine.Tokenize(" ");
   //Assuming ordering is kinematic, Beam Energy, BB Angle, SBS angle, SBS dist, HCal dist
   datKin = ((TObjString*) (*myobjs)[0])->GetString();
   Ebeam = (((TObjString*) (*myobjs)[1])->GetString()).Atof();
   bbtheta = (((TObjString*) (*myobjs)[2])->GetString()).Atof();
-  sbstheta = (((TObjString*) (*myobjs)[3])->GetString()).Atof();
-  sbsdist = (((TObjString*) (*myobjs)[4])->GetString()).Atof();
-  hcaldist = (((TObjString*) (*myobjs)[5])->GetString()).Atof();
-  cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Dist  " << hcaldist  << endl; 
+  bbdist = (((TObjString*) (*myobjs)[3])->GetString()).Atof();
+  sbstheta = (((TObjString*) (*myobjs)[4])->GetString()).Atof();
+  sbsdist = (((TObjString*) (*myobjs)[5])->GetString()).Atof();
+  hcaltheta = (((TObjString*) (*myobjs)[6])->GetString()).Atof();
+  hcaldist = (((TObjString*) (*myobjs)[7])->GetString()).Atof();
+  cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist  << endl; 
   gotKin = true;
    //cout << gotRun << endl;
    }
  else{
-  //Where are still searching but it's not a comment
+  //Where are still searching or its a comment
   //cout << "Cond 3" << endl; 
   continue;
   }
@@ -112,19 +186,19 @@ ifstream kinfile(kinematic_file_name);
  }
 
 
-
-
-
-
 //To convert from degrees to radians
-  sbstheta *= TMath::Pi()/180.0;
-  bbtheta *= TMath::Pi()/180.0;
-
+  
+  double sbstheta_rad = sbstheta * (TMath::Pi()/180.0);
+  double bbtheta_rad = bbtheta * (TMath::Pi()/180.0);
+  double hcaltheta_rad = hcaltheta * (TMath::Pi()/180.0);
+  cout << "In Radians " << " SBS Angle " << sbstheta_rad << " BB Angle " << bbtheta_rad << " HCal Angle " << hcaltheta_rad << endl;
 //Looks like this is assuming it is taking one root file
   TChain *C = new TChain("T");
 
   C->Add(inputfile);
- // C->Add(rootfilename); 
+ // C->Add(rootfilename);
+ //
+//need to change globalcut to be read in from file 
 //need to understand what these variables mean
   TCut globalcut = "bb.ps.e>0.15&&abs(bb.tr.vz)<0.27&&sbs.hcal.nclus>0&&bb.tr.n==1";
   
