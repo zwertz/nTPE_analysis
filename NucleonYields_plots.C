@@ -16,11 +16,11 @@
 
 //read in target as well
 TCut globalcut = "";
-TString exp,kin,data_file_name,kinematic_file_name;
+TString Exp,kin,data_file_name,kinematic_file_name,targ;
 int SBS_field;
 double W2_mean,W2_sigma;
 //A vector to hold run numbers as TStrings eventually
-vector<ints> runnums;
+vector<int> runnums;
 //Make a function that parse the main config file
 void parseMainConfig(const char *setup_file_name){
 	ifstream setupfile(setup_file_name);
@@ -34,13 +34,14 @@ void parseMainConfig(const char *setup_file_name){
 	while(myline.ReadLine(setupfile) && !myline.BeginsWith("endrun")){
 	 if(!myline.BeginsWith("#")){
 	 TObjArray *demObjs = myline.Tokenize(" ");
-		int numObjs = demObjs.GetEntries();
-	 	for(int i=0;i < numObjs;i++){
-	 	//store the run numbers in the vector as TString
-	 	int runnum_temp = (((TObjString*) (*demObjs)[i])->GetString()).Atoi();
-	 	runnums.push_back(runnum_temp);
-		//cout << runnum_temp << " ";
-		}
+		int numObjs = demObjs->GetEntries();
+	 		for(int i=0;i < numObjs;i++){
+	 		//store the run numbers in the vector as ints
+	 		int runnum_temp = (((TObjString*) (*demObjs)[i])->GetString()).Atoi();
+	 		runnums.push_back(runnum_temp);
+			//cout << runnum_temp << " ";
+			}
+	
 	 }
 	}  
 	while(myline.ReadLine(setupfile) && !myline.BeginsWith("endcut")){
@@ -51,13 +52,13 @@ void parseMainConfig(const char *setup_file_name){
         }
 	while(myline.ReadLine(setupfile) && !myline.BeginsWith("#")){
         TObjArray *daObjs = myline.Tokenize(" ");
-        int nObjs = daObjs.GetEntries();
+        int nObjs = daObjs->GetEntries();
 		if(nObjs >1){
 		TString key = ((TObjString*) (*daObjs)[0])->GetString();
 		TString val = ((TObjString*) (*daObjs)[1])->GetString();
 			if(key == "exp"){
-			exp = val;
-			//cout << "Experiment " << exp << endl;
+			Exp = val;
+			//cout << "Experiment " << Exp << endl;
 			}
 			else if(key == "kin"){
     			kin = val;            	
@@ -83,6 +84,10 @@ void parseMainConfig(const char *setup_file_name){
 			W2_sigma = val.Atof();
                         //cout << "W2 Sigma " << W2_sigma << endl;
 			}
+			else if(key == "targ"){
+			targ = val;
+			//cout << "Target " << targ << endl;
+			}
 			else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
 			cout << "Found a key that this script can't handle. Fix that!" << endl;
@@ -97,110 +102,35 @@ void parseMainConfig(const char *setup_file_name){
 		return;
 		}
         }
+	if(runnums.empty()){
+	// if there are no run nums in the file, not good
+	cout << "No run numbers in the config file, I can't do anything if I don't know where the data lives!" << endl;
+	return;
+	}
 }
 
-void NucleonYields_plots( double runnum, const char *data_file_name, const char *kinematic_file_name){
-//Convert from double to char and then to TString.
- TString runnum_string = doubleToTString(runnum);
+void NucleonYields_plots( const char *setup_file_name){
+ //Constructor for the data structure we will use to make plots
+ TChain *C = new TChain("T");
 
+ //parse function to get in the information that The One Config file has and is manipulated
+ //this function will inialize the global parameters: globalcut,Exp,kin,data_file_name,kinematic_file_name,SBS_field,W2_mean,W2_sigma,targ,runnums
+ parseMainConfig(setup_file_name);
 
- //The next couple blocks of code use a iostream to read-in data from a file to properly constructed the location of the root file data. So it figures out the path for you and all you need to remember is the run number. 
-//need a check to see if file is not empty. 
-ifstream datafile(data_file_name);
- TString currentLine;
- bool gotRun = false;
- while(currentLine.ReadLine(datafile)){
- if(currentLine.BeginsWith(runnum_string)){
- //We found the right run number. Store the info
-  TObjArray *tokens = currentLine.Tokenize(" ");
-  //Assuming ordering is runnum, pass, SBSKin, Target, sbsfield
-  datRun =  ((TObjString*) (*tokens)[0])->GetString();
-  pass = ((TObjString*) (*tokens)[1])->GetString();
-  kinematic =  ((TObjString*) (*tokens)[2])->GetString();
-  target =  ((TObjString*) (*tokens)[3])->GetString();
-  sbs_field = (((TObjString*) (*tokens)[4])->GetString()).Atof();
-  cout << "Run " << datRun << " Pass " << pass << " Kin " << kinematic << " Target " << target << " SBS Field  " << sbs_field << endl;
-  gotRun = true;
-  //cout << gotRun << endl;
+ //Load in information about the data files specified in The One config file. 
+ //We will store the information in data_objects and put those in a vector
+ vector<data_object> myData;
+ for (int j=0; j < runnums.size();j++){
+ data_object myObj(runnums[j],data_file_name,kinematic_file_name,kin,SBS_field,targ);
+ myData.push_back(myObj);
+//Use the class function getInputFile() to generate the file paths and add them to the TChain
+ TString input_file_name(myObj.getInputFile());
+ //cout << "File Location " << input_file_name << endl;
+ C->Add(input_file_name);
+
  }
 
- else{
-  //Where are still searching but it's a comment denoted by #
-   // cout << "Cond 2" << endl; 
-  continue;
-  }
- }
-
-  if ((datafile.eof()) && !gotRun){
-  //Conditional that we checked the entire data file and did not find the runnum
-  cout << "Did not find run number: " << runnum_string << " in the data file! Quitting, figure it out!" << endl;
-  return;
- }
- //All of this was to have a modular input directory. So let's make it
- string input_directory = "/work/halla/sbs/sbs-gmn";
-  const char *input_directory_char = input_directory.c_str();
-  const char *datRun_char = datRun.Data();
-  const char *pass_char = pass.Data();
-  const char *kin_char = kinematic.Data();
-  const char *tar_char = target.Data();
- TString inputfile = Form("%s/%s/%s/%s/rootfiles/e1209019_fullreplay_%s_*.root",input_directory_char,pass_char,kin_char,tar_char,datRun_char);
- //cout << "File Location " << inputfile << endl;
-
-
-
-//Read-in loop and conditionals to find the correct kinematic information so we don't have to remember it every time we want to call the script.
-double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
-
-ifstream kinfile(kinematic_file_name);
- TString datLine;
- TString datKin;
- bool gotKin = false;
- while(datLine.ReadLine(kinfile)){
- if(datLine.BeginsWith(kinematic)){
- //We found the right kinematic. Store the info
- TObjArray *myobjs = datLine.Tokenize(" ");
-  //Assuming ordering is kinematic, Beam Energy, BB Angle, SBS angle, SBS dist, HCal dist
-  datKin = ((TObjString*) (*myobjs)[0])->GetString();
-  Ebeam = (((TObjString*) (*myobjs)[1])->GetString()).Atof();
-  bbtheta = (((TObjString*) (*myobjs)[2])->GetString()).Atof();
-  bbdist = (((TObjString*) (*myobjs)[3])->GetString()).Atof();
-  sbstheta = (((TObjString*) (*myobjs)[4])->GetString()).Atof();
-  sbsdist = (((TObjString*) (*myobjs)[5])->GetString()).Atof();
-  hcaltheta = (((TObjString*) (*myobjs)[6])->GetString()).Atof();
-  hcaldist = (((TObjString*) (*myobjs)[7])->GetString()).Atof();
-  cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist  << endl; 
-  gotKin = true;
-   //cout << gotRun << endl;
-   }
- else{
-  //Where are still searching or its a comment
-  //cout << "Cond 3" << endl; 
-  continue;
-  }
- }
-  
- if ((kinfile.eof()) && !gotKin){
-  //Conditional that we checked the entire kinematic file and did not find the kinematic info
- cout << "Did not find kinematic: " << datKin << " in the kinematic file! Quitting, figure it out!" << endl;
-  return;
- }
-
-
-//To convert from degrees to radians
-  
-  double sbstheta_rad = sbstheta * (TMath::Pi()/180.0);
-  double bbtheta_rad = bbtheta * (TMath::Pi()/180.0);
-  double hcaltheta_rad = hcaltheta * (TMath::Pi()/180.0);
-  cout << "In Radians " << " SBS Angle " << sbstheta_rad << " BB Angle " << bbtheta_rad << " HCal Angle " << hcaltheta_rad << endl;
-//Looks like this is assuming it is taking one root file
-  TChain *C = new TChain("T");
-
-  C->Add(inputfile);
- // C->Add(rootfilename);
- //
-//need to change globalcut to be read in from file 
-//need to understand what these variables mean
-  TCut globalcut = "bb.ps.e>0.15&&abs(bb.tr.vz)<0.27&&sbs.hcal.nclus>0&&bb.tr.n==1";
+/*
   
   TEventList *elist = new TEventList("elist","");
   
@@ -308,4 +238,5 @@ ifstream kinfile(kinematic_file_name);
   elist->Delete(); 
   fout->Write();
 
+*/
 } 

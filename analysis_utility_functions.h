@@ -4,20 +4,67 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "TString.h"
+
+
 
 //This belongs to the header file, not the class. So that way an output file can come from multiple data objects
-private string output_directory = "yields_output";
-private TString output_file= "";
+
+ string out_dir_temp = "yields_output";
+ TString output_directory = TString(out_dir_temp);
+ string output_temp = "";
+ TString output_file = TString(output_temp);
+
+
+//convert an int to a TString. Just a helper function
+TString intToTString(int datInt){
+stringstream ss;
+ss << datInt;
+std::string datInt_temp;
+ss >> datInt_temp;
+TString datInt_string(datInt_temp.c_str());
+//cout << datInt_string << endl;
+return datInt_string;
+}
+//convert from degrees to radians
+double DegToRad(double myNum){
+return (myNum * (TMath::Pi()/180.0));
+}
+TString getOutputDir(){
+return output_directory;
+}
+TString makeOutputFileName(TString exp, TString Kin, TString SBS_field,TString target){
+TString outfile = Form("%s/yields_Zeke_%s_%s_%s_%s.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field.Data());
+return outfile;
+}
+
+
+
+
 
 //Make a class to store information about the data
 class data_object{
 //Define some private variables we will fill later.
-private TString pass,kinematic,target,input_file;
-private double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
-int run,sbs_field;
-private string input_directory = "/work/halla/sbs/sbs-gmn";
+private:
+ TString pass,kinematic,target,input_file;
+ double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
+ int run,sbs_field;
+ string input_directory = "/work/halla/sbs/sbs-gmn";
+
+TString makeInputFileName(){
+ //All of this was to have a modular input directory. So let's make it
+ const char *input_directory_char = input_directory.c_str();
+ const char *pass_char = pass.Data();
+ const char *kin_char = kinematic.Data();
+ const char *tar_char = target.Data();
+ TString inputfile = Form("%s/%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_char,pass_char,kin_char,tar_char,run);
+ //cout << "File Location " << inputfile << endl;               
+ return inputfile;
+ }
+
 //constructor to search through the files we care about and store the information of use. Will handle some cases of unexpected behavior. Handle on a run by run basis. But one could store these in a vector and manipulate them
-public data_object(int runnum,const char *data_file_name,const char *kinematic_file_name,TString Kin, TString SBS_field){
+public:
+ data_object(int runnum,const char *data_file_name,const char *kinematic_file_name,TString Kin, TString SBS_field, TString targ){
  
  //This part of the constructor reads in information about the data file itself
  ifstream datafile(data_file_name);
@@ -39,16 +86,19 @@ public data_object(int runnum,const char *data_file_name,const char *kinematic_f
 	 kinematic =  ((TObjString*) (*tokens)[2])->GetString();
 	 target =  ((TObjString*) (*tokens)[3])->GetString();
 	 sbs_field = (((TObjString*) (*tokens)[4])->GetString()).Atoi();
-	 //cout << "Run " << datRun << " Pass " << pass << " Kin " << kinematic << " Target " << target << " SBS Field  " << sbs_field << endl;
+	 cout << "Run " << run  << " Pass " << pass << " Kin " << kinematic << " Target " << target << " SBS Field  " << sbs_field << endl;
 	if(!(kinematic == Kin)){
-	cout << "The run has a mismatch in the kinematic, investigate what is going on!" << endl
+	cout << "The run " << run << " has a mismatch in the kinematic, investigate what is going on!" << endl;
 	return;
 	}
 	if(!(sbs_field == SBS_field)){
-        cout << "The run has a mismatch in the sbs field, investigate what is going on!" << endl
+        cout << "The run "<< run << " has a mismatch in the sbs field, investigate what is going on!" << endl;
         return;
         }
- 
+ 	if(!(target == targ )){
+        cout << "The run " << run << " has a mismatch in the target, investigate what is going on!" << endl;
+        return;
+        }
 	gotRun = true;
 	 //cout << gotRun << endl;
 	 }
@@ -66,7 +116,7 @@ public data_object(int runnum,const char *data_file_name,const char *kinematic_f
  //Now read-in the kinematic information
  ifstream kinfile(kinematic_file_name);
  //check if there is a problem opening the file
- if(datafile.fail()){
+ if(kinfile.fail()){
  cout << "There was a problem with the kinematic file " << kinematic_file_name << ". Figure it out nerd!" << endl;
  return;
  }    
@@ -106,117 +156,76 @@ public data_object(int runnum,const char *data_file_name,const char *kinematic_f
 
 }
 
-
-public int getRun(){
+ int getRun(){
 	return run;
 	}
-public TString getPass(){
+ TString getPass(){
 	return pass;
 	}
-public TString getKinematic(){
+ TString getKinematic(){
 	return kinematic;
 	}
-public TString getTarget(){
+ TString getTarget(){
 	return target;
 	}
-public int getSBSField(){
+ int getSBSField(){
 	return sbs_field;
 	}
 
-public double getBeamEnergy(){
+ double getBeamEnergy(){
 	return Ebeam;
 	}		
-public double getBBAngle_Deg(){
+ double getBBAngle_Deg(){
 	return bbtheta;
 	}
-public double getBBAngle_Rad(){
+ double getBBAngle_Rad(){
 	return DegToRad(bbtheta);
 	}
-public double getBBDist(){
+ double getBBDist(){
 	return bbdist;
 	}
-public double getSBSAngle_Deg(){
+ double getSBSAngle_Deg(){
         return sbstheta;
         }
-public double getSBSAngle_Rad(){
+ double getSBSAngle_Rad(){
         return DegToRad(sbstheta);
         }
-public double getSBSDist(){
+ double getSBSDist(){
         return sbsdist;
         }
-public double getHCalAngle_Deg(){
+ double getHCalAngle_Deg(){
         return hcaltheta;
         }
-public double getHCalAngle_Rad(){
+ double getHCalAngle_Rad(){
         return DegToRad(hcaltheta);
         }
-public double getHCalDist(){
+ double getHCalDist(){
         return hcaldist;
         }
-public string getInputDir(){
+ string getInputDir(){
 	return input_directory;
 	}
-public TString getInputFile(){
+ TString getInputFile(){
 
 	return input_file;
 	}
-private TString makeInputFileName(){
- //All of this was to have a modular input directory. So let's make it
- const char *input_directory_char = input_directory.c_str();
- const char *datRun_char = datRun.Data();
- const char *pass_char = pass.Data();
- const char *kin_char = kinematic.Data();
- const char *tar_char = target.Data();
- TString inputfile = Form("%s/%s/%s/%s/rootfiles/e1209019_fullreplay_%s_*.root",input_directory_char,pass_char,kin_char,tar_char,datRun_char);
- //cout << "File Location " << inputfile << endl;             	
-	return inputfile;
-	}
-public void printRunInfo(){
-	cout << "------------------------"	 			<< endl
-	     << Form("Run number: %i,",getRun()) 			<< endl
-	     << Form("Kinematic: %s,",getKinematic())			<< endl
-	     << Form("Target: %s,", getTarget())			<< endl
-	     << Form("SBS Field: %i,",getSBSField())			<< endl
-	     << Form("Beam Energy: %d,",getBeamEnergy())		<< endl
-	     << Form("BB angle in Degrees: %d,",getBBAngle_Deg())	<< endl 
-	     << Form("BB angle in Radians: %d,",getBBAngle_Rad())	<< endl
-	     << Form("BB Distance: %d,",getBBDist())		 	<< endl
-	     << Form("SBS angle in Degrees: %d,",getSBSAngle_Deg())	<< endl
-	     << Form("SBS angle in Radians: %d,",getSBSAngle_Rad())	<< endl
-	     << Form("SBS Distance: %d,",getSBSDist())			<< endl
-	     << Form("HCal angle in Degress: %d,",getHCalAngle_Deg())	<< endl
-	     << Form("HCal angle in Radians: %d,",getHCalAngle_Rad())	<< endl
-	     << Form("HCal Distance: %d,",getHCalDist())		<< endl
- 	     << "------------------------"                              << endl;
-	}
-
-}
-//convert an int to a TString. Just a helper function
-public TString intToTString(int datInt){
-stringstream ss;
- ss << datInt;
- std::string datInt_temp;
- ss >> datInt_temp;
- TString datInt_string(datInt_temp.c_str());
- //cout << datInt_string << endl;
- return datInt_string;
-}
-
-//convert from degrees to radians
-public double DegToRad(myNum){
-return (myNum * (TMath::Pi()/180.0));
-}
-
-
-
-public string getOutputDir(){
-        return output_directory;
-        }
-
-public TString makeOutputFileName(TString exp, TString Kin, TString SBS_field,TString target){
-	TString outfile = Form("%s/yields_Zeke_%s_%s_%s_%s.root",getOutputDir(),exp,Kin,target,SBS_field);
-
-        return outfile;
-        }
-
+ void printRunInfo(){
+        cout << "------------------------"                              << endl
+             << Form("Run number: %i,",getRun())                        << endl
+             << Form("Kinematic: %s,",(getKinematic()).Data())          << endl
+             << Form("Target: %s,", (getTarget()).Data())               << endl
+             << Form("SBS Field: %i,",getSBSField())       		<< endl
+             << Form("Beam Energy: %f,",getBeamEnergy())                << endl
+             << Form("BB angle in Degrees: %f,",getBBAngle_Deg())       << endl
+             << Form("BB angle in Radians: %f,",getBBAngle_Rad())       << endl
+             << Form("BB Distance: %f,",getBBDist())                    << endl
+             << Form("SBS angle in Degrees: %f,",getSBSAngle_Deg())     << endl
+             << Form("SBS angle in Radians: %f,",getSBSAngle_Rad())     << endl
+             << Form("SBS Distance: %f,",getSBSDist())                  << endl
+             << Form("HCal angle in Degress: %f,",getHCalAngle_Deg())   << endl
+             << Form("HCal angle in Radians: %f,",getHCalAngle_Rad())   << endl
+             << Form("HCal Distance: %f,",getHCalDist())                << endl
+             << "------------------------"                              << endl;
+ }
+};
 #endif
