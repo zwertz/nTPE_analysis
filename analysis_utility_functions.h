@@ -33,8 +33,9 @@ return (myNum * (TMath::Pi()/180.0));
 TString getOutputDir(){
 return output_directory;
 }
-TString makeOutputFileName(TString exp, TString Kin, TString SBS_field,TString target){
-TString outfile = Form("%s/yields_Zeke_%s_%s_%s_%s.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field.Data());
+TString makeOutputFileName(TString exp, TString Kin, int SBS_field,TString target){
+TString outfile = Form("%s/yields_Zeke_%s_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field);
+//cout << outfile << endl;
 return outfile;
 }
 
@@ -86,7 +87,7 @@ public:
 	 kinematic =  ((TObjString*) (*tokens)[2])->GetString();
 	 target =  ((TObjString*) (*tokens)[3])->GetString();
 	 sbs_field = (((TObjString*) (*tokens)[4])->GetString()).Atoi();
-	 cout << "Run " << run  << " Pass " << pass << " Kin " << kinematic << " Target " << target << " SBS Field  " << sbs_field << endl;
+	 //cout << "Run " << run  << " Pass " << pass << " Kin " << kinematic << " Target " << target << " SBS Field  " << sbs_field << endl;
 	if(!(kinematic == Kin)){
 	cout << "The run " << run << " has a mismatch in the kinematic, investigate what is going on!" << endl;
 	return;
