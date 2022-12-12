@@ -340,10 +340,10 @@ void NucleonYields_plots( const char *setup_file_name){
   double Wrecon;
   double E_ep = BBtr_p[0]; // Obtain the scattered electron energy, neglect mass e
   double p_ep = BBtr_p[0]; // Obtain the magnitude of scattered electron momentum
-  double Q2 = 2*Ebeam*E_ep*( 1-(BBtr_pz[0]/p_ep) );
+  double etheta = acos( BBtr_pz[0]/BBtr_p[0] );
+  double Q2 = 2*Ebeam*E_ep*( 1-cos(etheta) );
   double nu = Ebeam-E_ep; // Obtain energy transfer
   double W2 = pow( M_p,2 )+2*M_p*nu-Q2; // Obtain W2 from Q2 and nu
-  double etheta = acos( BBtr_pz[0]/BBtr_p[0] );
   double ephi = atan2( BBtr_py[0], BBtr_px[0] );
   double phinucleon = ephi + TMath::Pi(); //assume coplanarity
   double thetanucleon = acos( (Ebeam - BBtr_pz[0])/p_ep ); //use elastic constraint on nucleon kinematics
@@ -357,7 +357,7 @@ void NucleonYields_plots( const char *setup_file_name){
   double dpel = BBtr_p[0]/pelastic - 1.0;
   hKE_p->Fill( KE_p );
 
-  //Cut on BBCal and HCal trigger coincidence. Not sure if this is necessary or not for this analysis
+  //Cut on BBCal and HCal trigger coincidence. 
   double bbcal_time=0., hcal_time=0., coin_time=0., rf_time=0.;
     bool cointrig = false;
     for(int ihit=0; ihit<TDCTndata; ihit++){
