@@ -44,7 +44,7 @@ class kinematic_obj{
 //Define some private variables we will fill later.
 private:
 TString kinematic;
-double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
+double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist,Q2;
 public:
 //Let's make a constructor which will just directly parse the kinematic file and store the info 
 kinematic_obj(const char *kinematic_file_name,TString Kin){
@@ -63,7 +63,7 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
 		if(datLine.BeginsWith(kinematic)){
 		//We found the right kinematic. Store the info
 		TObjArray *myobjs = datLine.Tokenize(" ");
-		//Assuming ordering is kinematic, Beam Energy, BB Angle, SBS angle, SBS dist, HCal dist
+		//Assuming ordering is kinematic, Beam Energy, BB Angle, SBS angle, SBS dist, HCal dist, Expected Q^2
  		datKin = ((TObjString*) (*myobjs)[0])->GetString();
                 Ebeam = (((TObjString*) (*myobjs)[1])->GetString()).Atof();
                 bbtheta = (((TObjString*) (*myobjs)[2])->GetString()).Atof();
@@ -72,7 +72,8 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
                 sbsdist = (((TObjString*) (*myobjs)[5])->GetString()).Atof();
                 hcaltheta = (((TObjString*) (*myobjs)[6])->GetString()).Atof();
                 hcaldist = (((TObjString*) (*myobjs)[7])->GetString()).Atof();
-                //cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist  << endl;
+		Q2 = (((TObjString*) (*myobjs)[8])->GetString()).Atof();
+                //cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist << " Q^2 " << Q2  << endl;
 		gotKin = true;
                 //cout << gotRun << endl;
  		}
@@ -121,6 +122,10 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
  double getHCalDist(){
         return hcaldist;
         }
+ double getQ2(){
+        return Q2;
+        }
+ 
  void printKinInfo(){
         cout << "------------------------"                              << endl
              << Form("Kinematic: %s,",(getKinematic()).Data())          << endl
