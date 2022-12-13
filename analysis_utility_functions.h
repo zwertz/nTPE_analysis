@@ -39,7 +39,104 @@ TString outfile = Form("%s/yields_Zeke_%s_%s_%s_%i.root",(getOutputDir()).Data()
 return outfile;
 }
 
-
+//Might be rewriting some code here. But make a class which can then be used to parse the kinematic file info
+class kinematic_obj{
+//Define some private variables we will fill later.
+private:
+TString kinematic;
+double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
+public:
+//Let's make a constructor which will just directly parse the kinematic file and store the info 
+kinematic_obj(const char *kinematic_file_name,TString Kin){
+	kinematic = Kin;
+	//Now read-in the kinematic information
+	ifstream kinfile(kinematic_file_name);
+	//check if there is a problem opening the file
+	if(kinfile.fail()){
+	cout << "There was a problem with the kinematic file " << kinematic_file_name << ". Figure it out nerd!" << endl;
+	return;
+	}
+	TString datLine;
+	TString datKin;
+	bool gotKin = false;
+	while(datLine.ReadLine(kinfile)){
+		if(datLine.BeginsWith(kinematic)){
+		//We found the right kinematic. Store the info
+		TObjArray *myobjs = datLine.Tokenize(" ");
+		//Assuming ordering is kinematic, Beam Energy, BB Angle, SBS angle, SBS dist, HCal dist
+ 		datKin = ((TObjString*) (*myobjs)[0])->GetString();
+                Ebeam = (((TObjString*) (*myobjs)[1])->GetString()).Atof();
+                bbtheta = (((TObjString*) (*myobjs)[2])->GetString()).Atof();
+                bbdist = (((TObjString*) (*myobjs)[3])->GetString()).Atof();
+                sbstheta = (((TObjString*) (*myobjs)[4])->GetString()).Atof();
+                sbsdist = (((TObjString*) (*myobjs)[5])->GetString()).Atof();
+                hcaltheta = (((TObjString*) (*myobjs)[6])->GetString()).Atof();
+                hcaldist = (((TObjString*) (*myobjs)[7])->GetString()).Atof();
+                //cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist  << endl;
+		gotKin = true;
+                //cout << gotRun << endl;
+ 		}
+                else{
+                //Where are still searching or its a comment
+                //cout << "Cond 3" << endl; 
+                 continue;
+                }
+        }
+        if ((kinfile.eof()) && !gotKin){
+         //Conditional that we checked the entire kinematic file and did not find the kinematic info
+	 cout << "Did not find kinematic: " << datKin << " in the kinematic file! Quitting, figure it out!" << endl;
+        return;
+        }
+ }
+ TString getKinematic(){
+        return kinematic;
+ }
+ double getBeamEnergy(){
+        return Ebeam;
+        }
+ double getBBAngle_Deg(){
+        return bbtheta;
+        }
+ double getBBAngle_Rad(){
+        return DegToRad(bbtheta);
+        }
+ double getBBDist(){
+        return bbdist;
+        }
+ double getSBSAngle_Deg(){
+        return sbstheta;
+        }
+ double getSBSAngle_Rad(){
+        return DegToRad(sbstheta);
+        }
+ double getSBSDist(){
+        return sbsdist;
+        }
+ double getHCalAngle_Deg(){
+        return hcaltheta;
+        }
+ double getHCalAngle_Rad(){
+        return DegToRad(hcaltheta);
+        }
+ double getHCalDist(){
+        return hcaldist;
+        }
+ void printKinInfo(){
+        cout << "------------------------"                              << endl
+             << Form("Kinematic: %s,",(getKinematic()).Data())          << endl
+             << Form("Beam Energy: %f,",getBeamEnergy())                << endl
+             << Form("BB angle in Degrees: %f,",getBBAngle_Deg())       << endl
+             << Form("BB angle in Radians: %f,",getBBAngle_Rad())       << endl
+             << Form("BB Distance: %f,",getBBDist())                    << endl
+             << Form("SBS angle in Degrees: %f,",getSBSAngle_Deg())     << endl
+             << Form("SBS angle in Radians: %f,",getSBSAngle_Rad())     << endl
+             << Form("SBS Distance: %f,",getSBSDist())                  << endl
+             << Form("HCal angle in Degress: %f,",getHCalAngle_Deg())   << endl
+             << Form("HCal angle in Radians: %f,",getHCalAngle_Rad())   << endl
+             << Form("HCal Distance: %f,",getHCalDist())                << endl
+             << "------------------------"                              << endl;
+ }
+};
 
 
 
@@ -47,10 +144,10 @@ return outfile;
 class data_object{
 //Define some private variables we will fill later.
 private:
- TString pass,kinematic,target,input_file;
- double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
- int run,sbs_field;
- string input_directory = "/work/halla/sbs/sbs-gmn";
+TString pass,kinematic,target,input_file;
+double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
+int run,sbs_field;
+string input_directory = "/work/halla/sbs/sbs-gmn";
 
 TString makeInputFileName(){
  //All of this was to have a modular input directory. So let's make it
@@ -61,7 +158,7 @@ TString makeInputFileName(){
  TString inputfile = Form("%s/%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_char,pass_char,kin_char,tar_char,run);
  //cout << "File Location " << inputfile << endl;               
  return inputfile;
- }
+}
 
 //constructor to search through the files we care about and store the information of use. Will handle some cases of unexpected behavior. Handle on a run by run basis. But one could store these in a vector and manipulate them
 public:
@@ -114,47 +211,18 @@ public:
  cout << "Did not find run number: " << runnum << " in the data file! Quitting, figure it out!" << endl;
  return;
  }  
- //Now read-in the kinematic information
- ifstream kinfile(kinematic_file_name);
- //check if there is a problem opening the file
- if(kinfile.fail()){
- cout << "There was a problem with the kinematic file " << kinematic_file_name << ". Figure it out nerd!" << endl;
- return;
- }    
- TString datLine;
- TString datKin;
- bool gotKin = false;
- while(datLine.ReadLine(kinfile)){
- 	if(datLine.BeginsWith(kinematic)){
-	//We found the right kinematic. Store the info
-	 TObjArray *myobjs = datLine.Tokenize(" ");
- 	//Assuming ordering is kinematic, Beam Energy, BB Angle, SBS angle, SBS dist, HCal dist
- 	datKin = ((TObjString*) (*myobjs)[0])->GetString();
- 	Ebeam = (((TObjString*) (*myobjs)[1])->GetString()).Atof();
- 	bbtheta = (((TObjString*) (*myobjs)[2])->GetString()).Atof();
- 	bbdist = (((TObjString*) (*myobjs)[3])->GetString()).Atof();
- 	sbstheta = (((TObjString*) (*myobjs)[4])->GetString()).Atof();
- 	sbsdist = (((TObjString*) (*myobjs)[5])->GetString()).Atof();
- 	hcaltheta = (((TObjString*) (*myobjs)[6])->GetString()).Atof();
- 	hcaldist = (((TObjString*) (*myobjs)[7])->GetString()).Atof();
- 	//cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist  << endl;
-	gotKin = true;
- 	//cout << gotRun << endl;
- 	}
- 	else{
- 	//Where are still searching or its a comment
- 	//cout << "Cond 3" << endl; 
- 	continue;
- 	}
- }
- if ((kinfile.eof()) && !gotKin){
-  //Conditional that we checked the entire kinematic file and did not find the kinematic info
-  cout << "Did not find kinematic: " << datKin << " in the kinematic file! Quitting, figure it out!" << endl;
-  return;
- }    
+ //Now read-in the kinematic information and store the info
+ kinematic_obj datKin(kinematic_file_name, Kin);
+ 
+ Ebeam = datKin.getBeamEnergy();
+ bbtheta = datKin.getBBAngle_Deg();
+ bbdist = datKin.getBBDist();
+ sbstheta = datKin.getSBSAngle_Deg();
+ sbsdist = datKin.getSBSDist();
+ hcaltheta = datKin.getHCalAngle_Deg();
+ hcaldist = datKin.getHCalDist();
+
  input_file = makeInputFileName();
-
-
 }
 
  int getRun(){

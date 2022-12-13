@@ -25,12 +25,12 @@ const double Yi = -0.853; // Distance from beam center to opposite-beam side of 
 const double Yf = 0.853; // Distance from beam center to beam side of HCal in m
 const double M_p = 0.938272; // Mass proton GeV
 const double M_n = 0.939565; // Mass neutron GeV
-const double tdiffmax = 20; // Max deviation from coin via tdctrig cut
 const double sampfrac = 0.077; // Most recent estimate of the sampling fraction via MC
 
 //Define max number of tracks per event
-const int MAXNTRACKS=100;
-   
+int MAXNTRACKS;
+
+double tdiffmax; // Max deviation from coin via tdctrig cut
 
 
 
@@ -112,6 +112,14 @@ void parseMainConfig(const char *setup_file_name){
 			else if(key == "tdiff"){
 			tdiff = val.Atof();
 			//cout << "Time Diff " << tdiff << endl;
+			}
+			else if(key == "tdiffmax"){
+			tdiffmax = val.Atof();
+			//cout << "Time Cut " << tdiffmax << endl;
+			}
+			else if(key == "MAXNTRACKS"){
+			MAXNTRACKS = val.Atoi();
+			//cout << "Max Number of Tracks per event" << MAXNTRACKS << endl;
 			}
 			else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
@@ -272,7 +280,7 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *htimeDiff = new TH1D( "hDiff","HCal time - BBCal time (ns)", 1300, -500, 800 );
   TH2D *hrowcol = new TH2D( "hrowcol", "HCal Block Position Elastics, HCal; Col; Row", kNcols, 0, kNcols, kNrows, -kNrows, 0 );
   TH1D *hX = new TH1D( "X", "HCal X (m); m", 100, -3, 3 );
-  TH1D *hX_expect = new TH1D( "X_expect (m)", "HCal X Expect (m); m", 100, -3, 3 );
+  TH1D *hX_expect = new TH1D( "X_expect", "HCal X Expect (m); m", 100, -3, 3 );
   TH1D *hY = new TH1D( "Y", "HCal Y (m); m", 100, -2, 2 );
   TH1D *hY_expect = new TH1D( "Y_expect", "HCal Y Expect (m); m", 100, -2, 3 );
   TH1D *hdx_cut = new TH1D( "dx_cut", "HCal dx (m), All cuts; m", 200, -2, 2 );
@@ -288,8 +296,8 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *h_dpel = new TH1D("h_dpel","d_pel;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
   TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,2.8);
   TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2); 
-  TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel;p/p_{elastic}(#theta)-1, All cuts;",250,-0.25,0.25);
-  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV, All cuts);",250,1.5,2.8);
+  TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel,All Cuts;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
+  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,2.8);
   TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), All cuts;",250,0.0,2.2);
 
   //variables for script
