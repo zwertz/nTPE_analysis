@@ -1,3 +1,9 @@
+//Still need to implement fiducial cuts and fitting functions for background, protons, and neutrons. Also need to implement basic blinding via random number and yields
+
+
+
+
+#include "TF1.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TFile.h"
@@ -299,6 +305,9 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel,All Cuts;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
   TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,2.8);
   TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), All cuts;",250,0.0,2.2);
+  TH1D *hdr = new TH1D("dr","HCal dr (m), No Cuts; m", 200, -3, 3 );
+  TH1D *hdr_cut = new TH1D("dr_cut","HCal dr (m), All Cuts; m", 200, -2, 2 );
+
 
   //variables for script
   long nevents = elist -> GetN();
@@ -365,6 +374,28 @@ void NucleonYields_plots( const char *setup_file_name){
   double dpel = BBtr_p[0]/pelastic - 1.0;
   hKE_p->Fill( KE_p );
 
+  //define dx,dy, and dr 
+  double dx = xhcal - xhcal_expect;
+  double dy = yhcal - yhcal_expect;
+  double dr;
+  double r = sqrt(pow(dx,2)+ pow(dy,2)); 
+  if(r != 0){
+  //handle the case where the radius does not equal zero
+  double myang = TMath::ATan2(dx,dy);
+  double myang_deg = RadToDeg(myang);
+  //cout << myang_deg << endl; 
+  	if((myang_deg >= -180.00) && (myang_deg < 0.00) ){
+  	dr = (-1)*r;
+  	}else{
+ 	 dr = r;  
+  	}
+ }else{
+ //handle if somehow r = 0
+ dr = r;
+ //cout << dr << endl;
+ }
+  //cout << dr << " " << myang_deg << endl;
+
   //Cut on BBCal and HCal trigger coincidence. 
   double bbcal_time=0., hcal_time=0., coin_time=0., rf_time=0.;
     bool cointrig = false;
@@ -382,7 +413,7 @@ void NucleonYields_plots( const char *setup_file_name){
   //Fill some histograms
   //cout << yhcal - yhcal_expect << endl;
   htimeDiff->Fill( diff );
-  hdxdy_all->Fill( yhcal - yhcal_expect, xhcal - xhcal_expect );
+  hdxdy_all->Fill( dy, dx);
   h_vert->Fill(vz[0]);
   h_W2->Fill(W2);
   h_W2recon->Fill(W2recon);
@@ -391,14 +422,16 @@ void NucleonYields_plots( const char *setup_file_name){
   
   hX_expect->Fill( xhcal_expect);
   hY_expect->Fill( yhcal_expect);
-  hdx->Fill( xhcal-xhcal_expect );
-  hdy->Fill( yhcal-yhcal_expect );
+  hdx->Fill(dx );
+  hdy->Fill(dy );
   hX->Fill( xhcal);
   hY->Fill( yhcal );
   h_dpel->Fill(dpel);
   h_TPS_SH->Fill(BBps_e+BBsh_e);
   h_PS_E->Fill(BBps_e);
 
+  hdr->Fill(dr);
+  
   ///////////////
   //    //PRIMARYCUTS//
   //Cut on vertex inside target. This cut is already handled by global cut in some capacity
@@ -418,12 +451,12 @@ void NucleonYields_plots( const char *setup_file_name){
   //elastic_yield++;
   //Fill some histograms
   hKElow->Fill( KE_p*sampfrac );
-  hdxVE->Fill(xhcal - xhcal_expect,ehcal);
+  hdxVE->Fill(dx,ehcal);
   //Fill delta plots and others
-  hdxdy_cut->Fill( yhcal - yhcal_expect, xhcal - xhcal_expect );
+  hdxdy_cut->Fill( dy, dx );
   h_E_cut->Fill(ehcal);
-  hdx_cut->Fill( xhcal-xhcal_expect );
-  hdy_cut->Fill( yhcal-yhcal_expect );
+  hdx_cut->Fill( dx );
+  hdy_cut->Fill( dy );
   //h_atime->Fill( atime[0] );
   hX_cut->Fill( xhcal);
   hY_cut->Fill( yhcal );
@@ -435,6 +468,8 @@ void NucleonYields_plots( const char *setup_file_name){
   h_dpel_cut->Fill(dpel);
   h_TPS_SH_cut->Fill(BBps_e+BBsh_e);
   h_PS_E_cut->Fill(BBps_e);
+
+  hdr_cut->Fill(dr);
 
 
   ///////////////
@@ -450,10 +485,80 @@ void NucleonYields_plots( const char *setup_file_name){
   
   }
 
-  cout << "Total calibration yield for run with current cuts: " << elastic_yield << "." << endl;
+ //Declare Canvas
+ TCanvas *c1 = new TCanvas("c1","c1",1600,1200);
+ c1->Divide(2,1);
+ //place holder till I do fiducials
+ c1->cd(1);
+ hdxdy_cut->Draw("colz"); 
 
+ //Sets to no fitting?
+ gStyle->SetOptFit(0);
+ //Set to no stat box?
+ gStyle->SetOptStat(0);
+
+ //Working on fitting the dx plot
+ c1->cd(2);
+ //make a clone of the dx plot
+ TH1D *hdxcut_clone = (TH1D*)hdx_cut->Clone("hdxcut_clone");
+ 
+ //Initialize fit parameters
+ 
+ vector<Double_t> myParam (11);
+ myParam= fit_Params(kin);
+ Double_t fit_low = myParam[9];
+ Double_t fit_high = myParam[10];
+
+
+ //Make the total fit
+ c1->cd(2);
+ TF1 *totalFit = new TF1("totalfit",Tot_fit,fit_low,fit_high,9);
+ totalFit->SetLineWidth(4);
+ totalFit->SetLineColor(kMagenta);
+ //Set or Fix parameter. Right now there are 9
+ 
+ totalFit->SetParameter(0,myParam[0]);
+ totalFit->SetParLimits(0,150,900);
+ totalFit->SetParameter(1,myParam[1]);
+ totalFit->SetParameter(2,myParam[2]);
+ totalFit->SetParameter(3,myParam[3]);
+ totalFit->FixParameter(4,myParam[4]); //fix the mean rather than fitting radiative tails
+ totalFit->SetParameter(5,myParam[5]);
+ totalFit->SetParameter(6,myParam[6]);
+ totalFit->FixParameter(7,myParam[7]); //fix the mean
+ totalFit->SetParameter(8,myParam[8]);
+
+
+ //Q = minimum printing, R =fit using fitting range specified in the function range, B= Used when fixing or setting limits on one or more parameters in predefined function, + = add to list of fitted functions
+ hdxcut_clone->Fit("totalfit","QRB+");
+ TF1 *bkgd = new TF1("bkgd",BG_fit,fit_low,fit_high,3);
+ TF1 *proton = new TF1("proton",P_fit,fit_low,fit_high,3);
+ TF1 *neutron = new TF1("neutron",N_fit,fit_low,fit_high,3);
+ bkgd->SetLineColor(kBlack);
+ proton->SetLineColor(kRed);
+ neutron->SetLineColor(kBlue);
+ 
+ bkgd->SetParameters(&myParam[0]);
+ proton->SetParameters(&myParam[3]);
+ neutron->SetParameters(&myParam[6]);
+ 
+ 
+ bkgd->Draw("same");
+ proton->Draw("same");
+ neutron->Draw("same");
+
+ //put something here for yields and blinding
+  
+  //output the info to some files
+  cout << "Total calibration yield for run with current cuts: " << elastic_yield << "." << endl;
+  c1->Write();
+  TString plotname = outfile;
+  plotname.ReplaceAll(".root",".pdf");
+  c1->Print(plotname.Data(),"pdf");
+  plotname.ReplaceAll(".pdf",".png");
+  c1->Print(plotname.Data(),"png");
   fout->Write();
-  fout->Close();
+
 
   cout << "Histograms populated and written to file." << endl;
 

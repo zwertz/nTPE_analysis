@@ -5,7 +5,8 @@
 #include <fstream>
 #include <sstream>
 #include "TString.h"
-
+#include "TMath.h"
+#include <vector>
 
 
 //This belongs to the header file, not the class. So that way an output file can come from multiple data objects
@@ -14,6 +15,72 @@
  TString output_directory = TString(out_dir_temp);
  string output_temp = "";
  TString output_file = TString(output_temp);
+
+
+//Define some fits to be used for analysis
+
+//Background fit of a second-order polynomial
+double BG_fit(double *x, double *param){
+double c = param[0];
+double b = param[1];
+double a = param[2];
+
+double func = a*(pow(x[0],2))+b*(x[0])+c;
+return func;
+}
+
+
+//Fit for protons using a Gaussian
+double P_fit(double *x, double *param){
+double amp = param[0];
+double offset = param[1];
+double sigma = param[2];
+
+double func = amp*(exp(-0.5*pow((x[0]-offset)/sigma,2)));
+return func;
+}
+
+//Fit for neutrons using a Gaussian
+double N_fit(double *x, double *param){
+double amp = param[0];
+double offset = param[1];
+double sigma = param[2];
+
+double func = amp*(exp(-0.5*pow((x[0]-offset)/sigma,2)));
+return func;
+}
+
+//Total fit to overlay. Combine all fits
+double Tot_fit(double *x, double *param){
+double tot_func = BG_fit(x,&param[0])+P_fit(x,&param[3])+N_fit(x,&param[6]);
+return tot_func;
+
+}
+
+//Function to intialize fit parameters. Currently only supports SBS-4. Will need to have support other kinematics like SBS8,SBS9
+vector<Double_t> fit_Params(TString myKin){
+vector<Double_t> param (11);
+//need to look at the on a graph and see what its actually trying to do
+if(myKin == "SBS4"){
+param[0] = 200; //used for total fit as 0 parameter
+param[1] = -0.3; //used for total fit as 1 parameter
+param[2] = 0.8; //used for total fit as 2 parameter
+param[3] = 9400; //used for total fit as 3 parameter
+param[4] = -0.35; //used for total fit as 4 parameter
+param[5] = 0.2; //used for total fit as 5 parameter
+param[6] = 3300; //used for total fit as 6 parameter
+param[7] = 0.28; //used for total fit as 7 parameter
+param[8] = 0.19; //used for total fit as  8 parameter
+param[9] = -1.5; // min value for fit
+param[10] = 0.7; // max value for fit
+}else{
+//Error message
+cout << "Error: The kinematic setting you are analyzing does not have preset fit parameters. Plots will probably not make sense!";
+}
+
+return param;
+}
+
 
 
 //convert an int to a TString. Just a helper function
@@ -30,6 +97,10 @@ return datInt_string;
 double DegToRad(double myNum){
 return (myNum * (TMath::Pi()/180.0));
 }
+double RadToDeg(double datRad){
+return ((datRad * 180.0)/(TMath::Pi()));
+}
+
 TString getOutputDir(){
 return output_directory;
 }
