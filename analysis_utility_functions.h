@@ -62,15 +62,15 @@ vector<Double_t> fit_Params(TString myKin){
 vector<Double_t> param (11);
 //need to look at the on a graph and see what its actually trying to do
 if(myKin == "SBS4"){
-param[0] = 200; //used for total fit as 0 parameter
-param[1] = -0.3; //used for total fit as 1 parameter
-param[2] = 0.8; //used for total fit as 2 parameter
-param[3] = 9400; //used for total fit as 3 parameter
-param[4] = -0.35; //used for total fit as 4 parameter
-param[5] = 0.2; //used for total fit as 5 parameter
-param[6] = 3300; //used for total fit as 6 parameter
-param[7] = 0.28; //used for total fit as 7 parameter
-param[8] = 0.19; //used for total fit as  8 parameter
+param[0] = 100; //used for total fit as 0 parameter
+param[1] = -0.4; //used for total fit as 1 parameter
+param[2] = 0.6; //used for total fit as 2 parameter
+param[3] = 9500; //used for total fit as 3 parameter
+param[4] = -0.649; //used for total fit as 4 parameter
+param[5] = 0.17; //used for total fit as 5 parameter
+param[6] = 3700; //used for total fit as 6 parameter
+param[7] = 0.004; //used for total fit as 7 parameter
+param[8] = 0.17; //used for total fit as  8 parameter
 param[9] = -1.5; // min value for fit
 param[10] = 0.7; // max value for fit
 }else{

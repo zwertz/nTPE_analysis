@@ -32,7 +32,10 @@ const double Yi = -0.853; // Distance from beam center to opposite-beam side of 
 const double Yf = 0.853; // Distance from beam center to beam side of HCal in m
 const double M_p = 0.938272; // Mass proton GeV
 const double M_n = 0.939565; // Mass neutron GeV
+const double M_e = 0.00051; // Mass electron GeV
 const double sampfrac = 0.077; // Most recent estimate of the sampling fraction via MC
+
+const double hcalheight = -0.2897; //Height of HCal above beamline
 
 //Static Target Parameters
 const double l_tgt = 0.15; // Length of the target (m)
@@ -161,22 +164,26 @@ void parseMainConfig(const char *setup_file_name){
                         dysig_n = val.Atof();
                         //cout << "y sigma of neutron spot" << dysig_n << endl;
                         }
-			else if(key == "dxO_n"){
-                        dxO_n = val.Atof();
-                        //cout << "x-position of neutron spot" << dxO_n << endl;
+			else if(key == "dxO_p"){
+                        dxO_p = val.Atof();
+                        //cout << "x-position of proton spot" << dxO_p << endl;
                         }
-                        else if(key == "dyO_n"){
-                        dyO_n = val.Atof();
-                        //cout << "y-position of neutron spot" << dyO_n << endl;
+                        else if(key == "dyO_p"){
+                        dyO_p = val.Atof();
+                        //cout << "y-position of proton spot" << dyO_p << endl;
                         }
-                        else if(key == "dxsig_n"){
-                        dxsig_n = val.Atof();
-                        //cout << "x sigma of neutron spot" << dxsig_n << endl;
+                        else if(key == "dxsig_p"){
+                        dxsig_p = val.Atof();
+                        //cout << "x sigma of proton spot" << dxsig_p << endl;
                         }                       
-                        else if(key == "dysig_n"){
-                        dysig_n = val.Atof();
-                        //cout << "y sigma of neutron spot" << dysig_n << endl;
+                        else if(key == "dysig_p"){
+                        dysig_p = val.Atof();
+                        //cout << "y sigma of proton spot" << dysig_p << endl;
                         }
+			else if(key == "dxmax"){
+                        dxmax = val.Atof();
+                        //cout << "max x difference between peaks" << dxmax << endl;
+                        }                        
 			else if(key == "useAlshield"){
                         useAlshield = val.Atoi();
                         //cout << "Use Al shield" << useAlshield << endl;
@@ -331,19 +338,27 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *h_E_all = new TH1D( "E_all", "HCal Cluster Energy (GeV), All Channels; GeV", 250, 0, 0.4 );
   TH1D *h_E_cut = new TH1D( "E_cut", "HCal Cluster Energy (GeV) All Cuts, All Channels; GeV", 250, 0, 0.4 );
  // TH1D *h_E_exp = new TH1D( "E_exp", "Expected Energy Dep in HCal; GeV", 100, 0, 0.2 );
+  TH2D *hdxVE = new TH2D("dxVE","dx vs VE;x_{HCAL}-x_{expect} (m); GeV", 100, -4.0, 2.0, 100, 0, 0.5 );
+  TH1D *hKElow = new TH1D( "KElow", "Lowest Elastic E Sampled in HCal (GeV)", 500, 0.0, 0.2 );
+
+ 
   TH1D *h_vert = new TH1D( "vert", "Vertex Position (m); m", 200, -0.4, 0.4 );
  // TH2D *h_EvCh = new TH2D( "EvCh", "HCal Cluster E Single Block Clusters; channel, GeV", kNcell, 0, kNcell, 50, 0, 0.5 );
-  TH1D *h_W2 = new TH1D( "W2", "W2 (GeV) No Cuts; GeV", 250, -1.0, 4.0 );
   TH1D *h_W2recon = new TH1D( "W2recon", "W2 Reconstructed (GeV) No Cuts; GeV", 250, -1.0, 4.0 );
+  TH1D *h_W2recon_cut = new TH1D( "W2recon_cut", "W2 Reconstructed (GeV) with cuts; GeV", 250, -1.0, 4.0 );
+  TH1D *htimeDiff = new TH1D( "hDiff","HCal time - BBCal time (ns)", 1300, -500, 800 );
+  TH1D *htimeDiff_cut = new TH1D( "hDiff_cut","HCal time - BBCal time (ns), All Cuts", 150, 450, 600 );
+  TH2D *hrowcol = new TH2D( "hrowcol", "HCal Block Position Elastics, HCal; Col; Row", kNcols, 0, kNcols, kNrows, -kNrows, 0 );
+  TH1D *h_Wrecon = new TH1D( "Wrecon", "W Reconstructed (GeV) no cuts; GeV", 250, -0.5, 3.0 );
+  TH1D *h_Wrecon_cut = new TH1D( "Wrecon_cuts", "W Reconstructed (GeV) With cuts; GeV", 250, -0.5, 3.0 );
+  TH1D *h_W2recon_fcut = new TH1D( "W2recon_fcut", "W2recon_fcut; GeV", 250, -1.0, 4.0 );
+  TH1D *h_Wrecon_fcut = new TH1D( "Wrecon_fcut", "Wrecon_fcut; GeV", 250, -1.0, 4.0 );
+
+
   TH2D *hdxdy_cut = new TH2D("dxdy_cut","HCal dxdy All Cuts, All Channels;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 250, -1.25, 1.25, 250, dx_low, dx_high );
   TH2D *hdxdy_all = new TH2D("dxdy_all","HCal dxdy All Channels ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",250,-1.25,1.25,250,dx_low,dx_high);
   TH1D *hdx = new TH1D( "dx", "HCal dx (m); m", 200, dx_low, dx_high );
   TH1D *hdy = new TH1D( "dy", "HCal dy (m); m", 200, dy_low, dy_high );
-  TH1D *hKE_p = new TH1D( "KE_p", "Scattered Proton Kinetic Energy", 500, 0.0, 5.0 );
-  TH2D *hdxVE = new TH2D("dxVE","dx vs VE;x_{HCAL}-x_{expect} (m); GeV", 100, -4.0, 2.0, 100, 0, 0.5 );
-  TH1D *hKElow = new TH1D( "KElow", "Lowest Elastic E Sampled in HCal (GeV)", 500, 0.0, 0.2 );
-  TH1D *htimeDiff = new TH1D( "hDiff","HCal time - BBCal time (ns)", 1300, -500, 800 );
-  TH2D *hrowcol = new TH2D( "hrowcol", "HCal Block Position Elastics, HCal; Col; Row", kNcols, 0, kNcols, kNrows, -kNrows, 0 );
   TH1D *hX = new TH1D( "X", "HCal X (m); m", 100, dx_low, dx_high );
   TH1D *hX_expect = new TH1D( "X_expect", "HCal X Expect (m); m", 100, dx_low, dx_high );
   TH1D *hY = new TH1D( "Y", "HCal Y (m); m", 100, dy_low, dy_high );
@@ -354,29 +369,40 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *hX_expect_cut = new TH1D( "X_expect_cut", "HCal X Expect (m), All cuts; m", 100, dx_low, dx_high );
   TH1D *hY_cut = new TH1D( "Y_cut", "HCal Y (m),All cuts; m", 100, dy_low, dy_high );
   TH1D *hY_expect_cut = new TH1D( "Y_expect_cut", "HCal Y Expect (m), All cuts; m", 100, dy_low, dy_high );
-  TH1D *h_W2recon_cut = new TH1D( "W2recon_cut", "W2 Reconstructed (GeV) with cuts; GeV", 250, -1.0, 4.0 );
-  TH1D *htimeDiff_cut = new TH1D( "hDiff_cut","HCal time - BBCal time (ns), All Cuts", 150, 450, 600 );
-  TH1D *h_Wrecon = new TH1D( "Wrecon", "W Reconstructed (GeV) no cuts; GeV", 250, -0.5, 3.0 );
-  TH1D *h_Wrecon_cut = new TH1D( "Wrecon_cuts", "W Reconstructed (GeV) With cuts; GeV", 250, -0.5, 3.0 );
+  TH1D *hdr = new TH1D("dr","HCal dr (m), No Cuts; m", 200, -3, 3 );
+  TH1D *hdr_cut = new TH1D("dr_cut","HCal dr (m), All Cuts; m", 200, -3, 3 );
+  TH2D *hdxdy_pcut = new TH2D("hdxdy_pcut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  TH2D *hdxdy_ncut = new TH2D("hdxdy_ncut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  TH2D *hdxdy_fcut = new TH2D("hdxdy_fcut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",250,-1.25,1.25,250,dx_low,dx_high);
+  TH1D *hdx_fcut = new TH1D( "dx_fcut","; x_{HCAL}-x_{expect} (m)", 200, dx_low, dx_high );
+  TH1D *hdy_fcut = new TH1D( "dy_fcut","; y_{HCAL}-y_{expect} (m)", 200, dy_low, dy_high );
+  TH2D *hxy = new TH2D("hxy",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  TH2D *hxy_fcut = new TH2D("hxy_cut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  TH2D *hxy_pcut = new TH2D("hxy_pcut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  TH2D *hxy_ncut = new TH2D("hxy_ncut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
+ 
+
   TH1D *h_dpel = new TH1D("h_dpel","d_pel;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
   TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,2.8);
   TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2); 
   TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel,All Cuts;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
   TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,2.8);
   TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), All cuts;",250,0.0,2.2);
-  TH1D *hdr = new TH1D("dr","HCal dr (m), No Cuts; m", 200, -3, 3 );
-  TH1D *hdr_cut = new TH1D("dr_cut","HCal dr (m), All Cuts; m", 200, -3, 3 );
-  TH2D *hdxdy_pcut = new TH2D("hdxdy_pcut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",12,-0.9,0.9,24,-2.165,1.435);
-  TH2D *hdxdy_ncut = new TH2D("hdxdy_ncut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",12,-0.9,0.9,24,-2.165,1.435);
-  TH2D *hdxdy_fcut = new TH2D("hdxdy_fcut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",250,-1.25,1.25,250,dx_low,dx_high); 
-  TH1D *hdx_fcut = new TH1D( "dx_fcut","; x_{HCAL}-x_{expect} (m)", 200, dx_low, dx_high );
-  TH1D *hdy_fcut = new TH1D( "dy_fcut","; y_{HCAL}-y_{expect} (m)", 200, dy_low, dy_high );
-  TH1D *h_W2recon_fcut = new TH1D( "W2recon_fcut", "W2recon_fcut; GeV", 250, -1.0, 4.0 );
-  TH1D *h_Wrecon_fcut = new TH1D( "Wrecon_fcut", "Wrecon_fcut; GeV", 250, -1.0, 4.0 );
-  TH2D *hxy = new TH2D("hxy",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
-  TH2D *hxy_fcut = new TH2D("hxy_cut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
-  TH2D *hxy_pcut = new TH2D("hxy_pcut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
-  TH2D *hxy_ncut = new TH2D("hxy",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  
+ //need to find where to fill these histograms
+  TH1D *hE_ep = new TH1D("Scattered Electron Energy","E_ep",500,0.0,Ebeam*1.5);
+  hE_ep->GetXaxis()->SetTitle("GeV"); 
+  TH1D *hE_eloss = new TH1D("Scattered Electron Energy Loss in Target","E_eloss",500,0.0, Ebeam *0.1);
+  TH1D *hE_ecorr = new TH1D("Corrected Scattered Electron Energy","E_ecorr",500,0.0,Ebeam*1.5);
+  TH2D *hE_ecorr_vs_vertex = new TH2D("hE_ecorr_vs_vertex",";E_{corr} (GeV);z_{vertex} (m)", 250, -0.125, 0.125, 500, 0,0.001);
+  TH1D *hE_pp = new TH1D("Scattered Proton Energy","E_pp",500, 0.0, Ebeam*1.5);
+  hE_pp->GetXaxis()->SetTitle("GeV");
+  TH1D *hKE_p = new TH1D( "KE_p", "Scattered Proton Kinetic Energy", 500, 0.0, Ebeam*1.5 );
+  hKE_p->GetXaxis()->SetTitle("GeV");
+
+  TH1D *hQ2 = new TH1D("Q2","Q2",250,0.5,3.0);
+  hQ2->GetXaxis()->SetTitle("GeV");
+
 
  //variables for script
   long nevents = elist -> GetN();
@@ -396,70 +422,82 @@ void NucleonYields_plots( const char *setup_file_name){
     }
   }
   
+ //create loop with the number of events from elist
+ for(long nevent = 0;nevent < nevents; nevent++){
+ if( nevent%10000 == 0 ){
+ cout << "Loop: " << nevent << "/" << nevents << ". Elastic yield: " << elastic_yield << endl;
+ }
+ cout.flush();
+ //Get sequential event from elist (parsed chain with cuts from setup file)
+  C->GetEntry( elist->GetEntry( nevent ) );
+
+
   //Correct the beam energy with energy loss in target using vertex position
   double Eloss = (vz[0]+(l_tgt/2))*rho_tgt*dEdx_tgt + uwallthick_LH2*rho_Al*dEdx_Al; //aproximately 3 MeV
-  //fill Eloss in histogram
+  hE_eloss->Fill(Eloss);
 
   double Ecorr = Ebeam-Eloss;
-  //fill histo
+  hE_ecorr->Fill(Ecorr);
+  hE_ecorr_vs_vertex->Fill(vz[0],Ecorr);
 
   double pcorr = BBtr_p[0]-Eloss_outgoing; //neglecting outgoing electron mass
 
- 
-
-
-  //Beam and detector vars including definition of HCal coordinate axis
-  TLorentzVector Pbeam(0,0,Ecorr,Ecorr);
-  TLorentzVector Ptarg( 0, 0, 0, 0.5*(M_p+M_n) ); //Average of proton and neutron rest mass
-  TVector3 hcal_origin( -hcaldist*sin(hcaltheta), 0, hcaldist*cos(hcaltheta) );
-  //TVector3 hcal_origin( -hcaldist*sin(sbstheta), 0, hcaldist*cos(sbstheta) );
-  TVector3 hcal_zaxis = hcal_origin.Unit();
-  TVector3 hcal_xaxis(0,-1,0);
-  TVector3 hcal_yaxis = hcal_zaxis.Cross( hcal_xaxis ).Unit();
-
-
-  double W_min = W_mean - W_sigma;
-  double W_max = W_mean + W_sigma;
-  //create loop with the number of events from elist
-  for(long nevent = 0;nevent < nevents; nevent++){
-  
-  if( nevent%10000 == 0 ){
-  cout << "Loop: " << nevent << "/" << nevents << ". Elastic yield: " << elastic_yield << endl;
-  }
-  cout.flush();
- 
-  //Get sequential event from elist (parsed chain with cuts from setup file)
-  C->GetEntry( elist->GetEntry( nevent ) );
-  
-  //Define useful vectors
-  TLorentzVector kprime( BBtr_px[0], BBtr_py[0], BBtr_pz[0], BBtr_p[0] );
-  TLorentzVector q = Pbeam - kprime; //Standard q-vector
-  TVector3 vertex( 0, 0, vz[0] ); //Location of scattering event in target
-  TVector3 qdir = q.Vect().Unit(); //q-vector direction
-  
-  double sintersect = (hcal_origin-vertex).Dot( hcal_zaxis )/qdir.Dot( hcal_zaxis );
-  TVector3 hcal_intersect = vertex + sintersect * qdir;
-  double xhcal_expect = hcal_intersect.Dot( hcal_xaxis );
-  double yhcal_expect = hcal_intersect.Dot( hcal_yaxis );
-  //cout << yhcal_expect << endl;
-  double W2recon = (Ptarg + q).M2();//M2 is magnitude squared of the 4-vector
-  double Wrecon;
-  double E_ep = BBtr_p[0]; // Obtain the scattered electron energy, neglect mass e
+  //
   double p_ep = BBtr_p[0]; // Obtain the magnitude of scattered electron momentum
-  double etheta = acos( BBtr_pz[0]/BBtr_p[0] );
-  double Q2 = 2*Ecorr*E_ep*( 1-cos(etheta) );
-  double nu = Ecorr-E_ep; // Obtain energy transfer
-  double W2 = pow( M_p,2 )+2*M_p*nu-Q2; // Obtain W2 from Q2 and nu
+  double etheta = acos( BBtr_pz[0]/p_ep); //Use the uncorrected track momentum to reconstruct e' thetha
   double ephi = atan2( BBtr_py[0], BBtr_px[0] );
-  double phinucleon = ephi + TMath::Pi(); //assume coplanarity
-  double thetanucleon = acos( (Ecorr - BBtr_pz[0])/p_ep ); //use elastic constraint on nucleon kinematics
-  TVector3 pNhat( sin(thetanucleon)*cos(phinucleon),sin(thetanucleon)*sin(phinucleon),cos(thetanucleon));
-  double KE_p = nu; //For elastics
-  if(W2recon >0){
-  Wrecon = sqrt(W2);
+
+  TVector3 vertex( 0, 0, vz[0] ); //z location of vertex in hall coordinates
+
+  TLorentzVector Pbeam(0,0,Ecorr,Ecorr);//Mass of e negligable
+  TLorentzVector kprime( BBtr_px[0], BBtr_py[0], BBtr_pz[0], BBtr_p[0] );
+
+
+  TLorentzVector Ptarg( 0, 0, 0, M_p ); //Just use proton?
   
-  }
+
+  TLorentzVector q = Pbeam - kprime; //Standard q-vector
+  TLorentzVector PgammaN = Ptarg+q; // (-px, -py, Ebeam-pz,Mp+Ebeam-p)
+ 
+  double E_ep = sqrt(pow(M_e,2)+pow(BBtr_p[0],2)); //Obtain the scattered electron energy
+  hE_ep->Fill(E_ep);
+
   double pelastic = Ecorr /(1.0+(Ecorr/M_p)*(1.0-cos(etheta)));
+  double nu = Ecorr-E_ep; // Obtain energy transfer
+  double pp = sqrt(pow(nu,2)+ 2*M_p*nu);
+  double phinucleon = ephi + TMath::Pi(); //assume coplanarity
+  double thetanucleon = acos( (Ecorr - BBtr_pz[0])/pp ); //use elastic constraint on nucleon kinematics
+
+  TVector3 pNhat( sin(thetanucleon)*cos(phinucleon),sin(thetanucleon)*sin(phinucleon),cos(thetanucleon));
+
+   //Define HCal coordinate system
+   TVector3 hcal_zaxis (sin(-hcaltheta),0,cos(-hcaltheta));
+   TVector3 hcal_xaxis(0,-1,0);
+   TVector3 hcal_yaxis = hcal_zaxis.Cross( hcal_xaxis ).Unit();
+   TVector3 hcal_origin = hcaldist *hcal_zaxis +hcalheight*hcal_xaxis;
+
+  //Define interesection points for hadron vector
+  double sintersect = (hcal_origin-vertex).Dot( hcal_zaxis )/pNhat.Dot( hcal_zaxis );
+  TVector3 hcal_intersect = vertex + sintersect * pNhat;
+
+  //Define the expected position of hadron on HCal from BB track
+  double xhcal_expect = (hcal_intersect-hcal_origin).Dot( hcal_xaxis );
+  double yhcal_expect = (hcal_intersect-hcal_origin).Dot( hcal_yaxis );
+
+
+  //Get the invariant mass transfer W and four-momentum of the scattered nucleon
+  double W2recon = PgammaN.M2();//M2 is magnitude squared of the 4-vector
+  double Wrecon = PgammaN.M();
+  double Q2 = 2*Ecorr*E_ep*( 1-cos(etheta) );
+  hQ2->Fill(Q2);
+
+  //Use the electron kinematics to predict the proton momentum assuming elastic scattering on the free proton at rest (will need to correct for fermi motion);
+  double E_pp = nu+M_p; //Get energy of proton
+  double Enucleon = sqrt(pow(pp,2)+pow(M_p,2));
+  hE_pp->Fill(E_pp);
+
+  double KE_p = nu; //For elastics
+  hKE_p->Fill(KE_p);
   double dpel = BBtr_p[0]/pelastic - 1.0;
   hKE_p->Fill( KE_p );
 
@@ -505,7 +543,6 @@ void NucleonYields_plots( const char *setup_file_name){
   hdxdy_all->Fill( dy, dx);
   h_vert->Fill(vz[0]);
   hxy->Fill(yhcal,xhcal);
-  h_W2->Fill(W2);
   h_W2recon->Fill(W2recon);
   h_E_all->Fill(ehcal);
   h_Wrecon->Fill(Wrecon);
@@ -532,8 +569,6 @@ void NucleonYields_plots( const char *setup_file_name){
   //if( atime[0]>60. && atime[0]<90. ) //Observed HCal ADC time peak
   //Cut on  W2
   if( abs(Wrecon-W_mean)>W_sigma ) continue; //Observed W2 peak
-  //if( Wrecon >= W_min && Wrecon <= W_max) continue; //Observed W2 peak
-  //Cut on BBCal HCal trig diff
   if( abs(diff-tdiff)>tdiffmax ) continue; //BBCal/HCal trigger difference time
   //Bigbite track / HCal angular correlation cut
   //ENDCUTS//
@@ -583,7 +618,7 @@ void NucleonYields_plots( const char *setup_file_name){
  HCal_on = true;
  }
  //equation for a circle around proton spot. Maybe make ellipse later
- if(pow((dx-dxO_p)/dxsig_p,2)+pow((dy-dyO_p)/dysig_p,2)<= pow(3.5,2)){
+ if(pow((dx-dxO_p)/dxsig_p,2)+pow((dy-dyO_p)/dysig_p,2)<= pow(2.5,2)){
  find_p = true;
  }
  //equation for a circle around neutron spot. Maybe make ellipse later
@@ -636,6 +671,20 @@ void NucleonYields_plots( const char *setup_file_name){
  c1->cd(1);
  hdxdy_cut->Draw("colz"); 
 
+ TEllipse el_pro;
+ el_pro.SetFillStyle(4005);
+ el_pro.SetLineColor(2);
+ el_pro.SetLineWidth(3);
+ el_pro.DrawEllipse(dyO_p,dxO_p,dysig_p,dxsig_p,0,360,0);
+
+ 
+ TEllipse el_neu;
+ el_neu.SetFillStyle(4005);
+ el_neu.SetLineColor(4);
+ el_neu.SetLineWidth(3);
+ el_neu.DrawEllipse(dyO_n,dxO_n,dysig_n,dxsig_n,0,360,0);
+
+
  //Sets to no fitting?
  gStyle->SetOptFit(0);
  //Set to no stat box?
@@ -644,14 +693,14 @@ void NucleonYields_plots( const char *setup_file_name){
  //Working on fitting the dx plot
  c1->cd(2);
  //make a clone of the dx plot
- TH1D *hdxcut_clone = (TH1D*)hdx_cut->Clone("hdxcut_clone");
- 
+ TH1D *hdxcut_clone = (TH1D*)hdx_fcut->Clone("hdxcut_clone");
  //Initialize fit parameters
  
  vector<Double_t> myParam (11);
  myParam= fit_Params(kin);
  Double_t fit_low = myParam[9];
  Double_t fit_high = myParam[10];
+ hdxcut_clone->SetAxisRange(fit_low,fit_high,"X");
 
 
  //Make the total fit
