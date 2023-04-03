@@ -14,13 +14,13 @@ const Double_t bbcal_threshconv = 7.2; // MeV/mV
 
 void GMn_nTPE_ElasticPeak(TString Kinematic){
 //Use the kinematic objectic class which keeps track of useful information. Load that information in via object member functions. This inherently looks in the config file for the information.
-kinematic_obj myKin = New kinematic_obj("All_Kinematic.cfg",Kinematic);
-double Ebeam = myKin.getBeamEnergy();
-double BBAngle_rad = myKin.getBBAngle_Rad();
-double BBDist = myKin.getBBDist();
-double Q2 = myKin.getQ2();
-double HCalAngle_rad = myKin.getHCalAngle_Rad();
-double HCalDist = myKin.getHCalDist();
+kinematic_obj *myKin = new kinematic_obj("All_Kinematic.cfg",Kinematic);
+double Ebeam = myKin->getBeamEnergy();
+double BBAngle_rad = myKin->getBBAngle_Rad();
+double BBDist = myKin->getBBDist();
+double Q2 = myKin->getQ2();
+double HCalAngle_rad = myKin->getHCalAngle_Rad();
+double HCalDist = myKin->getHCalDist();
 
 //determine min/max angle for HCal by trying to approximate the arclength
 double HCalAngle_min = HCalAngle_rad - ((hcal_width/2)/HCalDist); //approx with arclength
@@ -40,7 +40,7 @@ double deltaBBAng = 0;
 
 //determine the effective BBAngle based on trigonometry
 for(int shcol=0;shcol<7;shcol++){
-effective_BBang[shco]= (sh_yposition[shcol]/sh_faceDist)+BBAngle_rad;
+effective_BBang[shcol]= (sh_yposition[shcol]/sh_faceDist)+BBAngle_rad;
 }
 
 double elasticPeak_e[7] = {0};
@@ -88,7 +88,7 @@ epsilon_n[shcol] = pow(1+2*(1+Q2/4*M_n)*pow(tan(effective_BBang[shcol]/2),2),-1)
 elasticPeak_n[shcol] = nu_n[shcol]+M_n;
 hcal_n_projang[shcol] = acos((Ebeam - ePeak_en*cos(effective_BBang[shcol]))/phel_n);
 
-hcalON[shcol] = (hcal_p_projang[shcol]>hcal_minang) && (hcal_p_projang[shcol]<hcal_maxang) ;
+hcalON[shcol] = (hcal_p_projang[shcol]>HCalAngle_min) && (hcal_p_projang[shcol]<HCalAngle_max) ;
 
 //Check for lowest KE in HCal
 if((nu_p[shcol] < hcal_minKE) && hcalON[shcol]){
@@ -103,20 +103,20 @@ hcal_minKE = nu_n[shcol];
 
 cout << endl;
 
-cout << "// BBSH col  |  e' angle  |  e' p   |  elastic proton KE  |  elastic neutron KE  |  had proj ang  | on HCal?  |  p epsilon  |  n epsilon  //" << endl; 
+cout << "// BBSH col  |  e' angle  |  e' p     |  elastic proton KE  |  elastic neutron KE  |  had proj ang  | on HCal?  |  p epsilon  |  n epsilon  //" << endl; 
 
 for(int i=0; i<7; i++){
 
 std:cout << std::setprecision(5) << std::fixed;
 
-cout << "//  "<< i << "    |  " << RadToDeg(effective_BBang[i]) << "  |  " << elasticPeak_e[i] << "  |  " << nu_p[i] << "    |  " << nu_n[i] << "    |   " << RadToDeg(hcal_p_projang[i]) << "   |  " << hcalON[i] << "   |  " << epsiolon_p[i] << "  |  " << epsilon_n[i] << "  //" << endl;
+cout << "//  "<< i << "        |  " << RadToDeg(effective_BBang[i]) << "  |  " << elasticPeak_e[i] << "  |  " << nu_p[i] << "            |  " << nu_n[i] << "             |   " << RadToDeg(hcal_p_projang[i]) << "     |  " << hcalON[i] << "        |  " << epsilon_p[i] << "    |  " << epsilon_n[i] << "    //" << endl;
 
 }
 
 double hcal_ms = hcal_minKE * hcal_sampfrac*1000; //convert from GeV to MeV
-
-cout << endl << endl << "Lowest energy sampled in HCal with estimated smearing (MeV): " << hcal_ms -hcal_ms*ff << "." << endl;
-cout << endl << endl << "Suggested HCal threshold with estimated smearing: " (hcal_ms -hcal_ms*ff)/hcal_threshconv << "." << endl;
+double hcal_le = hcal_ms-hcal_ms*ff;
+cout << endl << endl << "Lowest energy sampled in HCal with estimated smearing (MeV): " << hcal_le << "." << endl;
+cout << endl << endl << "Suggested HCal threshold with estimated smearing: " <<  hcal_le/hcal_threshconv << "." << endl;
 
 cout << endl << endl <<  "Lowest energy sampled in HCal (MeV): " << hcal_ms << "." << endl;
 cout << endl << endl << "Suggest HCal threshold: " << hcal_ms/hcal_threshconv << "." << endl;

@@ -8,7 +8,6 @@
 #include "TMath.h"
 #include <vector>
 
-
 //This belongs to the header file, not the class. So that way an output file can come from multiple data objects
 
  string out_dir_temp = "yields_output";
@@ -17,63 +16,105 @@
  TString output_file = TString(output_temp);
 
 
-//Define some fits to be used for analysis
 
-//Background fit of a second-order polynomial
-double BG_fit(double *x, double *param){
-double c = param[0];
-double b = param[1];
-double a = param[2];
-
-double func = a*(pow(x[0],2))+b*(x[0])+c;
-return func;
-}
-
-
-//Fit for protons using a Gaussian
-double P_fit(double *x, double *param){
-double amp = param[0];
-double offset = param[1];
-double sigma = param[2];
-
-double func = amp*(exp(-0.5*pow((x[0]-offset)/sigma,2)));
-return func;
-}
-
-//Fit for neutrons using a Gaussian
-double N_fit(double *x, double *param){
-double amp = param[0];
-double offset = param[1];
-double sigma = param[2];
-
-double func = amp*(exp(-0.5*pow((x[0]-offset)/sigma,2)));
-return func;
-}
-
-//Total fit to overlay. Combine all fits
-double Tot_fit(double *x, double *param){
-double tot_func = BG_fit(x,&param[0])+P_fit(x,&param[3])+N_fit(x,&param[6]);
-return tot_func;
-
-}
 
 //Function to intialize fit parameters. Currently only supports SBS-4. Will need to have support other kinematics like SBS8,SBS9
-vector<Double_t> fit_Params(TString myKin){
-vector<Double_t> param (11);
-//need to look at the on a graph and see what its actually trying to do
-if(myKin == "SBS4"){
-param[0] = 100; //used for total fit as 0 parameter
-param[1] = -0.4; //used for total fit as 1 parameter
-param[2] = 0.6; //used for total fit as 2 parameter
-param[3] = 9500; //used for total fit as 3 parameter
-param[4] = -0.649; //used for total fit as 4 parameter
-param[5] = 0.17; //used for total fit as 5 parameter
-param[6] = 3700; //used for total fit as 6 parameter
-param[7] = 0.004; //used for total fit as 7 parameter
-param[8] = 0.17; //used for total fit as  8 parameter
-param[9] = -1.5; // min value for fit
-param[10] = 0.7; // max value for fit
-}else{
+vector<Double_t> fit_Params(TString myKin,int sbs_field){
+vector<Double_t> param (13);
+if(myKin == "SBS4" && sbs_field == 30){
+param[0] = 392.598; //used for background
+param[1] = -149.831;//used for background
+param[2] = -94.1881;//used for background
+param[3] = 29.4916 ;//used for background
+param[4] = 7.71833; //used for background
+param[5] = 9375.82; //used for proton
+param[6] = -0.645559; //used for proton
+param[7] = 0.177031; //used for proton
+param[8] = 3125.53; //used for neutron
+param[9] = 0.00105228; //used for neutron
+param[10] = 0.17046; //used for neutron
+param[11] = -2.0; // min value for fit
+param[12] = 2.0; // max value for fit
+}
+else if(myKin == "SBS4" && sbs_field == 50){
+param[0] = 31.3045; //used for background
+param[1] = -11.274;//used for background
+param[2] = -8.53245;//used for background
+param[3] = 2.06596 ;//used for background
+param[4] = 0.954097; //used for background
+param[5] = 974.296; //used for proton
+param[6] = -1.08370; //used for proton
+param[7] = 0.18571; //used for proton
+param[8] = 335.47; //used for neutron
+param[9] = 0.0138818; //used for neutron
+param[10] = 0.158507; //used for neutron
+param[11] = -3.0; // min value for fit
+param[12] = 2.0; // max value for fit
+}
+else if(myKin == "SBS8" && sbs_field == 70){
+param[0] = 2380.80; //used for background
+param[1] = -688.796;//used for background
+param[2] = -468.258;//used for background
+param[3] = 103.072 ;//used for background
+param[4] = 44.8213; //used for background
+param[5] = 38169.9; //used for proton
+param[6] = -0.769101; //used for proton
+param[7] = 0.183487; //used for proton
+param[8] = 13360.4; //used for neutron
+param[9] = 0.0816066; //used for neutron
+param[10] = 0.155811; //used for neutron
+param[11] = -3.0; // min value for fit
+param[12] = 2.0; // max value for fit
+}
+else if(myKin == "SBS8" && sbs_field == 100){
+param[0] = 290.667; //used for background
+param[1] = -93.4792;//used for background
+param[2] = -55.806;//used for background
+param[3] = 13.9312 ;//used for background
+param[4] = 5.26703; //used for background
+param[5] = 4274.15; //used for proton
+param[6] = -1.12882; //used for proton
+param[7] = 0.193342; //used for proton
+param[8] = 1636.95; //used for neutron
+param[9] = 0.0910029; //used for neutron
+param[10] = 0.146692; //used for neutron
+param[11] = -3.0; // min value for fit
+param[12] = 2.0; // max value for fit
+}
+else if(myKin == "SBS8" && sbs_field == 50){
+param[0] = 304.939; //used for background
+param[1] = -73.2219;//used for background
+param[2] = -54.0288;//used for background
+param[3] = 9.19629 ;//used for background
+param[4] = 4.34144; //used for background
+param[5] = 5338.41; //used for proton
+param[6] = -0.525136; //used for proton
+param[7] = 0.173936; //used for proton
+param[8] = 1895.43; //used for neutron
+param[9] = 0.086927; //used for neutron
+param[10] = 0.149202; //used for neutron
+param[11] = -3.0; // min value for fit
+param[12] = 2.0; // max value for fit
+}
+
+else if(myKin == "SBS9" && sbs_field == 70){
+param[0] = 2724.99; //used for background
+param[1] = -749.166;//used for background
+param[2] = -680.79;//used for background
+param[3] = 111.373 ;//used for background
+param[4] = 57.697; //used for background
+param[5] = 19177.4; //used for proton
+param[6] = -0.82072; //used for proton
+param[7] = 0.161423; //used for proton
+param[8] = 6996.65; //used for neutron
+param[9] = 0.0844196; //used for neutron
+param[10] = 0.144542; //used for neutron
+param[11] = -3.0; // min value for fit
+param[12] = 2.0; // max value for fit
+}
+
+
+else{
 //Error message
 cout << "Error: The kinematic setting you are analyzing does not have preset fit parameters. Plots will probably not make sense!";
 }
