@@ -8,6 +8,83 @@
 #include "TMath.h"
 #include <vector>
 
+//////////////////////////////
+//////Static Detector Parameters
+//Trigger TDC
+const Int_t maxTDCTrigChan = 10; // Set to accomodate original 5 TDCTrig channels with buffer
+const Double_t tdiffwidecut = 50; // Set at 50ns from nominal 510ns (passed by user) from GMn
+//HCal - Note that actual measurement of vertical length is 381.6cm, indicating that the MC figures are correct
+const Int_t maxHCalChan = 288; // Total HCal channels
+const Int_t maxHCalRows = 24; // Total HCal rows
+const Int_t maxHCalCols = 12; // Total HCal cols
+const Int_t maxClusters = 10; // Total HCal clusters with information saved
+const Double_t HCALHeight = -0.2897; // Height of HCal above beamline in m
+const Double_t HCalblk_l = 0.15; // Width and height of HCAL blocks in m
+const Double_t HCalblk_l_h_MC = 0.15494; // Horizontal length of all HCAL blocks in m from MC database
+const Double_t HCalblk_l_v_MC = 0.15875; // Vertical length of all HCAL blocks in m from MC database
+const Double_t posHCalXi = -2.165; // Distance from beam center to top of HCal in m
+const Double_t posHCalXf = 1.435; // Distance from beam center to bottom of HCal in m
+const Double_t posHCalYi = -0.9; // Distance from beam center to opposite-beam side of HCal in m
+const Double_t posHCalYf = 0.9; // Distance from beam center to beam side of HCal in m
+const Double_t posHCalXi_MC = -2.3531; // Distance from beam center to top of HCal in m from MC database
+const Double_t posHCalXf_MC = 1.45309; // Distance from beam center to bottom of HCal in m from MC database
+const Double_t posHCalYi_MC = -0.93155; // Distance from beam center to opposite-beam side of HCal in m from MC database
+const Double_t posHCalYf_MC = 0.93155; // Distance from beam center to beam side of HCal in m from MC database
+const Double_t HCalSampFrac = 0.077;  //Re-evaluated with MC GEn settings using second to outermost shower column for kin2
+
+//BBCal
+const Int_t maxBBCalShChan = 189; // Total BBCal Shower Channels
+const Int_t maxBBCalShRows = 27;
+const Int_t maxBBCalShCols = 7;
+const Int_t maxBBCalPSChan = 52; // Total BBCal Preshower Channels
+const Int_t maxBBCalPSRows = 26;
+const Int_t maxBBCalPSCols = 2;
+
+//Beamline
+const Int_t chargeConvert = 3318; // See D.Flay Doc DB sbs.jlab.org/DocDB/0001/000164/002/dflay_bcm-ana-update_02-21-22.pdf p.8
+const Int_t clockActual = 103700; // Needed to convert the 104kHz clock to the actual counting rate
+
+//SBS Magnet
+const Double_t Dgap = 48.0*2.54/100.0; //about 1.22 m
+const Double_t maxSBSfield = 1.26; //Tesla
+const Double_t SBSfield = 1.0; //fraction of max field. TODO: should be variable per run
+const Double_t SBSdist = 2.25; //m
+const Double_t dipGap = 1.22; //m
+const Double_t sbsmaxfield = 3.1 * atan( 0.85/(11.0 - 2.25 - 1.22/2.0 ))/0.3/1.22/0.7;
+
+//GEMs
+const Double_t GEMpitch = 10*TMath::DegToRad();
+
+///////////////
+/////Physics/Math
+const Double_t PI = TMath::Pi();
+const Double_t M_e = 0.00051;
+const Double_t M_p = 0.938272;
+const Double_t M_n = 0.939565;
+const UInt_t us = 1000000; //For conversion to seconds used by reporting time delays
+const Int_t proton = 2212; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+const Int_t neutron = 2112; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+const Int_t electron = 11; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+const Int_t photon = 22; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+
+////////////////////////////
+//////Static Target/Scattering Chamber Parameters
+const Double_t l_tgt = 0.15; // Length of the target (m)
+const Double_t rho_tgt = 0.0723; // Density of target (g/cc)
+const Double_t rho_Al = 2.7; // Density of aluminum windows (g/cc)
+const Double_t celldiameter = 1.6*2.54/100; //m, right now this is a guess
+const Double_t Ztgt = 1.0;
+const Double_t Atgt = 1.0;
+const Double_t Mmol_tgt = 1.008; //g/mol
+const Double_t dEdx_tgt=0.00574; //According to NIST ESTAR, the collisional stopping power of hydrogen is about 5.74 MeV*cm2/g at 2 GeV energy
+const Double_t dEdx_Al = 0.0021; //According to NIST ESTAR, the collisional stopping power of Aluminum is about 2.1 MeV*cm2/g between 1-4 GeV
+const Double_t uwallthick_LH2 = 0.0145; //cm
+const Double_t dwallthick_LH2 = 0.015; //cm
+const Double_t cellthick_LH2 = 0.02; //cm, this is a guess;
+const Double_t Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch 
+
+
+
 //This belongs to the header file, not the class. So that way an output file can come from multiple data objects
 
  string out_dir_temp = "yields_output";
@@ -18,25 +95,25 @@
 
 
 
-//Function to intialize fit parameters. Currently only supports SBS-4. Will need to have support other kinematics like SBS8,SBS9
-vector<Double_t> fit_Params(TString myKin,int sbs_field){
-vector<Double_t> param (13);
-if(myKin == "SBS4" && sbs_field == 30){
-param[0] = 392.598; //used for background
-param[1] = -149.831;//used for background
-param[2] = -94.1881;//used for background
-param[3] = 29.4916 ;//used for background
-param[4] = 7.71833; //used for background
-param[5] = 9375.82; //used for proton
-param[6] = -0.645559; //used for proton
-param[7] = 0.177031; //used for proton
-param[8] = 3125.53; //used for neutron
-param[9] = 0.00105228; //used for neutron
-param[10] = 0.17046; //used for neutron
+//Function to intialize fit parameters. Currently only supports SBS-4, SBS8, SBS9
+vector<double> fit_Params(TString myKin,int sbs_field,TString targ){
+vector<double> param (13);
+if(myKin == "SBS4" && sbs_field == 30 && targ == "LD2"){
+param[0] = 392.598; //used for background p0
+param[1] = -149.831;//used for background p1
+param[2] = -94.1881;//used for background p1
+param[3] = 29.4916 ;//used for background p3
+param[4] = 7.71833; //used for background p4
+param[5] = 9375.82; //used for proton amplitude
+param[6] = -0.645559; //used for proton mean
+param[7] = 0.177031; //used for proton sigma
+param[8] = 3125.53; //used for neutron amplitude
+param[9] = 0.00105228; //used for neutron mean
+param[10] = 0.17046; //used for neutron sigma
 param[11] = -2.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
-else if(myKin == "SBS4" && sbs_field == 50){
+else if(myKin == "SBS4" && sbs_field == 50 && targ == "LD2"){
 param[0] = 31.3045; //used for background
 param[1] = -11.274;//used for background
 param[2] = -8.53245;//used for background
@@ -51,7 +128,7 @@ param[10] = 0.158507; //used for neutron
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
-else if(myKin == "SBS8" && sbs_field == 70){
+else if(myKin == "SBS8" && sbs_field == 70 && targ == "LD2"){
 param[0] = 2380.80; //used for background
 param[1] = -688.796;//used for background
 param[2] = -468.258;//used for background
@@ -66,7 +143,7 @@ param[10] = 0.155811; //used for neutron
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
-else if(myKin == "SBS8" && sbs_field == 100){
+else if(myKin == "SBS8" && sbs_field == 100 && targ == "LD2"){
 param[0] = 290.667; //used for background
 param[1] = -93.4792;//used for background
 param[2] = -55.806;//used for background
@@ -81,7 +158,7 @@ param[10] = 0.146692; //used for neutron
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
-else if(myKin == "SBS8" && sbs_field == 50){
+else if(myKin == "SBS8" && sbs_field == 50 && targ == "LD2"){
 param[0] = 304.939; //used for background
 param[1] = -73.2219;//used for background
 param[2] = -54.0288;//used for background
@@ -97,7 +174,7 @@ param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 
-else if(myKin == "SBS9" && sbs_field == 70){
+else if(myKin == "SBS9" && sbs_field == 70 && targ == "LD2"){
 param[0] = 2724.99; //used for background
 param[1] = -749.166;//used for background
 param[2] = -680.79;//used for background
@@ -111,6 +188,17 @@ param[9] = 0.0844196; //used for neutron
 param[10] = 0.144542; //used for neutron
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
+}
+
+if(myKin == "SBS4" && sbs_field == 0 && targ == "LH2"){
+param[0] = 0.0; //used for background p0
+param[1] = 1.0;//used for background p1
+param[2] = 1.0;//used for background p2
+param[3] = 1.0 ;//used for background p3
+param[4] = 1.0; //used for background p4
+param[5] = 15000; //used for proton amplitude
+param[6] = 0.01886; //used for proton mean
+param[7] = 0.0517; //used for proton sigma
 }
 
 
@@ -150,6 +238,14 @@ TString outfile = Form("%s/yields_Zeke_%s_%s_%s_%i.root",(getOutputDir()).Data()
 //cout << outfile << endl;
 return outfile;
 }
+
+TString makeReportFileName(TString exp, TString Kin, int SBS_field,TString target){
+TString outfile = Form("%s/efficiencyRep_Zeke_%s_%s_%s_%i.txt",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field);
+//cout << outfile << endl;
+return outfile;
+}
+
+
 
 //Might be rewriting some code here. But make a class which can then be used to parse the kinematic file info
 class kinematic_obj{

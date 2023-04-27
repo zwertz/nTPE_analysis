@@ -20,39 +20,6 @@
 #include "analysis_utility_functions.h"
 #include "BlindFactor.h"
 #include <vector>
-//Maybe some of these can be elevated to the setup config file
-//Some other parameters that are potentially useful but need to understand them. Taken from Seeds Script
-const int kNcell = 288; // Total number of HCal modules
-const int kNrows = 24; // Total number of HCal rows
-const int kNcols = 12; // Total number of HCal columns
-const int kNtdc = 1000; // Reasonable max number of tdc signals per event
-const double Xi = -2.20; // Distance from beam center to top of HCal in m
-const double Xf = 1.47; // Distance from beam center to bottom of HCal in m
-const double Yi = -0.853; // Distance from beam center to opposite-beam side of HCal in m
-const double Yf = 0.853; // Distance from beam center to beam side of HCal in m
-const double M_p = 0.938272; // Mass proton GeV
-const double M_n = 0.939565; // Mass neutron GeV
-const double M_e = 0.00051; // Mass electron GeV
-const double sampfrac = 0.077; // Most recent estimate of the sampling fraction via MC
-
-const double hcalheight = -0.2897; //Height of HCal above beamline
-
-//Static Target Parameters
-const double l_tgt = 0.15; // Length of the target (m)
-const double rho_tgt = 0.0723; // Density of target (g/cc)
-const double rho_Al = 2.7; // Density of aluminum windows (g/cc)
-const double celldiameter = 1.6*2.54; //cm, right now this is a guess
-const double Ztgt = 1.0;
-const double Atgt = 1.0;
-const double Mmol_tgt = 1.008; //g/mol
-
-//For energy-loss correction to beam energy:
-const double dEdx_tgt=0.00574; //According to NIST ESTAR, the collisional stopping power of hydrogen is about 5.74 MeV*cm2/g at 2 GeV energy
-const double dEdx_Al = 0.0021; //According to NIST ESTAR, the collisional stopping power of Aluminum is about 2.1 MeV*cm2/g between 1-4 GeV
-const double uwallthick_LH2 = 0.0145; //cm
-const double dwallthick_LH2 = 0.015; //cm
-const double cellthick_LH2 = 0.02; //cm, this is a guess;
-const double Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch  
 
 //Define max number of tracks per event
 int MAXNTRACKS;
@@ -60,6 +27,7 @@ int MAXNTRACKS;
 double tdiffmax,dx_low,dx_high,dy_low,dy_high; // Max deviation from coin via tdctrig cut
 TString Exp,kin,data_file_name,kinematic_file_name,targ;
 int SBS_field,useAlshield;
+double W2_low,W2_high,tdiff,dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dxmax;
 
 //Define some fits to be used for analysis
 //Background fit of a fourth-order polynomial
@@ -137,13 +105,8 @@ return tot_func;
 }
 
 
-
-
-
 TCut globalcut = "";
 
-
-double W2_low,W2_high,tdiff,dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dxmax;
 
 //A vector to hold run numbers as TStrings eventually
 vector<int> runnums;
@@ -337,10 +300,10 @@ void NucleonYields_plots( const char *setup_file_name){
   double vx[MAXNTRACKS], vy[MAXNTRACKS], vz[MAXNTRACKS];
   double xhcal,yhcal,ehcal,nblk,nclus,SHnclus,PSnclus;
   //Not sure exactly what these are usful for. Maybe describing energy in diff HCal blocks? Might not need all of these depending on the Histograms
-  double atime[kNcell], row[kNcell], col[kNcell], cblkid[kNcell], cblke [kNcell];
+  double atime[maxHCalChan], row[maxHCalRows], col[maxHCalCols], cblkid[maxHCalChan], cblke [maxHCalChan];
   UInt_t TBits;
   double BBtr_n, BBps_x, BBps_y, BBps_e, BBsh_x, BBsh_y, BBsh_e, hcal_atime,hcal_tdctime,bbcal_atime;
-  double TDCT_id[kNtdc], TDCT_tdc[kNtdc], hodo_tmean[kNtdc];
+  double TDCT_id[maxTDCTrigChan], TDCT_tdc[maxTDCTrigChan], hodo_tmean[maxTDCTrigChan];
   int TDCTndata;
  
 
@@ -413,7 +376,6 @@ void NucleonYields_plots( const char *setup_file_name){
   C->SetBranchAddress( "fEvtHdr.fTrigBits", &TBits ); 
   //need to change these bb times
   C->SetBranchAddress( "bb.tdctrig.tdcelemID", TDCT_id );
-  C->SetBranchAddress( "bb.tdctrig.tdc", TDCT_tdc );
   C->SetBranchAddress( "bb.sh.atimeblk", &bbcal_atime );
   C->SetBranchAddress( "Ndata.bb.tdctrig.tdcelemID", &TDCTndata );
   
@@ -429,7 +391,7 @@ void NucleonYields_plots( const char *setup_file_name){
 
   // Initialize histograms
  // TH1D *h_atime = new TH1D( "atime", "HCal ADC Time, All Channels; ns", 160, 0, 160 );
- // TH2D *h_CvCh = new TH2D( "CvCh", "HCal Coeff Single Block Clusters; channel, GeV", kNcell, 0, kNcell, 200, 0, 1.0 );
+ // TH2D *h_CvCh = new TH2D( "CvCh", "HCal Coeff Single Block Clusters; channel, GeV", maxHCalChan, 0, maxHCalChan, 200, 0, 1.0 );
   TH1D *h_E_all = new TH1D( "E_all", "HCal Cluster Energy (GeV), All Channels; GeV", 250, 0, 0.4 );
   TH1D *h_E_cut = new TH1D( "E_cut", "HCal Cluster Energy (GeV) All Cuts, All Channels; GeV", 250, 0, 0.4 );
  // TH1D *h_E_exp = new TH1D( "E_exp", "Expected Energy Dep in HCal; GeV", 100, 0, 0.2 );
@@ -451,12 +413,12 @@ void NucleonYields_plots( const char *setup_file_name){
 
   
   TH1D *h_vert = new TH1D( "vert", "Vertex Position (m); m", 200, -0.4, 0.4 );
- // TH2D *h_EvCh = new TH2D( "EvCh", "HCal Cluster E Single Block Clusters; channel, GeV", kNcell, 0, kNcell, 50, 0, 0.5 );
-  TH1D *h_W2recon = new TH1D( "W2recon", "W2 Reconstructed (GeV) No Cuts; GeV", 250, -1.0, 4.0 );
-  TH1D *h_W2recon_cut = new TH1D( "W2recon_cut", "W2 Reconstructed (GeV) with cuts; GeV", 250, -1.0, 4.0 );
+ // TH2D *h_EvCh = new TH2D( "EvCh", "HCal Cluster E Single Block Clusters; channel, GeV", maxHCalChan, 0, maxHCalChan, 50, 0, 0.5 );
+  TH1D *h_W2recon = new TH1D( "W2recon", "W2 Reconstructed (GeV) No Cuts; GeV", 250, -1.0, 6.0 );
+  TH1D *h_W2recon_cut = new TH1D( "W2recon_cut", "W2 Reconstructed (GeV) with cuts; GeV", 250, -1.0, 3.0 );
   TH1D *htimeDiff = new TH1D( "hDiff","HCal time - BBCal time (ns)", 1300, -500, 800 );
   TH1D *htimeDiff_cut = new TH1D( "hDiff_cut","HCal time - BBCal time (ns), All Cuts", 150, 450, 600 );
-  TH2D *hrowcol = new TH2D( "hrowcol", "HCal Block Position Elastics, HCal; Col; Row", kNcols, 0, kNcols, kNrows, -kNrows, 0 );
+  TH2D *hrowcol = new TH2D( "hrowcol", "HCal Block Position Elastics, HCal; Col; Row", maxHCalCols, 0, maxHCalCols, maxHCalRows, -maxHCalRows, 0 );
   TH1D *h_Wrecon = new TH1D( "Wrecon", "W Reconstructed (GeV) no cuts; GeV", 250, -0.5, 3.0 );
   TH1D *h_Wrecon_cut = new TH1D( "Wrecon_cuts", "W Reconstructed (GeV) With cuts; GeV", 250, -0.5, 3.0 );
   TH1D *h_W2recon_fcut = new TH1D( "W2recon_fcut", "W2recon_fcut; GeV", 250, -1.0, 4.0 );
@@ -484,17 +446,17 @@ void NucleonYields_plots( const char *setup_file_name){
   TH2D *hdxdy_fcut = new TH2D("hdxdy_fcut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH1D *hdx_fcut = new TH1D( "dx_fcut","; x_{HCAL}-x_{expect} (m)", 350, dx_low, dx_high );
   TH1D *hdy_fcut = new TH1D( "dy_fcut","; y_{HCAL}-y_{expect} (m)", 200, dy_low, dy_high );
-  TH2D *hxy = new TH2D("hxy",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  TH2D *hxy = new TH2D("hxy",";y_{HCAL} (m); x_{HCAL} (m)",50,-1.25,1.25,50,dx_low,dx_high);
   TH2D *hxy_fcut = new TH2D("hxy_cut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
   TH2D *hxy_pcut = new TH2D("hxy_pcut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
   TH2D *hxy_ncut = new TH2D("hxy_ncut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
  
 
   TH1D *h_dpel = new TH1D("h_dpel","d_pel;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
-  TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,2.8);
+  TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,4.0);
   TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2); 
   TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel,All Cuts;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
-  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,2.8);
+  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,4.0);
   TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), All cuts;",250,0.0,2.2);
   
  //need to find where to fill these histograms
@@ -508,7 +470,7 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *hKE_p = new TH1D( "KE_p", "Scattered Proton Kinetic Energy", 500, 0.0, Ebeam*1.25 );
   hKE_p->GetXaxis()->SetTitle("GeV");
 
-  TH1D *hQ2 = new TH1D("Q2","Q2",250,0.5,3.0);
+  TH1D *hQ2 = new TH1D("Q2","Q2",250,0.5,6.0);
   hQ2->GetXaxis()->SetTitle("GeV");
 
 
@@ -524,8 +486,8 @@ void NucleonYields_plots( const char *setup_file_name){
  }
 
   
-  for( int r =0; r<kNrows; r++){
-    for (int c=0; c<kNcols; c++){
+  for( int r =0; r<maxHCalRows; r++){
+    for (int c=0; c<maxHCalCols; c++){
       hrowcol->Fill( (c+1), -(r+1) );
     }
   }
@@ -582,7 +544,7 @@ void NucleonYields_plots( const char *setup_file_name){
    TVector3 hcal_zaxis (sin(-hcaltheta),0,cos(-hcaltheta));
    TVector3 hcal_xaxis(0,-1,0);
    TVector3 hcal_yaxis = hcal_zaxis.Cross( hcal_xaxis ).Unit();
-   TVector3 hcal_origin = hcaldist *hcal_zaxis +hcalheight*hcal_xaxis;
+   TVector3 hcal_origin = hcaldist *hcal_zaxis +HCALHeight*hcal_xaxis;
 
   //Define interesection points for hadron vector
   double sintersect = (hcal_origin-vertex).Dot( hcal_zaxis )/pNhat.Dot( hcal_zaxis );
@@ -607,7 +569,6 @@ void NucleonYields_plots( const char *setup_file_name){
   double KE_p = nu; //For elastics
   hKE_p->Fill(KE_p);
   double dpel = BBtr_p[0]/pelastic - 1.0;
-  hKE_p->Fill( KE_p );
 
   //define dx,dy, and dr 
   double dx = xhcal - xhcal_expect;
@@ -695,7 +656,7 @@ void NucleonYields_plots( const char *setup_file_name){
   ///////////
   //elastic_yield++;
   //Fill some histograms
-  hKElow->Fill( KE_p*sampfrac );
+  hKElow->Fill( KE_p*HCalSampFrac );
   hdxVE->Fill(dx,ehcal);
   //Fill delta plots and others
   h_E_cut->Fill(ehcal);
@@ -826,10 +787,10 @@ hdx_residual->GetXaxis()->SetTitle("m");
  TH1D *hdxcut_clone = (TH1D*)hdx_cut->Clone("hdxcut_clone");
  //Initialize fit parameters
  
- vector<Double_t> myParam (13),myFParam (13);
- myParam= fit_Params(kin,sbs_field);
- Double_t fit_low = myParam[11];
- Double_t fit_high = myParam[12];
+ vector<double> myParam (13),myFParam (13);
+ myParam= fit_Params(kin,sbs_field,targ);
+ double fit_low = myParam[11];
+ double fit_high = myParam[12];
  
 
 
