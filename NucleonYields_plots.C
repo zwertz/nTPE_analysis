@@ -33,8 +33,8 @@ double W2_low,W2_high,tdiff,dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysi
 //Background fit of a fourth-order polynomial
 bool reject_bkgd;
 double BG_fit(double *x, double *param){
-
-/*if((kin == "SBS4") && (SBS_field == 30) && reject_bkgd && x[0]> -1.5  && x[0] < 0.5 ){
+/*
+if((kin == "SBS4") && (SBS_field == 30) && reject_bkgd && x[0]> -1.5  && x[0] < 0.5 ){
 TF1::RejectPoint();
 return 0;
 }*/
@@ -294,19 +294,25 @@ void NucleonYields_plots( const char *setup_file_name){
   double sbstheta = myData[0].getSBSAngle_Rad(); //SBS Angle, again should be the same for all data
   double hcaltheta = myData[0].getHCalAngle_Rad();//HCal Angle, same for all data being considered
   double bbtheta = myData[0].getBBAngle_Rad();//BB angle, same for all data
-  int sbs_field = myData[0].getSBSField(); // SBS field
-  double ntrack;
+
+  double ntrack, nhits;
+ //BBCal variables
   double BBtr_px[MAXNTRACKS], BBtr_py[MAXNTRACKS], BBtr_pz[MAXNTRACKS], BBtr_p[MAXNTRACKS];
   double vx[MAXNTRACKS], vy[MAXNTRACKS], vz[MAXNTRACKS];
-  double xhcal,yhcal,ehcal,nblk,nclus,SHnclus,PSnclus;
-  //Not sure exactly what these are usful for. Maybe describing energy in diff HCal blocks? Might not need all of these depending on the Histograms
+  double BBtr_n, BBps_x, BBps_y, BBps_e, BBsh_x, BBsh_y, BBsh_e,SHnclus,PSnclus;
+
+  //HCal variables
+  double xhcal,yhcal,ehcal,nblk,nclus;
   double atime[maxHCalChan], row[maxHCalRows], col[maxHCalCols], cblkid[maxHCalChan], cblke [maxHCalChan];
   UInt_t TBits;
-  double BBtr_n, BBps_x, BBps_y, BBps_e, BBsh_x, BBsh_y, BBsh_e, hcal_atime,hcal_tdctime,bbcal_atime;
+  double  hcal_atime,hcal_tdctime,bbcal_atime;
   double TDCT_id[maxTDCTrigChan], TDCT_tdc[maxTDCTrigChan], hodo_tmean[maxTDCTrigChan];
   int TDCTndata;
- 
+  double kineW2;
 
+  // Cut on global parameters from setup config
+  TTreeFormula *GlobalCut = new TTreeFormula( "GlobalCut", globalcut, C );
+      
   //Setup leaves
   C->SetMakeClass(1); //Allows for viewing of general detector params from Event_Branch
   C->SetBranchStatus("*",0);
@@ -345,8 +351,10 @@ void NucleonYields_plots( const char *setup_file_name){
   C->SetBranchStatus( "sbs.hcal.atimeblk", 1 );
   C->SetBranchStatus( "bb.sh.atimeblk", 1 );
   C->SetBranchStatus( "sbs.hcal.tdctimeblk", 1 );
+  C->SetBranchStatus("e.kine.W2",1);
 
   C->SetBranchAddress("bb.tr.n",&ntrack);
+  C->SetBranchAddress("bb.gem.track.nhits",&nhits);
   C->SetBranchAddress("bb.tr.vz",vz);
   C->SetBranchAddress("bb.tr.px",BBtr_px);
   C->SetBranchAddress("bb.tr.py",BBtr_py);
@@ -378,22 +386,36 @@ void NucleonYields_plots( const char *setup_file_name){
   C->SetBranchAddress( "bb.tdctrig.tdcelemID", TDCT_id );
   C->SetBranchAddress( "bb.sh.atimeblk", &bbcal_atime );
   C->SetBranchAddress( "Ndata.bb.tdctrig.tdcelemID", &TDCTndata );
-  
+  C->SetBranchAddress( "e.kine.W2", &kineW2 );
   
   //Declare output file
   //Setup the name for the output file
   TString outfile = makeOutputFileName(Exp,kin,SBS_field,targ);
   TFile *fout = new TFile(outfile,"RECREATE");
 
-   //Cut on global parameters from setup config
-   TEventList *elist = new TEventList("elist","");
-   C->Draw(">>elist",globalcut);
+  
+   int nentries = C->GetEntries();
 
+    
   // Initialize histograms
+  
+  //Check global cut information
+  TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
+  TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2);
+  TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), Cuts;",250,0.0,2.2);
+  TH1D *h_vert_z = new TH1D( "vert_z", "Vertex Position z-direction (m); m", 200, -0.2, 0.2 );
+  TH1D *h_vert_z_cut = new TH1D( "vert_z_cut", "Vertex Position z-direction (m), Cuts; m", 200, -0.2, 0.2 );
+  TH1D *h_HCal_E = new TH1D( "HCal_E", "HCal Cluster Energy (GeV); GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_nclus = new TH1D("HCal_nclus","HCal number of clusters meeting threshold;", 250,0,10);
+  TH1D *h_HCal_nclus_cut = new TH1D("HCal_nclus_cut","HCal number of clusters meeting threshold, Cuts;", 250,0,10);
+  TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,4.0);
+  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,4.0);
+  TH1D *h_nhits = new TH1D("nhits","Number of hits on track;",150, 0, 6);
+  TH1D *h_nhits_cut = new TH1D("nhits_cut","Number of hits on track;",150, 0, 6);
+
  // TH1D *h_atime = new TH1D( "atime", "HCal ADC Time, All Channels; ns", 160, 0, 160 );
  // TH2D *h_CvCh = new TH2D( "CvCh", "HCal Coeff Single Block Clusters; channel, GeV", maxHCalChan, 0, maxHCalChan, 200, 0, 1.0 );
-  TH1D *h_E_all = new TH1D( "E_all", "HCal Cluster Energy (GeV), All Channels; GeV", 250, 0, 0.4 );
-  TH1D *h_E_cut = new TH1D( "E_cut", "HCal Cluster Energy (GeV) All Cuts, All Channels; GeV", 250, 0, 0.4 );
  // TH1D *h_E_exp = new TH1D( "E_exp", "Expected Energy Dep in HCal; GeV", 100, 0, 0.2 );
   TH2D *hdxVE = new TH2D("dxVE","dx vs VE;x_{HCAL}-x_{expect} (m); GeV", 100, -4.0, 2.0, 100, 0, 0.5 );
   TH1D *hKElow = new TH1D( "KElow", "Lowest Elastic E Sampled in HCal (GeV)", 500, 0.0, 0.2 );
@@ -412,59 +434,58 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *h_hcalatime_bbcalatime_cut = new TH1D( "hHCalABBCalA_cut","HCal ADC time - BBCal time (ns),Cuts", 1300, -50, 100 );
 
   
-  TH1D *h_vert = new TH1D( "vert", "Vertex Position (m); m", 200, -0.4, 0.4 );
+
+ //W2 and timing info
  // TH2D *h_EvCh = new TH2D( "EvCh", "HCal Cluster E Single Block Clusters; channel, GeV", maxHCalChan, 0, maxHCalChan, 50, 0, 0.5 );
-  TH1D *h_W2recon = new TH1D( "W2recon", "W2 Reconstructed (GeV) No Cuts; GeV", 250, -1.0, 6.0 );
-  TH1D *h_W2recon_cut = new TH1D( "W2recon_cut", "W2 Reconstructed (GeV) with cuts; GeV", 250, -1.0, 3.0 );
+  TH1D *h_W2 = new TH1D( "W2", "W2 (GeV) No Cuts; GeV", 250, -1.0, 6.0 );
+  TH1D *h_W2recon = new TH1D( "W2recon", "W2 (GeV) No Cuts; GeV", 250, -1.0, 6.0 );
+  TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV) with cuts; GeV", 250, -1.0, 3.0 );
   TH1D *htimeDiff = new TH1D( "hDiff","HCal time - BBCal time (ns)", 1300, -500, 800 );
   TH1D *htimeDiff_cut = new TH1D( "hDiff_cut","HCal time - BBCal time (ns), All Cuts", 150, 450, 600 );
-  TH2D *hrowcol = new TH2D( "hrowcol", "HCal Block Position Elastics, HCal; Col; Row", maxHCalCols, 0, maxHCalCols, maxHCalRows, -maxHCalRows, 0 );
-  TH1D *h_Wrecon = new TH1D( "Wrecon", "W Reconstructed (GeV) no cuts; GeV", 250, -0.5, 3.0 );
-  TH1D *h_Wrecon_cut = new TH1D( "Wrecon_cuts", "W Reconstructed (GeV) With cuts; GeV", 250, -0.5, 3.0 );
-  TH1D *h_W2recon_fcut = new TH1D( "W2recon_fcut", "W2recon_fcut; GeV", 250, -1.0, 4.0 );
-  TH1D *h_Wrecon_fcut = new TH1D( "Wrecon_fcut", "Wrecon_fcut; GeV", 250, -1.0, 4.0 );
+  TH1D *h_W2_fcut = new TH1D( "W2recon_fcut", "W2recon_fcut; GeV", 250, -1.0, 4.0 );
+  
 
-
+  //Various HCal related yield plots
+  TH2D *hxy_nocut = new TH2D("hxy_nocut","HCal X  vs Y, no cuts;HCal Y  (m); HCal X  (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
+  TH2D *hxy_expect_nocut = new TH2D("hxy_expect_nocut","HCal X Expect vs Y Expect, no cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_cut = new TH2D("hxy_cut","HCal X  vs Y, cuts;HCal Y (m); HCal X (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
+  TH2D *hxy_expect_cut = new TH2D("hxy_expect_cut","HCal X Expect vs Y Expect, cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  
   TH2D *hdxdy_cut = new TH2D("dxdy_cut","HCal dxdy All Cuts, All Channels;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 350, -1.25, 1.25, 350, dx_low, dx_high );
   TH2D *hdxdy_all = new TH2D("dxdy_all","HCal dxdy All Channels ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH1D *hdx = new TH1D( "dx", "HCal dx (m); m", 250, dx_low, dx_high );
   TH1D *hdy = new TH1D( "dy", "HCal dy (m); m", 250, dy_low, dy_high );
   TH1D *hX = new TH1D( "X", "HCal X (m); m", 250, dx_low, dx_high );
-  TH1D *hX_expect = new TH1D( "X_expect", "HCal X Expect (m); m", 250, dx_low, dx_high );
-  TH1D *hY = new TH1D( "Y", "HCal Y (m); m", 100, dy_low, dy_high );
+  TH1D *hX_expect = new TH1D( "X_expect", "HCal X Expect (m); m", 250, dx_low, dx_high+1 );
+  TH1D *hY = new TH1D( "Y", "HCal Y (m); m", 250, dy_low, dy_high );
   TH1D *hY_expect = new TH1D( "Y_expect", "HCal Y Expect (m); m", 250, dy_low, dy_high );
   TH1D *hdx_cut = new TH1D( "dx_cut", "HCal dx (m), All cuts; m", 250, dx_low, dx_high );
   TH1D *hdy_cut = new TH1D( "dy_cut", "HCal dy (m), All cuts; m", 250, dy_low, dy_high );
   TH1D *hX_cut = new TH1D( "X_cut", "HCal X (m), All cuts; m", 250, dx_low, dx_high );
-  TH1D *hX_expect_cut = new TH1D( "X_expect_cut", "HCal X Expect (m), All cuts; m", 250, dx_low, dx_high );
+  TH1D *hX_expect_cut = new TH1D( "X_expect_cut", "HCal X Expect (m), All cuts; m", 250, dx_low, dx_high+1 );
   TH1D *hY_cut = new TH1D( "Y_cut", "HCal Y (m),All cuts; m", 250, dy_low, dy_high );
   TH1D *hY_expect_cut = new TH1D( "Y_expect_cut", "HCal Y Expect (m), All cuts; m", 250, dy_low, dy_high );
-  TH1D *hdr = new TH1D("dr","HCal dr (m), No Cuts; m", 200, -3, 3 );
-  TH1D *hdr_cut = new TH1D("dr_cut","HCal dr (m), All Cuts; m", 200, -3, 3 );
   TH2D *hdxdy_pcut = new TH2D("hdxdy_pcut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",12,-0.9,0.9,24,-2.165,1.435);
   TH2D *hdxdy_ncut = new TH2D("hdxdy_ncut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",12,-0.9,0.9,24,-2.165,1.435);
   TH2D *hdxdy_fcut = new TH2D("hdxdy_fcut",";y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH1D *hdx_fcut = new TH1D( "dx_fcut","; x_{HCAL}-x_{expect} (m)", 350, dx_low, dx_high );
   TH1D *hdy_fcut = new TH1D( "dy_fcut","; y_{HCAL}-y_{expect} (m)", 200, dy_low, dy_high );
-  TH2D *hxy = new TH2D("hxy",";y_{HCAL} (m); x_{HCAL} (m)",50,-1.25,1.25,50,dx_low,dx_high);
-  TH2D *hxy_fcut = new TH2D("hxy_cut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
+  TH2D *hxy_fcut = new TH2D("hxy_fcut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
   TH2D *hxy_pcut = new TH2D("hxy_pcut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
   TH2D *hxy_ncut = new TH2D("hxy_ncut",";y_{HCAL} (m); x_{HCAL} (m)",12,-0.9,0.9,24,-2.165,1.435);
  
-
-  TH1D *h_dpel = new TH1D("h_dpel","d_pel;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
-  TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,4.0);
-  TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2); 
-  TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel,All Cuts;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
-  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,4.0);
-  TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), All cuts;",250,0.0,2.2);
   
- //need to find where to fill these histograms
+  //From physics calculations
+  TH1D *h_dpel = new TH1D("h_dpel","d_pel;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
+  TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel,All Cuts;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
   TH1D *hE_ep = new TH1D("E_ep","Scattered Electron Energy",500,0.0,Ebeam*1.25);
   hE_ep->GetXaxis()->SetTitle("GeV"); 
-  TH1D *hE_eloss = new TH1D("E_eloss","Scattered Electron Energy Loss in Target",500,0.0, Ebeam *0.001);
-  TH1D *hE_ecorr = new TH1D("E_ecorr","Corrected Scattered Electron Energy",500,0.0,Ebeam*1.25);
-  TH2D *hE_ecorr_vs_vertex = new TH2D("hE_ecorr_vs_vertex",";z_{vertex} (m); E_{corr} (GeV)", 250, -0.125, 0.125, 500, 0,0.001);
+  TH1D *hE_eloss = new TH1D("E_eloss","Scattered Electron Energy Loss in Target",500,-0.001, Ebeam *0.003);
+  hE_eloss->GetXaxis()->SetTitle("GeV");
+  TH1D *hE_ecorr = new TH1D("E_ecorr","Corrected Scattered Electron Energy",500,Ebeam*0.995,Ebeam*1.005);
+  hE_ecorr->GetXaxis()->SetTitle("GeV");
+  TH2D *hE_ecorr_vs_vertex = new TH2D("hE_ecorr_vs_vertex",";z_{vertex} (m); E_{corr} (GeV)", 500, -0.15, 0.15, 500, Ebeam*0.995,Ebeam*1.005);
+  TH2D *hE_eloss_vs_vertex = new TH2D("hE_eloss_vs_vertex",";z_{vertex} (m); E_{loss} (GeV)", 500, -0.15, 0.15, 500, -0.001, Ebeam *0.003);
   TH1D *hE_pp = new TH1D("E_pp","Scattered Proton Energy",500, 0.0, Ebeam*1.25);
   hE_pp->GetXaxis()->SetTitle("GeV");
   TH1D *hKE_p = new TH1D( "KE_p", "Scattered Proton Kinetic Energy", 500, 0.0, Ebeam*1.25 );
@@ -474,9 +495,7 @@ void NucleonYields_plots( const char *setup_file_name){
   hQ2->GetXaxis()->SetTitle("GeV");
 
 
- //variables for script
-  long nevents = elist -> GetN();
-  int elastic_yield = 0;
+ 
   double pBeam = Ebeam/(1.0 +(Ebeam/M_p)*(1.0-cos(bbtheta)));
 
  //mean energy loss of the beam before scattering
@@ -485,59 +504,64 @@ void NucleonYields_plots( const char *setup_file_name){
  Eloss_outgoing += Alshieldthick * rho_Al*dEdx_Al;
  }
 
-  
-  for( int r =0; r<maxHCalRows; r++){
-    for (int c=0; c<maxHCalCols; c++){
-      hrowcol->Fill( (c+1), -(r+1) );
-    }
-  }
-  
- //create loop with the number of events from elist
- for(long nevent = 0;nevent < nevents; nevent++){
- if( nevent%10000 == 0 ){
- cout << "Loop: " << nevent << "/" << nevents << ". Elastic yield: " << elastic_yield << endl;
- }
- cout.flush();
- //Get sequential event from elist (parsed chain with cuts from setup file)
-  C->GetEntry( elist->GetEntry( nevent ) );
+ 
 
+ //Accounting and diagnostic variables
+ long nevent = 0;
+ int treenum = 0, currenttreenum = 0,currentrun =0;
+ double progress = 0.0;
+ 
+ cout << "Processing events.." << endl;
+ 
+ //create loop to display the progress bar
+
+
+
+ while (progress < 1.0){
+ //cout << progress<< " " << nevent<< " " <<nentries << endl;
+ int barwidth = 70;
+ int step =1;
+ if(nevent >= nentries){
+ //cout << "Hello" << endl;
+ break;
+ }
+ while(C->GetEntry(nevent++)){
+ currenttreenum = C->GetTreeNumber();
+ if( nevent == 1 || currenttreenum != treenum ){
+ //  cout << "My leaves" << endl;
+ treenum = currenttreenum;
+ GlobalCut->UpdateFormulaLeaves();
+ }
+ bool failedglobal = GlobalCut->EvalInstance(0) == 0; 
+  
 
   //Correct the beam energy with energy loss in target using vertex position
-  double Eloss = (vz[0]+(l_tgt/2))*rho_tgt*dEdx_tgt + uwallthick_LH2*rho_Al*dEdx_Al; //aproximately 3 MeV
+  //convert length to cm so units cancel properly
+  double Eloss = ((vz[0]+(l_tgt/2))*100)*rho_tgt*dEdx_tgt + uwallthick_LH2*rho_Al*dEdx_Al; //aproximately 3 MeV
   hE_eloss->Fill(Eloss);
+  hE_eloss_vs_vertex->Fill(vz[0],Eloss);
 
   double Ecorr = Ebeam-Eloss;
   hE_ecorr->Fill(Ecorr);
   hE_ecorr_vs_vertex->Fill(vz[0],Ecorr);
 
   double pcorr = BBtr_p[0]-Eloss_outgoing; //neglecting outgoing electron mass
-
-  //
   double p_ep = BBtr_p[0]; // Obtain the magnitude of scattered electron momentum
   double etheta = acos( BBtr_pz[0]/p_ep); //Use the uncorrected track momentum to reconstruct e' thetha
   double ephi = atan2( BBtr_py[0], BBtr_px[0] );
-
   TVector3 vertex( 0, 0, vz[0] ); //z location of vertex in hall coordinates
-
   TLorentzVector Pbeam(0,0,Ecorr,Ecorr);//Mass of e negligable
   TLorentzVector kprime( BBtr_px[0], BBtr_py[0], BBtr_pz[0], BBtr_p[0] );
-
-
   TLorentzVector Ptarg( 0, 0, 0, M_p ); //Just use proton?
-  
-
   TLorentzVector q = Pbeam - kprime; //Standard q-vector
   TLorentzVector PgammaN = Ptarg+q; // (-px, -py, Ebeam-pz,Mp+Ebeam-p)
- 
   double E_ep = sqrt(pow(M_e,2)+pow(BBtr_p[0],2)); //Obtain the scattered electron energy
   hE_ep->Fill(E_ep);
-
   double pelastic = Ecorr /(1.0+(Ecorr/M_p)*(1.0-cos(etheta)));
   double nu = Ecorr-E_ep; // Obtain energy transfer
   double pp = sqrt(pow(nu,2)+ 2*M_p*nu);
   double phinucleon = ephi + TMath::Pi(); //assume coplanarity
   double thetanucleon = acos( (Ecorr - BBtr_pz[0])/pp ); //use elastic constraint on nucleon kinematics
-
   TVector3 pNhat( sin(thetanucleon)*cos(phinucleon),sin(thetanucleon)*sin(phinucleon),cos(thetanucleon));
 
    //Define HCal coordinate system
@@ -545,7 +569,7 @@ void NucleonYields_plots( const char *setup_file_name){
    TVector3 hcal_xaxis(0,-1,0);
    TVector3 hcal_yaxis = hcal_zaxis.Cross( hcal_xaxis ).Unit();
    TVector3 hcal_origin = hcaldist *hcal_zaxis +HCALHeight*hcal_xaxis;
-
+   TVector3 hcalpos = hcal_origin + xhcal * hcal_xaxis + yhcal * hcal_yaxis;
   //Define interesection points for hadron vector
   double sintersect = (hcal_origin-vertex).Dot( hcal_zaxis )/pNhat.Dot( hcal_zaxis );
   TVector3 hcal_intersect = vertex + sintersect * pNhat;
@@ -554,10 +578,10 @@ void NucleonYields_plots( const char *setup_file_name){
   double xhcal_expect = (hcal_intersect-hcal_origin).Dot( hcal_xaxis );
   double yhcal_expect = (hcal_intersect-hcal_origin).Dot( hcal_yaxis );
 
-
-  //Get the invariant mass transfer W and four-momentum of the scattered nucleon
+  //calculate quantities of interest
+  double W2 = kineW2;//Get the invariant mass transfer W and four-momentum of the scattered nucleon
   double W2recon = PgammaN.M2();//M2 is magnitude squared of the 4-vector
-  double Wrecon = PgammaN.M();
+  //double Wrecon = PgammaN.M();
   double Q2 = 2*Ecorr*E_ep*( 1-cos(etheta) );
   hQ2->Fill(Q2);
 
@@ -573,25 +597,8 @@ void NucleonYields_plots( const char *setup_file_name){
   //define dx,dy, and dr 
   double dx = xhcal - xhcal_expect;
   double dy = yhcal - yhcal_expect;
-  double dr;
-  double r = sqrt(pow(dx,2)+ pow(dy,2)); 
-  if(r != 0){
-  //handle the case where the radius does not equal zero
-  double myang = TMath::ATan2(dx,dy);
-  double myang_deg = RadToDeg(myang);
-  //cout << myang_deg << endl; 
-  	if((myang_deg >= -180.00) && (myang_deg < 0.00) ){
-  	dr = (-1)*r;
-  	}else{
- 	 dr = r;  
-  	}
- }else{
- //handle if somehow r = 0
- dr = r;
- //cout << dr << endl;
- }
-  //cout << dr << " " << myang_deg << endl;
-
+  
+ 
   //Cut on BBCal and HCal trigger coincidence. 
   double bbcal_time=0., hcal_time=0., rf_time=0., edtm_time = 0.,bbcalL0_time=0.,bbcalHiVeto_time=0.;
   double hcaltdc_bbcal = hcal_tdctime - bbcal_atime; 
@@ -605,6 +612,16 @@ void NucleonYields_plots( const char *setup_file_name){
       if(TDCT_id[ihit]==0) hcal_time=TDCT_tdc[ihit];
       
      }*/
+
+  //Fill histos for global cuts
+  h_ntracks->Fill(ntrack);
+  h_PS_E->Fill(BBps_e);
+  h_vert_z->Fill(vz[0]);
+  h_HCal_E->Fill(ehcal);
+  h_HCal_nclus->Fill(nclus);
+  h_TPS_SH->Fill(BBps_e+BBsh_e);
+  h_nhits->Fill(nhits);
+
  //cout << hcal_time << " " << bbcal_time << endl;
   //double diff = hcal_time - bbcal_time;
   //
@@ -612,12 +629,11 @@ void NucleonYields_plots( const char *setup_file_name){
   //cout << yhcal - yhcal_expect << endl;
   //htimeDiff->Fill( diff );
   hdxdy_all->Fill( dy, dx);
-  h_vert->Fill(vz[0]);
-  hxy->Fill(yhcal,xhcal);
+ 
+  h_W2->Fill(W2);
   h_W2recon->Fill(W2recon);
-  h_E_all->Fill(ehcal);
-  h_Wrecon->Fill(Wrecon);
-  
+  hxy_nocut->Fill(yhcal,xhcal);
+  hxy_expect_nocut->Fill(yhcal_expect,xhcal_expect);
   hX_expect->Fill( xhcal_expect);
   hY_expect->Fill( yhcal_expect);
   hdx->Fill(dx );
@@ -625,72 +641,60 @@ void NucleonYields_plots( const char *setup_file_name){
   hX->Fill( xhcal);
   hY->Fill( yhcal );
   h_dpel->Fill(dpel);
-  h_TPS_SH->Fill(BBps_e+BBsh_e);
-  h_PS_E->Fill(BBps_e);
+  
 
-  hdr->Fill(dr);
+ 
   h_hcalatime->Fill(hcal_atime);
   h_bbcalatime->Fill(bbcal_atime);
   h_hcaltdctime->Fill(hcal_tdctime); 
   h_hcaltdctime_bbcalatime->Fill(hcaltdc_bbcal);
   h_hcalatime_bbcalatime->Fill(hcala_bbcal);
 
-  ///////////////
-  //    //PRIMARYCUTS//
-  //Cut on vertex inside target. This cut is already handled by global cut in some capacity
- // if( abs(BBtr_vz[0])>0.27 ) continue;
-  //Cut on coin
-  //if( TBits==1 ) continue; //TBits 1 is BBCal trig, TBits 5 is coin
-  //Atime cut hcal
-  //if( atime[0]>60. && atime[0]<90. ) //Observed HCal ADC time peak
-  //Cut on  W2
-  if((W2recon < W2_low)||(W2recon > W2_high)) continue; //Observed W2 peak
-  //if( abs(Wrecon-W_mean)>W_sigma ) continue; //Observed W2 peak
+   //PRIMARYCUTS//
+  bool goodW2 = (W2 >= W2_low) && (W2 <= W2_high);  
+  bool bad_dy = (abs(dy-dyO_n) > dysig_n) || (abs(dy-dyO_p)>dysig_p);
+  if(goodW2 && !failedglobal){  //Observed W2 peak
+ 
+  
   hdxdy_cut->Fill( dy, dx );
   hY_cut->Fill( yhcal );
   hdy_cut->Fill( dy );
-  if(abs(dy-dyO_n)>dysig_n || abs(dy-dyO_p)>dysig_p) continue;
-  //if( abs(diff-tdiff)>tdiffmax ) continue; //BBCal/HCal trigger difference time
-  //Bigbite track / HCal angular correlation cut
-  //ENDCUTS//
-  ///////////
-  //elastic_yield++;
+  hxy_cut->Fill(yhcal,xhcal);
+  hxy_expect_cut->Fill(yhcal_expect,xhcal_expect);
+  if(!bad_dy){
+
+  h_W2_cut->Fill(W2);
+  h_vert_z_cut->Fill(vz[0]);
+  h_PS_E_cut->Fill(BBps_e);
+  h_HCal_E_cut->Fill(ehcal);
+  h_HCal_nclus_cut->Fill(nclus);
+  h_TPS_SH_cut->Fill(BBps_e+BBsh_e);
+  h_nhits_cut->Fill(nhits);
+
   //Fill some histograms
+
   hKElow->Fill( KE_p*HCalSampFrac );
   hdxVE->Fill(dx,ehcal);
   //Fill delta plots and others
-  h_E_cut->Fill(ehcal);
   hdx_cut->Fill( dx );
   //h_atime->Fill( atime[0] );
   hX_cut->Fill( xhcal);
-  h_W2recon_cut->Fill(W2recon);
   hX_expect_cut->Fill( xhcal_expect);
   hY_expect_cut->Fill( yhcal_expect);
   //htimeDiff_cut->Fill( diff );
-  h_Wrecon_cut->Fill(Wrecon);
   h_dpel_cut->Fill(dpel);
-  h_TPS_SH_cut->Fill(BBps_e+BBsh_e);
-  h_PS_E_cut->Fill(BBps_e);
 
-  hdr_cut->Fill(dr);
+ 
+
+ 
 
   h_hcalatime_cut->Fill(hcal_atime);
   h_bbcalatime_cut->Fill(bbcal_atime);
   h_hcaltdctime_cut->Fill(hcal_tdctime);
   h_hcaltdctime_bbcalatime_cut->Fill(hcaltdc_bbcal);
   h_hcalatime_bbcalatime_cut->Fill(hcala_bbcal); 
-
-  ///////////////
-  //SECONDARYCUTS
-  //Reject events where the primary block in the primary cluster is on the edge of the acceptance
- // if( row[0]==0 ||
- // row[0]==23 ||
- // col[0]==0 ||
- // col[0]==11 )
- //  continue;
- // elastic_yield++;
-  //ENDCUTS
-  
+   }
+  }
   
  //Probably the place for acceptance/fiducial cuts
  
@@ -726,11 +730,10 @@ void NucleonYields_plots( const char *setup_file_name){
 	hdxdy_fcut->Fill(dy,dx);
         hdx_fcut->Fill(dx);
 	hdy_fcut->Fill(dy);
-	h_W2recon_fcut->Fill(W2recon);
-	h_Wrecon_fcut->Fill(Wrecon);
+	h_W2_fcut->Fill(W2);
 	hxy_fcut->Fill(yhcal,xhcal);
 	hxy_ncut->Fill(yhcal,xhcal);
-        elastic_yield++;
+        
 	}
  
  }else if (HCal_on == true && find_p == true){
@@ -739,15 +742,51 @@ void NucleonYields_plots( const char *setup_file_name){
 	hdxdy_fcut->Fill(dy,dx);
         hdx_fcut->Fill(dx);
         hdy_fcut->Fill(dy);
-        h_W2recon_fcut->Fill(W2recon);
-        h_Wrecon_fcut->Fill(Wrecon);
+        h_W2_fcut->Fill(W2);
         hxy_fcut->Fill(yhcal,xhcal);
         hxy_pcut->Fill(yhcal,xhcal);	
-	elastic_yield++;
+	
 	}
  }
-}
 
+ cout << "[";
+  int pos = barwidth*progress;
+
+  for(int i=0; i<barwidth; ++i){
+  //cout << step << endl;
+  if(i<pos){
+  cout << "_";
+  }else if(i==pos){
+   if(step%4==0){
+   cout << "(>0_0)>";
+   }
+   if(step%4==1){
+   cout << "<(0_0)>";
+   }
+   if(step%4==2){
+   cout << "<(0_0<)";
+   }
+   if(step%4==3){
+   cout << "<( ; )>";
+   }
+  }
+  else{
+  cout << " ";
+  }
+  }
+
+ progress = (double) ((nevent+1.0)/nentries);
+ cout << "]" << (int) (progress*100) << "%\r";
+ cout.flush();
+ if(nevent%10000==0){
+ step++;
+ }
+ //cout << progress<< " " << nevent<< " " <<nentries << endl;
+ 
+  }
+ }// This ends the double loop over the events
+ 
+ 
 
 //TH1D *hdx_fit = new TH1D( "dx_fit", "HCal dx fit (m), All cuts; m", 250, dx_low, dx_high );
 
@@ -788,7 +827,7 @@ hdx_residual->GetXaxis()->SetTitle("m");
  //Initialize fit parameters
  
  vector<double> myParam (13),myFParam (13);
- myParam= fit_Params(kin,sbs_field,targ);
+ myParam= fit_Params(kin,SBS_field,targ);
  double fit_low = myParam[11];
  double fit_high = myParam[12];
  
@@ -864,7 +903,6 @@ hdx_residual->GetXaxis()->SetTitle("m");
  
 
   //output the info to some files
-  cout << "Total calibration yield for run with current cuts: " << elastic_yield << "." << endl;
   c1->Write();
   TString plotname = outfile;
   plotname.ReplaceAll(".root",".pdf");

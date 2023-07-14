@@ -337,6 +337,7 @@ void HCalEfficiency( const char *setup_file_name){
   double hcaltheta = myData[0].getHCalAngle_Rad();//HCal Angle, same for all data being considered
   double bbtheta = myData[0].getBBAngle_Rad();//BB angle, same for all data
   int sbs_field = myData[0].getSBSField(); // SBS field
+  double sbs_dist = myData[0].getSBSDist(); //SBS dist
   double ntrack;
   
  //BBCal variables
@@ -577,7 +578,8 @@ void HCalEfficiency( const char *setup_file_name){
 
   
   //Correct the beam energy with energy loss in target using vertex position
-  double Eloss = (vz[0]+(l_tgt/2))*rho_tgt*dEdx_tgt + uwallthick_LH2*rho_Al*dEdx_Al; //aproximately 3 MeV
+  //Convert the length component from meter to cm so that way units properly cancel
+  double Eloss = ((vz[0]+(l_tgt/2))*100)*rho_tgt*dEdx_tgt + uwallthick_LH2*rho_Al*dEdx_Al; //aproximately 3 MeV
   hE_eloss->Fill(Eloss);
   double Ecorr = Ebeam-Eloss;
   hE_ecorr->Fill(Ecorr);
@@ -641,8 +643,8 @@ void HCalEfficiency( const char *setup_file_name){
     
     //Get theta pq for neutron and proton
     TVector3 NeutronDirection = (hcalpos - vertex).Unit();
-    double BdL = SBSfield * maxSBSfield * Dgap * (sbs_field/100); //scale crudely by magnetic field
-    double proton_deflection = tan( 0.3 * BdL / qvect_recon.Mag() ) * (hcaldist - (SBSdist + Dgap/2.0) );
+    double BdL =  maxSBSfield * Dgap * (sbs_field/100); //scale crudely by magnetic field
+    double proton_deflection = tan( 0.3 * BdL / qvect_recon.Mag() ) * (hcaldist - (sbs_dist + Dgap/2.0) );
     TVector3 ProtonDirection = (hcalpos + proton_deflection * hcal_xaxis - vertex).Unit();
     double thetapq = acos( ProtonDirection.Dot( qvect_recon.Unit() ) ); 
  

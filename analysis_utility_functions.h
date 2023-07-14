@@ -69,10 +69,10 @@ const Int_t photon = 22; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numb
 
 ////////////////////////////
 //////Static Target/Scattering Chamber Parameters
-const Double_t l_tgt = 0.15; // Length of the target (m)
+const Double_t l_tgt = 0.15; // Length of the target (m), keep in m and convert in equation
 const Double_t rho_tgt = 0.0723; // Density of target (g/cc)
 const Double_t rho_Al = 2.7; // Density of aluminum windows (g/cc)
-const Double_t celldiameter = 1.6*2.54/100; //m, right now this is a guess
+const Double_t celldiameter = 1.6*2.54; //cm, this is to properly cancel units
 const Double_t Ztgt = 1.0;
 const Double_t Atgt = 1.0;
 const Double_t Mmol_tgt = 1.008; //g/mol
@@ -114,17 +114,17 @@ param[11] = -2.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 else if(myKin == "SBS4" && sbs_field == 50 && targ == "LD2"){
-param[0] = 31.3045; //used for background
-param[1] = -11.274;//used for background
-param[2] = -8.53245;//used for background
-param[3] = 2.06596 ;//used for background
-param[4] = 0.954097; //used for background
-param[5] = 974.296; //used for proton
-param[6] = -1.08370; //used for proton
-param[7] = 0.18571; //used for proton
-param[8] = 335.47; //used for neutron
-param[9] = 0.0138818; //used for neutron
-param[10] = 0.158507; //used for neutron
+param[0] = 35.7374; //used for background p0
+param[1] = -12.8487;//used for background p1
+param[2] = -9.39925;//used for background p2
+param[3] = 2.26929 ;//used for background p3
+param[4] = 1.03330; //used for background p4
+param[5] = 1118.68; //used for proton amplitude
+param[6] = -1.08298; //used for proton mean
+param[7] = 0.187293; //used for proton sigma
+param[8] = 370.488; //used for neutron amplitude
+param[9] = 0.0112526; //used for neutron mean
+param[10] = 0.160564; //used for neutron sigma
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
