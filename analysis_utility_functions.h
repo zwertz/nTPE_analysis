@@ -98,33 +98,35 @@ const Double_t Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch
 //Function to intialize fit parameters. Currently only supports SBS-4, SBS8, SBS9
 vector<double> fit_Params(TString myKin,int sbs_field,TString targ){
 vector<double> param (13);
+//cout << (myKin == "SBS4") << " " << (sbs_field == 50) << " " << (targ == "LD2") << endl; 
+//cout << "kin: " << myKin << " SBS_field:  " << sbs_field << " targ:  " << targ << endl;
 if(myKin == "SBS4" && sbs_field == 30 && targ == "LD2"){
-param[0] = 392.598; //used for background p0
-param[1] = -149.831;//used for background p1
-param[2] = -94.1881;//used for background p1
-param[3] = 29.4916 ;//used for background p3
-param[4] = 7.71833; //used for background p4
-param[5] = 9375.82; //used for proton amplitude
-param[6] = -0.645559; //used for proton mean
-param[7] = 0.177031; //used for proton sigma
-param[8] = 3125.53; //used for neutron amplitude
-param[9] = 0.00105228; //used for neutron mean
-param[10] = 0.17046; //used for neutron sigma
+param[0] = 546.862; //used for background p0
+param[1] = -133.169;//used for background p1
+param[2] = -149.748;//used for background p1
+param[3] = 26.311 ;//used for background p3
+param[4] = 13.9809; //used for background p4
+param[5] = 10579.5; //used for proton amplitude
+param[6] = -0.645406; //used for proton mean
+param[7] = 0.182097; //used for proton sigma
+param[8] = 4101.12; //used for neutron amplitude
+param[9] = 0.00086083; //used for neutron mean
+param[10] = 0.172687; //used for neutron sigma
 param[11] = -2.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 else if(myKin == "SBS4" && sbs_field == 50 && targ == "LD2"){
-param[0] = 35.7374; //used for background p0
-param[1] = -12.8487;//used for background p1
-param[2] = -9.39925;//used for background p2
-param[3] = 2.26929 ;//used for background p3
-param[4] = 1.03330; //used for background p4
-param[5] = 1118.68; //used for proton amplitude
-param[6] = -1.08298; //used for proton mean
-param[7] = 0.187293; //used for proton sigma
-param[8] = 370.488; //used for neutron amplitude
-param[9] = 0.0112526; //used for neutron mean
-param[10] = 0.160564; //used for neutron sigma
+param[0] = 44.8485; //used for background p0
+param[1] = -16.0584;//used for background p1
+param[2] = -12.2555;//used for background p2
+param[3] = 3.03688 ;//used for background p3
+param[4] = 1.27111; //used for background p4
+param[5] = 932.605; //used for proton amplitude
+param[6] = -1.08484; //used for proton mean
+param[7] = 0.187685; //used for proton sigma
+param[8] = 374.483; //used for neutron amplitude
+param[9] = 0.0124946; //used for neutron mean
+param[10] = 0.161286; //used for neutron sigma
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
@@ -190,7 +192,7 @@ param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 
-if(myKin == "SBS4" && sbs_field == 0 && targ == "LH2"){
+else if(myKin == "SBS4" && sbs_field == 0 && targ == "LH2"){
 param[0] = 0.0; //used for background p0
 param[1] = 1.0;//used for background p1
 param[2] = 1.0;//used for background p2
@@ -203,6 +205,7 @@ param[7] = 0.0517; //used for proton sigma
 
 
 else{
+//cout << "kin: " << myKin << " SBS_field:  " << sbs_field << " targ:  " << targ << endl;
 //Error message
 cout << "Error: The kinematic setting you are analyzing does not have preset fit parameters. Plots will probably not make sense!";
 }
