@@ -92,7 +92,67 @@ const Double_t Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch
  string output_temp = "";
  TString output_file = TString(output_temp);
 
+//Generically implement a couple types of fits
+//4th-order polynomial
+double poly4_fit(double *x, double *param){
 
+double yint = param[0]; 
+double p1 = param[1];
+double p2 = param[2];
+double p3 = param[3];
+double p4 = param[4];
+
+double func = p4*(pow(x[0],4))+p3*(pow(x[0],3))+ p2*(pow(x[0],2))+p1*(x[0])+yint;
+return func;
+}
+//5th-order polynomial
+double poly5_fit(double *x, double *param){
+
+double yint = param[0];
+double p1 = param[1];
+double p2 = param[2];
+double p3 = param[3];
+double p4 = param[4];
+double p5 = param[5];
+
+double func = p5*(pow(x[0],5))+p4*(pow(x[0],4))+p3*(pow(x[0],3))+ p2*(pow(x[0],2))+p1*(x[0])+yint;
+return func;
+}
+//6th-order polynomial
+double poly6_fit(double *x, double *param){
+
+double yint = param[0];
+double p1 = param[1];
+double p2 = param[2];
+double p3 = param[3];
+double p4 = param[4];
+double p5 = param[5];
+double p6 = param[6];
+
+double func =p6*(pow(x[0],6))+p5*(pow(x[0],5))+p4*(pow(x[0],4))+p3*(pow(x[0],3))+ p2*(pow(x[0],2))+p1*(x[0])+yint;
+return func;
+}
+//Gaussian
+double gaussian_fit(double *x, double *param){
+
+double amp = param[0];
+double offset = param[1];
+double sigma = param[2];
+
+double func = amp*(exp(-0.5*pow((x[0]-offset)/sigma,2)));
+return func;
+}
+//Exponential 
+double expo_fit(double *x, double *param){
+
+double amp = param[0];
+double offset = param[1];
+double str = param[2];
+
+double func = amp*exp(offset+str*x[0]);
+return func;
+
+}
 
 
 //Function to intialize fit parameters. Currently only supports SBS-4, SBS8, SBS9

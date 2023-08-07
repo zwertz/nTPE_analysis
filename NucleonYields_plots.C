@@ -32,7 +32,8 @@ double W2_low,W2_high,tdiff,dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysi
 //Define some fits to be used for analysis
 //Background fit of a fourth-order polynomial
 bool reject_bkgd;
-double BG_fit(double *x, double *param){
+
+double BG_4fit(double *x, double *param){
 
 if((kin == "SBS4") && (SBS_field == 30) && reject_bkgd && x[0]> -1.55  && x[0] < 0.7 ){
 TF1::RejectPoint();
@@ -44,66 +45,63 @@ TF1::RejectPoint();
 return 0;
 }
 
-/*if((kin == "SBS8") && (SBS_field == 100) && reject_bkgd && x[0]> -2.3  && x[0] < 0.7 ){
+if((kin == "SBS8") && (SBS_field == 100) && reject_bkgd && x[0]> -2.3  && x[0] < 0.7 ){
 TF1::RejectPoint();
 return 0;
-}*/
+}
 
-/*if((kin == "SBS8") && (SBS_field == 50) && reject_bkgd && x[0]> -1.5  && x[0] < 0.7 ){
+if((kin == "SBS8") && (SBS_field == 50) && reject_bkgd && x[0]> -1.5  && x[0] < 0.7 ){
  TF1::RejectPoint();
  return 0;
-}*/
+}
 
-/*if((kin == "SBS8") && (SBS_field == 70) && reject_bkgd && x[0]> -1.6  && x[0] < 0.75 ){
+if((kin == "SBS8") && (SBS_field == 70) && reject_bkgd && x[0]> -1.6  && x[0] < 0.75 ){
 TF1::RejectPoint();
 return 0;
-}*/
+}
 
-/*if((kin == "SBS9") && (SBS_field == 70) && reject_bkgd && x[0]> -2.2  && x[0] < 0.75 ){
+if((kin == "SBS9") && (SBS_field == 70) && reject_bkgd && x[0]> -2.2  && x[0] < 0.75 ){
 TF1::RejectPoint();
 return 0;
-}*/
+}
 
-
-
-double e = param[0];
-double d = param[1];
-double c = param[2];
-double b = param[3];
-double a = param[4];
-
-double func =a*(pow(x[0],4))+b*(pow(x[0],3))+ c*(pow(x[0],2))+d*(x[0])+e;
-return func;
-
+return poly4_fit(x,param);
 }
 
 //Fit for protons using a Gaussian
 double P_fit(double *x, double *param){
-double amp = param[0];
-double offset = param[1];
-double sigma = param[2];
-
-double func = amp*(exp(-0.5*pow((x[0]-offset)/sigma,2)));
-return func;
+return gaussian_fit(x,param);
 }
 
 //Fit for neutrons using a Gaussian
 double N_fit(double *x, double *param){
-double amp = param[0];
-double offset = param[1];
-double sigma = param[2];
-
-double func = amp*(exp(-0.5*pow((x[0]-offset)/sigma,2)));
-return func;
+return gaussian_fit(x,param);
 }
+
 
 //Total fit to overlay. Combine all fits
+//Scale a poly4 fit for background to the neutron and proton signal
+//Does not totally work need a better signal sample. Probably from MC. Use old method till then
+
+/*TH1D *hdx_justp;
+TH1D *hdx_justn;
 double Tot_fit(double *x, double *param){
-double tot_func = BG_fit(x,&param[0])+P_fit(x,&param[5])+N_fit(x,&param[8]);
+double dx = x[0];
+double sig_scale_p = param[0];
+double sig_scale_n = param[1];
+double signal = sig_scale_p*hdx_justp->Interpolate(dx) + sig_scale_n*hdx_justn->Interpolate(dx);
+double tot_func = signal + poly4_fit(x,&param[2]);
+
 return tot_func;
 
-}
+}*/
+// Total fit to overlay.
+// Currently 2 Gaussians and a 4th order poly
+double Tot_fit(double *x, double *param){
 
+double tot_func = BG_4fit(x, &param[0]) + P_fit(x, &param[5]) + N_fit(x, & param[8]);
+return tot_func;
+}
 
 TCut globalcut = "";
 
@@ -476,6 +474,8 @@ void NucleonYields_plots( const char *setup_file_name){
   TH2D *hdxdy_ncut = new TH2D("hdxdy_ncut","HCal dxdy, nuetron fiducial;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH2D *hdxdy_pncut = new TH2D("hdxdy_pncut","HCal dxdy, just pn;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH1D *hdx_pncut = new TH1D( "dx_pncut","HCal dx just pn; x_{HCAL}-x_{expect} (m)", 250, dx_low, dx_high );
+  TH1D *hdx_pcut = new TH1D( "dx_pcut","HCal dx just pcut; x_{HCAL}-x_{expect} (m)", 250, dx_low, dx_high );
+  TH1D *hdx_ncut = new TH1D( "dx_ncut","HCal dx just ncut; x_{HCAL}-x_{expect} (m)", 250, dx_low, dx_high );
   TH1D *hdy_pncut = new TH1D( "dy_pncut","HCal dy just pn; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
   TH2D *hxy_pncut = new TH2D("hxy_pncut","HCal X vs Y, just pn;y_{HCAL} (m); x_{HCAL} (m)",300, -2.0, 2.0, 500, -2.5, 2.5);
   TH2D *hxy_pcut = new TH2D("hxy_pcut","HCal X vs Y, proton ;y_{HCAL} (m); x_{HCAL} (m)",300, -2.0, 2.0, 500, -2.5, 2.5);
@@ -765,11 +765,11 @@ void NucleonYields_plots( const char *setup_file_name){
  bool find_p = false, find_n = false, find_both = false;
 
  //equation for an ellipse around proton spot. 
- if(pow((dx-dxO_p)/dxsig_p,2)+pow((dy-dyO_p)/dysig_p,2)<= pow(2.5,2)){
+ if(pow((dx-dxO_p)/dxsig_p,2)+pow((dy-dyO_p)/dysig_p,2)<= pow(3.5,2)){
  find_p = true;
  }
  //equation for an ellipse around neutron spot.
- if(pow((dx-dxO_n)/dxsig_n,2)+pow((dy-dyO_n)/dysig_n,2)<= pow(2.5,2)){
+ if(pow((dx-dxO_n)/dxsig_n,2)+pow((dy-dyO_n)/dysig_n,2)<= pow(3.5,2)){
  find_n = true;
  }
  if(find_p && find_n){
@@ -790,7 +790,7 @@ void NucleonYields_plots( const char *setup_file_name){
  bool proton_hyp = ((xhcal_expect + dxmax) <= HCal_bot) && xhcal_expect >= HCal_top ;
 
 
- if(find_both){
+ /* if(find_both){
   if(neutron_hyp && proton_hyp){
         hdxdy_pncut->Fill(dy,dx);
         hdx_pncut->Fill(dx);
@@ -798,12 +798,13 @@ void NucleonYields_plots( const char *setup_file_name){
         h_W2_pncut->Fill(W2);
         hxy_pncut->Fill(yhcal,xhcal);
        
-  }
- }else if(find_n && !find_both){
+  }*/
+  if(find_n){
  	if(neutron_hyp){
 	//HCal_bot =(posHCalXi_MC+HCalblk_l_v_MC) = 1.29434 which is the edge of HCal we need to worry about find neutrons at a kinematic
 	hdxdy_pncut->Fill(dy,dx);
         hdx_pncut->Fill(dx);
+	hdx_ncut->Fill(dx);
 	hdy_pncut->Fill(dy);
 	h_W2_pncut->Fill(W2);
 	hxy_pncut->Fill(yhcal,xhcal);
@@ -811,12 +812,13 @@ void NucleonYields_plots( const char *setup_file_name){
         hxy_expect_ncut->Fill(yhcal_expect,xhcal_expect);     
 	}
  
- }else if (find_p && !find_both){
+ }else if (find_p){
  	if(proton_hyp){
 	//HCal_top =(posHCalXf_MC-HCalblk_l_v_MC) = -2.19435 which is the edge of HCal we need to worry about find protons at a kinematic
 	hdxdy_pncut->Fill(dy,dx);
         hdx_pncut->Fill(dx);
-        hdy_pncut->Fill(dy);
+        hdx_pcut->Fill(dx);
+	hdy_pncut->Fill(dy);
         h_W2_pncut->Fill(W2);
         hxy_pncut->Fill(yhcal,xhcal);
         hxy_pcut->Fill(yhcal,xhcal);
@@ -907,14 +909,14 @@ hdx_residual->GetXaxis()->SetTitle("m");
  el_pro.SetFillStyle(4005);
  el_pro.SetLineColor(2);
  el_pro.SetLineWidth(3);
- el_pro.DrawEllipse(dyO_p,dxO_p,dysig_p,dxsig_p,0,360,0);
+ el_pro.DrawEllipse(dyO_p,dxO_p,dysig_p,sqrt(3.5)*dxsig_p,0,360,0);
 
  
  TEllipse el_neu;
  el_neu.SetFillStyle(4005);
  el_neu.SetLineColor(4);
  el_neu.SetLineWidth(3);
- el_neu.DrawEllipse(dyO_n,dxO_n,dysig_n,dxsig_n,0,360,0);
+ el_neu.DrawEllipse(dyO_n,dxO_n,dysig_n,sqrt(3.5)*dxsig_n,0,360,0);
 
 
  //Sets to no fitting?
@@ -925,11 +927,12 @@ hdx_residual->GetXaxis()->SetTitle("m");
  //Working on fitting the dx plot
  c1->cd(2);
  //make a clone of the dx plot
-// TH1D *hdxcut_clone = (TH1D*)hdx_fcut->Clone("hdxcut_clone");
- TH1D *hdxcut_clone = (TH1D*)hdx_fidcut->Clone("hdxcut_clone");
+ // hdx_justp = (TH1D*)hdx_pcut->Clone("hdx_justp");
+ // hdx_justn = (TH1D*)hdx_ncut->Clone("hdx_justn");
+  TH1D *hdx_fidcut_clone = (TH1D*)hdx_fidcut->Clone("hdx_fidcut_clone");
  //Initialize fit parameters
  
- vector<double> myParam (13),myFParam (13);
+ vector<double> myParam (13);
  //cout << "kin: " << kin << " SBS_field:  " << SBS_field << " targ:  " << targ << endl;
  myParam= fit_Params(kin,SBS_field,targ);
  double fit_low = myParam[11];
@@ -948,8 +951,9 @@ hdx_residual->GetXaxis()->SetTitle("m");
  totalFit->SetParameters(&myParam[0]);
 
  //Q = minimum printing, R =fit using fitting range specified in the function range, B= Used when fixing or setting limits on one or more parameters in predefined function, + = add to list of fitted functions, V = verbose
- hdxcut_clone->Fit("totalfit","RB+");
- totalFit->GetParameters(myFParam.data());
+ hdx_fidcut_clone->Fit("totalfit","RB+");
+ //totalFit->GetParameters(myFParam.data());
+ double *myFParam = totalFit->GetParameters();
  TH1D *hdx_fit = (TH1D*) (totalFit->GetHistogram())->Clone("hdx_fit"); 
  hdx_residual->Add(hdx_fit,-1);
  /*for(int i=0; i<myParam.size();i++){
@@ -958,7 +962,7 @@ hdx_residual->GetXaxis()->SetTitle("m");
  }*/
  
 
- TF1 *bkgd = new TF1("bkgd",BG_fit,fit_low,fit_high,5);
+ TF1 *bkgd = new TF1("bkgd",BG_4fit,fit_low,fit_high,5);
  TF1 *proton = new TF1("proton",P_fit,fit_low,fit_high,3);
  TF1 *neutron = new TF1("neutron",N_fit,fit_low,fit_high,3);
  bkgd->SetLineColor(kBlack);
@@ -969,21 +973,23 @@ hdx_residual->GetXaxis()->SetTitle("m");
  proton->SetNpx(500);
  neutron->SetNpx(500);
  
+/* bkgd->SetParameters(&myFParam[0]);
+ proton->SetParameters(&myFParam[5]);
+ neutron->SetParameters(&myFParam[8]);*/
+ 
  bkgd->SetParameters(&myParam[0]);
  proton->SetParameters(&myParam[5]);
  neutron->SetParameters(&myParam[8]);
- 
- reject_bkgd = true;
- hdxcut_clone->Fit("bkgd","RV+");
- reject_bkgd = false;
+
+
 
  bkgd->Draw("same");
  proton->Draw("same");
  neutron->Draw("same");
 
  //Generate yields
- double p_yield = proton->Integral(dx_low,dx_high)/hdxcut_clone->GetBinWidth(1);
- double n_yield = neutron->Integral(dx_low,dx_high)/hdxcut_clone->GetBinWidth(1);
+ double p_yield = proton->Integral(dx_low,dx_high)/hdx_fidcut_clone->GetBinWidth(1);
+ double n_yield = neutron->Integral(dx_low,dx_high)/hdx_fidcut_clone->GetBinWidth(1);
 
  //blind yields
  blind_factor *p_blind = new blind_factor("GetOffMyLawnYou");
