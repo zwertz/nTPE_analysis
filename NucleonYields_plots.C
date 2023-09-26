@@ -1,6 +1,11 @@
-//Still need to implement fiducial cuts and fitting functions for background, protons, and neutrons. 
-
-
+//Author Ezekiel Wertz
+//Includes Acceptance Cut based on MC parameters
+//Includes acceptance matching and fiducial cuts
+//Includes W2 cut
+//Includes dy cut
+//Makes ellipses around protons and neutrons in lieu of a thetapq cut
+//Includes yield blinding
+//Basic yield fitting using a 4th order poly background and gaussians for the proton and neutron data
 
 
 #include "TF1.h"
@@ -24,7 +29,7 @@
 //Define max number of tracks per event
 int MAXNTRACKS;
 
-double tdiffmax,dx_low,dx_high,dy_low,dy_high; // Max deviation from coin via tdctrig cut
+double tdiffmax,dx_low,dx_high,dy_low,dy_high,dxsig_n_fac,dxsig_p_fac,dysig_fac; 
 TString Exp,kin,data_file_name,kinematic_file_name,targ;
 int SBS_field,useAlshield;
 double W2_low,W2_high,tdiff,dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dxmax;
@@ -35,12 +40,12 @@ bool reject_bkgd;
 
 double BG_4fit(double *x, double *param){
 
-if((kin == "SBS4") && (SBS_field == 30) && reject_bkgd && x[0]> -1.55  && x[0] < 0.7 ){
+if((kin == "SBS4") && (SBS_field == 30) && reject_bkgd && x[0]> -2.1  && x[0] < 1.15 ){
 TF1::RejectPoint();
 return 0;
 }
 
-if((kin == "SBS4") && (SBS_field == 50) && reject_bkgd && x[0]> -1.9  && x[0] < 0.7 ){
+if((kin == "SBS4") && (SBS_field == 50) && reject_bkgd && x[0]> -1.5  && x[0] < 0.7 ){
 TF1::RejectPoint();
 return 0;
 }
@@ -243,6 +248,18 @@ void parseMainConfig(const char *setup_file_name){
                         dy_high = val.Atof();
                         //cout << "dy plot higher bound" << dy_high << endl;
                         }
+                        else if(key == "dxsig_n_fac"){
+                        dxsig_n_fac = val.Atof();
+                        //cout << "dx sigma factor for neutron" << dxsig_n_fac << endl;
+                        }    
+			else if(key == "dxsig_p_fac"){
+                        dxsig_p_fac = val.Atof();
+                        //cout << "dx sigma factor for proton" << dxsig_p_fac << endl;
+                        } 
+			else if(key == "dysig_fac"){
+                        dysig_fac = val.Atof();
+                        //cout << "dy sigma factor " << dysig_fac << endl;
+                        }                   
 			else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
 			cout << "Found a key that this script can't handle. Fix that!" << endl;
@@ -265,6 +282,12 @@ void parseMainConfig(const char *setup_file_name){
 }
 
 void NucleonYields_plots( const char *setup_file_name){
+ 
+ // Define a clock to check macro processing time
+ TStopwatch *watch = new TStopwatch();
+ watch->Start( kTRUE );
+
+
  //Constructor for the data structure we will use to make plots
  TChain *C = new TChain("T");
 
@@ -484,6 +507,7 @@ void NucleonYields_plots( const char *setup_file_name){
   TH2D *hxy_expect_ncut = new TH2D("hxy_expect_ncut","HCal X Expect vs Y Expect, ncuts;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
   TH1D *hdx_anticut = new TH1D( "dx_anticut", "HCal dx (m),  anticut; m", 250, dx_low, dx_high );
   TH2D *hdxdy_anticut = new TH2D("dxdy_anticut","HCal dxdy anticut;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 350, -1.25, 1.25, 350, dx_low, dx_high );
+  
 
   //Fiducial cut histograms
   TH2D *hdxdy_fidcut = new TH2D("hdxdy_fidcut","HCal dxdy, fiducial cut;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
@@ -711,7 +735,7 @@ void NucleonYields_plots( const char *setup_file_name){
   hxy_acceptancecut ->Fill(yhcal,xhcal);
    
   bool goodW2 = (W2 >= W2_low) && (W2 <= W2_high);  
-  bool bad_dy = (abs(dy-dyO_n) > dysig_n) || (abs(dy-dyO_p)>dysig_p);
+  bool bad_dy = (abs(dy-dyO_n) > (dysig_fac*dysig_n)) || (abs(dy-dyO_p)>(dysig_fac*dysig_p));
   if(goodW2 && !failedglobal){  //Observed W2 peak
   
   h_bbEoverp_cut->Fill(BB_E_over_p);
@@ -765,11 +789,11 @@ void NucleonYields_plots( const char *setup_file_name){
  bool find_p = false, find_n = false, find_both = false;
 
  //equation for an ellipse around proton spot. 
- if(pow((dx-dxO_p)/dxsig_p,2)+pow((dy-dyO_p)/dysig_p,2)<= pow(3.5,2)){
+ if(pow((dx-dxO_p)/(dxsig_p_fac*dxsig_p),2)+pow((dy-dyO_p)/(dysig_fac*dysig_p),2)<= pow(1,2)){
  find_p = true;
  }
  //equation for an ellipse around neutron spot.
- if(pow((dx-dxO_n)/dxsig_n,2)+pow((dy-dyO_n)/dysig_n,2)<= pow(3.5,2)){
+ if(pow((dx-dxO_n)/(dxsig_n_fac*dxsig_n),2)+pow((dy-dyO_n)/(dysig_fac*dysig_n),2)<= pow(1,2)){
  find_n = true;
  }
  if(find_p && find_n){
@@ -895,9 +919,17 @@ void NucleonYields_plots( const char *setup_file_name){
 
 //TH1D *hdx_fit = new TH1D( "dx_fit", "HCal dx fit (m), All cuts; m", 250, dx_low, dx_high );
 
+//setup residual histo
 TH1D *hdx_residual = (TH1D*)hdx_fidcut->Clone("hdx_residual");
 hdx_residual->SetTitle("HCal dx residual (data - fit),All cuts");
 hdx_residual->GetXaxis()->SetTitle("m");
+
+//setup background subtracted histo
+TH1D *hdx_BGSub = (TH1D*)hdx_fidcut->Clone("hdx_BGSub");
+hdx_BGSub->SetTitle("HCal dx BG subtracted");
+hdx_BGSub->GetXaxis()->SetTitle("m");
+
+
  //Declare Canvas
  TCanvas *c1 = new TCanvas("c1","c1",1600,1200);
  c1->Divide(2,1);
@@ -909,14 +941,14 @@ hdx_residual->GetXaxis()->SetTitle("m");
  el_pro.SetFillStyle(4005);
  el_pro.SetLineColor(2);
  el_pro.SetLineWidth(3);
- el_pro.DrawEllipse(dyO_p,dxO_p,dysig_p,sqrt(3.5)*dxsig_p,0,360,0);
+ el_pro.DrawEllipse(dyO_p,dxO_p,sqrt(dysig_fac)*dysig_p,sqrt(dxsig_p_fac)*dxsig_p,0,360,0);
 
  
  TEllipse el_neu;
  el_neu.SetFillStyle(4005);
  el_neu.SetLineColor(4);
  el_neu.SetLineWidth(3);
- el_neu.DrawEllipse(dyO_n,dxO_n,dysig_n,sqrt(3.5)*dxsig_n,0,360,0);
+ el_neu.DrawEllipse(dyO_n,dxO_n,sqrt(dysig_fac)*dysig_n,sqrt(dxsig_n_fac)*dxsig_n,0,360,0);
 
 
  //Sets to no fitting?
@@ -968,7 +1000,7 @@ hdx_residual->GetXaxis()->SetTitle("m");
  bkgd->SetLineColor(kBlack);
  proton->SetLineColor(kRed);
  neutron->SetLineColor(kBlue);
-   
+
  bkgd->SetNpx(500);
  proton->SetNpx(500);
  neutron->SetNpx(500);
@@ -986,7 +1018,7 @@ hdx_residual->GetXaxis()->SetTitle("m");
  bkgd->Draw("same");
  proton->Draw("same");
  neutron->Draw("same");
-
+ 
  //Generate yields
  double p_yield = proton->Integral(dx_low,dx_high)/hdx_fidcut_clone->GetBinWidth(1);
  double n_yield = neutron->Integral(dx_low,dx_high)/hdx_fidcut_clone->GetBinWidth(1);
@@ -996,7 +1028,7 @@ hdx_residual->GetXaxis()->SetTitle("m");
  blind_factor *n_blind = new blind_factor("ILaughedTheToaster");
  double p_tot = p_blind->blind(p_yield);
  double n_tot = n_blind->blind(n_yield);
-
+ double ratio = n_tot/p_tot;
 // cout << p_blind->getBlindFac() << " " << n_blind->getBlindFac() << endl;
 
  //make legend
@@ -1006,14 +1038,44 @@ hdx_residual->GetXaxis()->SetTitle("m");
  legend->AddEntry(proton,Form("Proton Fit, Yield: %d",(int)p_tot),"l");
  legend->AddEntry(neutron,Form("Neutron Fit, Yield: %d",(int)n_tot),"l");
  legend->AddEntry(totalFit,"Total Fit","l");
+ legend->AddEntry((TObject*)0,Form("Ratio, R: %f",ratio),"");
  legend->Draw();
+
+
+ //Subtract the background from the data
+ hdx_BGSub->Add(bkgd,-1);
+ for( int i=1; i<=hdx_BGSub->GetNbinsX(); i++ ){
+ double binc = hdx_BGSub->GetBinContent(i);
+  if( binc<0.0 ){
+  hdx_BGSub->SetBinContent(i,0.0);
+  }
+ } 
+
 
  c1->Write();
 
+ TString reportfile = makeYieldReportFileName(Exp,kin,SBS_field,targ);
+ //Declare outfile
+ ofstream report;
+ report.open( reportfile );
  
+ report << "Yield report for SBS" << kin << " LD2 data at " << SBS_field << " percent field" << endl << endl;
+
+ cout << "Chi^2 for total fit: " << totalFit->GetChisquare() << endl;
+ report << "Chi^2 for total fit: " << totalFit->GetChisquare() << endl;
+
+ cout << "Blinded neutron yield: " << (int)n_tot << endl;
+ report << "Blinded neutron yield: " << (int)n_tot << endl;
+
+ cout << "Blinded proton yield: " << (int)p_tot << endl;
+ report << "Blinded proton yield: " << (int)p_tot << endl;
+
+ cout << "Ratio of neutron over proton yields: " << ratio << endl;
+ report << "Ratio of neutron over proton yields: " << ratio << endl;
+
+ report.close();
 
   //output the info to some files
-  c1->Write();
   TString plotname = outfile;
   plotname.ReplaceAll(".root",".pdf");
   c1->Print(plotname.Data(),"pdf");
@@ -1022,7 +1084,10 @@ hdx_residual->GetXaxis()->SetTitle("m");
   fout->Write();
 
 
-  cout << "Histograms populated and written to file." << endl;
+  watch->Stop();
+
+  // Send time efficiency report to console
+  cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;
 
 
 

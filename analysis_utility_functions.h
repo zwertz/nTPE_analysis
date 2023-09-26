@@ -1,5 +1,6 @@
-#ifndef ANALYSIS_UTILITY_FUNCTIONS.H
-#define ANALYSIS_UTILITY_FUNCTIONS.H
+#ifndef ANALYSIS_UTILITY_FUNCTIONS.H 
+
+#define ANALYSIS_UTILITY_FUNCTIONS.H 
 
 #include <iostream>
 #include <fstream>
@@ -161,32 +162,32 @@ vector<double> param (13);
 //cout << (myKin == "SBS4") << " " << (sbs_field == 50) << " " << (targ == "LD2") << endl; 
 //cout << "kin: " << myKin << " SBS_field:  " << sbs_field << " targ:  " << targ << endl;
 if(myKin == "SBS4" && sbs_field == 30 && targ == "LD2"){
-param[0] = 546.862; //used for background p0
-param[1] = -133.169;//used for background p1
-param[2] = -149.748;//used for background p1
-param[3] = 26.311 ;//used for background p3
-param[4] = 13.9809; //used for background p4
-param[5] = 10579.5; //used for proton amplitude
-param[6] = -0.645406; //used for proton mean
-param[7] = 0.182097; //used for proton sigma
-param[8] = 4101.12; //used for neutron amplitude
-param[9] = 0.00086083; //used for neutron mean
-param[10] = 0.172687; //used for neutron sigma
-param[11] = -2.0; // min value for fit
+param[0] = 1086.83; //used for background p0
+param[1] = -254.260;//used for background p1
+param[2] = -291.156;//used for background p1
+param[3] = 52.3022 ;//used for background p3
+param[4] = 28.4984; //used for background p4
+param[5] = 12943.1; //used for proton amplitude
+param[6] = -0.645471; //used for proton mean
+param[7] = 0.181710; //used for proton sigma
+param[8] = 5111.02; //used for neutron amplitude
+param[9] = 0.000555295; //used for neutron mean
+param[10] = 0.174124; //used for neutron sigma
+param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 else if(myKin == "SBS4" && sbs_field == 50 && targ == "LD2"){
-param[0] = 44.8485; //used for background p0
-param[1] = -16.0584;//used for background p1
-param[2] = -12.2555;//used for background p2
-param[3] = 3.03688 ;//used for background p3
-param[4] = 1.27111; //used for background p4
-param[5] = 932.605; //used for proton amplitude
-param[6] = -1.08484; //used for proton mean
-param[7] = 0.187685; //used for proton sigma
-param[8] = 374.483; //used for neutron amplitude
-param[9] = 0.0124946; //used for neutron mean
-param[10] = 0.161286; //used for neutron sigma
+param[0] = 122.570; //used for background p0
+param[1] = -44.2312;//used for background p1
+param[2] = -38.1333;//used for background p2
+param[3] = 9.83748 ;//used for background p3
+param[4] = 4.55384; //used for background p4
+param[5] = 1041.39; //used for proton amplitude
+param[6] = -1.08320; //used for proton mean
+param[7] = 0.184155; //used for proton sigma
+param[8] = 429.021; //used for neutron amplitude
+param[9] = 0.015794; //used for neutron mean
+param[10] = 0.157336; //used for neutron sigma
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
@@ -304,6 +305,12 @@ return outfile;
 
 TString makeReportFileName(TString exp, TString Kin, int SBS_field,TString target){
 TString outfile = Form("%s/efficiencyRep_Zeke_%s_%s_%s_%i.txt",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field);
+//cout << outfile << endl;
+return outfile;
+}
+
+TString makeYieldReportFileName(TString exp, TString Kin, int SBS_field,TString target){
+TString outfile = Form("%s/yieldRep_Zeke_%s_%s_%s_%i.txt",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field);
 //cout << outfile << endl;
 return outfile;
 }
