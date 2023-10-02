@@ -24,6 +24,32 @@ double proton_thresh_fac, neutron_thresh_fac;
 int num_bin;
 double proton_Efit_p0, proton_Efit_p1, neutron_Efit_p0, neutron_Efit_p1, pmin, pmax, Emin, Emax,dx_low,dx_high,dy_low,dy_high;
 
+double calc_pol_error( vector<double> par_err, int polN){
+
+        vector<double> vec_errors(polN, 0.0);
+        for(int i = 0; i < polN; i++ ){
+                vec_errors[i] = par_err[i];
+        }
+
+        double error;
+        double temp_error = 0.0;
+
+        for( int elem = 0; elem < vec_errors.size(); elem++ ){
+                temp_error += pow( vec_errors[elem], 2 );
+        }
+
+        error = sqrt( temp_error );
+        return error;
+}
+
+double calc_det_eff(double p_central, vector<double> par ){
+
+        double det_eff = 0.0;
+        det_eff = par[0] + par[1]*p_central + par[2]*pow( p_central, 2 ) + par[3]*pow( p_central, 3 ) + par[4]*pow( p_central, 4 );
+	
+        return det_eff;
+
+}
 
 //Make a function that parse the main config file
 void parseMainConfig(const char *setup_file_name){
@@ -165,12 +191,55 @@ void HCalEfficiency_MC( const char *setup_file_name){
 //parse function to get in the information that The One Config file has and is manipulated
 parseMainConfig(setup_file_name);
 
-
+//need to get the central momenta for the various kinematics
 kinematic_obj my_kin(kinematic_name,kin);
+kinematic_obj kin_sbs4(kinematic_name,"SBS4");
+kinematic_obj kin_sbs7(kinematic_name,"SBS7");
+kinematic_obj kin_sbs8(kinematic_name,"SBS8");
+kinematic_obj kin_sbs9(kinematic_name,"SBS9");
+kinematic_obj kin_sbs11(kinematic_name,"SBS11");
+kinematic_obj kin_sbs14(kinematic_name,"SBS14");
+
+//get it from the information stored in kinematic objects
+double sbs4_nucleonp = kin_sbs4.getNucleonP();
+double sbs7_nucleonp = kin_sbs7.getNucleonP();
+double sbs8_nucleonp = kin_sbs8.getNucleonP();
+double sbs9_nucleonp = kin_sbs9.getNucleonP();
+double sbs11_nucleonp = kin_sbs11.getNucleonP();
+double sbs14_nucleonp = kin_sbs14.getNucleonP();
+//Place to store information per kinematic for efficiency
+
+double prot_det_eff_sbs4 = 0.0;
+double prot_det_eff_sbs7 = 0.0;
+double prot_det_eff_sbs8 = 0.0;
+double prot_det_eff_sbs9 = 0.0;
+double prot_det_eff_sbs11 = 0.0;
+double prot_det_eff_sbs14 = 0.0;
+
+double neut_det_eff_sbs4 = 0.0;
+double neut_det_eff_sbs7 = 0.0;
+double neut_det_eff_sbs8 = 0.0;
+double neut_det_eff_sbs9 = 0.0;
+double neut_det_eff_sbs11 = 0.0;
+double neut_det_eff_sbs14 = 0.0;
+
+double prot_bin_det_eff_sbs4 = 0.0;
+double prot_bin_det_eff_sbs7 = 0.0;
+double prot_bin_det_eff_sbs8 = 0.0;
+double prot_bin_det_eff_sbs9 = 0.0;
+double prot_bin_det_eff_sbs14 = 0.0;
+double prot_bin_det_eff_sbs11 = 0.0;
+
+double neut_bin_det_eff_sbs4 = 0.0;
+double neut_bin_det_eff_sbs7 = 0.0;
+double neut_bin_det_eff_sbs8 = 0.0;
+double neut_bin_det_eff_sbs9 = 0.0;
+double neut_bin_det_eff_sbs14 = 0.0;
+double neut_bin_det_eff_sbs11 = 0.0;
 
 //Amount of momentum transferred per bin
 double p_step = (pmax-pmin)/num_bin;
-
+double E_step = (Emax-Emin)/num_bin;
 //data structure to hold HCal energy histograms. What we will use to determine efficiency
 vector<TH1D*> HCalE_proton (num_bin);
 vector<TH1D*> HCalE_cut_proton (num_bin);
@@ -178,15 +247,21 @@ vector<TH1D*> HCalE_neutron (num_bin);
 vector<TH1D*> HCalE_cut_neutron (num_bin);
 vector<double> threshold_proton;
 vector<double> threshold_neutron;
+TH1D *h_det_eff_p, *h_det_eff_n;
+TAxis *tax_h_det_eff_n, *tax_h_det_eff_p;
+
+//To nicely display the information on efficiency
+TPaveText *tpt_det_eff_fits, *tpt_det_eff_bins;
 
 //Reporting
 gStyle->SetOptFit();
 gStyle->SetEndErrorSize(0);
 TCanvas *c0 = new TCanvas("c0","HCal E vs Proton P",1600,1200);
 TCanvas *c1 = new TCanvas("c1","HCal E vs Neutron P",1600,1200);
-//Iteration 0 arrays
+//Information stored for later to make plots
 vector<double> bin_p_pro (num_bin);
 vector<double> bin_p_neu (num_bin);
+
 
 //For proton
 vector<double> Emean_p (num_bin);
@@ -198,24 +273,31 @@ vector<double> Emean_n (num_bin);
 vector<double> Esig_n (num_bin);
 vector<double> binerror_n (num_bin);
 
-//Iteration 1 arrays
+//Where we will eventually hold the calculate efficiency
 vector<double> HCalEff_proton (num_bin);
 vector<double> HCalEff_neutron (num_bin);
 vector<double> HCalEff_np_ratio (num_bin);
+
+
+int num_params = 5;
+vector<double> param_n (num_params), param_p (num_params);
+vector<double> param_n_error (5), param_p_error (5);
+double det_eff_err_p = 0.0;
+double det_eff_err_n = 0.0;
 
 
 //Will be used for HCal E vs nucleon momentum
 auto multi_graph = new TMultiGraph();
 //move the fits out here so they can be used anytime
 TF1 *proton_gaus_fit, *neutron_gaus_fit;
-
+TF1 *proton_det_eff, *neutron_det_eff;
 //setup output file
 TString outfile_name = Form("outfiles/mc_HCalEff_%s.root",kin.Data());
 TFile *file_out = new TFile(outfile_name,"RECREATE");
 
 //setup relevant histograms
-  TH2D *hEdepvP_p = new TH2D("hEdepvP_p","HCal E dep vs proton momentum; p_{proton} (GeV); E_{hcal} (GeV)", num_bin, pmin, pmax, 200, Emin, Emax);
-  TH2D *hEdepvP_n = new TH2D("hEdepvP_n","HCal E dep vs neutron momentum; p_{neutron} (GeV); E_{hcal} (GeV)", num_bin, pmin, pmax, 200, Emin, Emax);
+  TH2D *hEdepvP_p = new TH2D("hEdepvP_p",Form("HCal E dep vs proton momentum, %s; p_{proton} (GeV); E_{hcal} (GeV)",kin.Data()), num_bin, pmin, pmax, 200, Emin, Emax);
+  TH2D *hEdepvP_n = new TH2D("hEdepvP_n",Form("HCal E dep vs neutron momentum, %s; p_{neutron} (GeV); E_{hcal} (GeV)",kin.Data()), num_bin, pmin, pmax, 200, Emin, Emax);
   TH2D *hEdepvP_p_Ecut = new TH2D("hEdepvP_p_Ecut","HCal E dep vs proton momentum, Mean E / 4 cut; p_{proton} (GeV); E_{hcal} (GeV)", num_bin, pmin, pmax, 200, Emin, Emax);
   TH2D *hEdepvP_n_Ecut = new TH2D("hEdepvP_n_Ecut","HCal E dep vs neutron momentum, Mean E / 4 cut; p_{neutron} (GeV); E_{hcal} (GeV)", num_bin, pmin, pmax, 200, Emin, Emax);
  // TH1D *hdx_p = new TH1D("hdx_p","dx proton (sd track);x_{HCAL}-x_{expect} (m)", 400, dx_low, dx_high);
@@ -238,17 +320,18 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
   TH2D *hx_p_vp = new TH2D("hx_p_vp","x_{HCAL} vs proton p; p_{p} (GeV); x_{HCAL} (m)", num_bin, pmin, pmax, 400, dx_low, dx_high);
   TH2D *hy_p_vp = new TH2D("hy_p_vp","y_{HCAL} vs proton p; p_{p} (GeV); y_{HCAL} (m)", num_bin, pmin, pmax, 400, dy_low, dy_high);
 
-  TH2D *hxexp_n_vp = new TH2D("hxexp_n_vp","x exp vs neutron p; p_{p} (GeV); x_{expect} (m)", num_bin, pmin, pmax, 400, dx_low, dx_high);
-  TH2D *hyexp_n_vp = new TH2D("hyexp_n_vp","y exp vs neutron p; p_{p} (GeV); y_{expect} (m)", num_bin, pmin, pmax, 400, dy_low, dy_high);
-  TH2D *hx_n_vp = new TH2D("hx_n_vp","x_{HCAL} vs neutron p; p_{p} (GeV); x_{HCAL} (m)", num_bin, pmin, pmax, 400, dx_low, dx_high);
-  TH2D *hy_n_vp = new TH2D("hy_n_vp","y_{HCAL} vs neutron p; p_{p} (GeV); y_{HCAL} (m)", num_bin, pmin, pmax, 400, dy_low, dy_high);
-
   TH1D *hxexp_n = new TH1D("hxexp_n","x exp neutron (angles);x_{expect} (m)", 400, dx_low, dx_high);
   TH1D *hyexp_n = new TH1D("hyexp_n","y exp neutron (angles);y_{expect} (m)", 400, dy_low, dy_high);
   TH2D *hxyexp_n = new TH2D("hxyexp_n","x exp vs y exp neutron; y exp (m); x exp (m)", 400, dy_low, dy_high,400, dx_low, dx_high);
   TH1D *hx_n = new TH1D("hx_n","x_{HCAL} neutron; x_{HCAL} (m)", 400, dx_low, dx_high);
   TH1D *hy_n = new TH1D("hy_n","y_{HCAL} neutron; y_{HCAL} (m)", 400, dy_low, dy_high);
   TH2D *hxy_n = new TH2D("hxy_n","x_{HCAL} vs y_{HCAL} neutron ; y_{HCAL} (m); x_{HCAL} (m)", 400, dy_low, dy_high,400, dx_low, dx_high);
+
+  TH2D *hxexp_n_vp = new TH2D("hxexp_n_vp","x exp vs neutron p; p_{p} (GeV); x_{expect} (m)", num_bin, pmin, pmax, 400, dx_low, dx_high);
+  TH2D *hyexp_n_vp = new TH2D("hyexp_n_vp","y exp vs neutron p; p_{p} (GeV); y_{expect} (m)", num_bin, pmin, pmax, 400, dy_low, dy_high);
+  TH2D *hx_n_vp = new TH2D("hx_n_vp","x_{HCAL} vs neutron p; p_{p} (GeV); x_{HCAL} (m)", num_bin, pmin, pmax, 400, dx_low, dx_high);
+  TH2D *hy_n_vp = new TH2D("hy_n_vp","y_{HCAL} vs neutron p; p_{p} (GeV); y_{HCAL} (m)", num_bin, pmin, pmax, 400, dy_low, dy_high);
+
 
   //TH1D *h_W2 = new TH1D( "W2", "W2 (GeV); GeV", 250, 0.0, 100 );
 
@@ -257,28 +340,45 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
   TH2D *hdxvp_n = new TH2D("hdxvp_n","dx vs neutron p; p_{n} (GeV); x_{HCAL}-x_{expect} (m)", num_bin, pmin, pmax, 400, dx_low, dx_high);
   TH2D *hdyvp_n = new TH2D("hdyvp_n","dy vs neutron p; p_{n} (GeV); y_{HCAL}-y_{expect} (m)", num_bin, pmin, pmax, 400, dy_low, dy_high);
  
+  h_det_eff_p = new TH1D("h_det_eff_p", Form("Proton Detection Efficiency - SBS%s; Nucleon Momentum (GeV/c); Efficiency (%%)", kin.Data()), num_bin, pmin, pmax);
+  h_det_eff_n = new TH1D("h_det_eff_n", Form("Neutron Detection Efficiency - SBS%s; Nucleon Momentum (GeV/c); Efficiency (%%)", kin.Data()), num_bin, pmin, pmax);
+  
   //Get relevant kinematic information for HCal
   double hcaltheta = my_kin.getHCalAngle_Rad();
   double hcaldist = my_kin.getHCalDist();
   
-  //Define HCal coordinate system
- // TVector3 hcal_zaxis (sin(-hcaltheta),0,cos(-hcaltheta));
- // TVector3 hcal_xaxis(0,-1,0);
- // TVector3 hcal_yaxis = hcal_zaxis.Cross( hcal_xaxis ).Unit(); 
- // TVector3 hcal_origin = hcaldist *hcal_zaxis;
+  
   //cout << "HCal Theta:" << hcaltheta << " "<< my_kin.getHCalAngle_Deg() << " "<< (TMath::RadToDeg()*hcaltheta) << endl ;
   // re-allocate memory at each run to load different cuts/parameters
   TChain *C = nullptr;
   TString nuc;
 
-
+  
+  double histo_max;
+  double my_bin;
   //loop over the bins to initialize some histograms
   for(int bin=0; bin< num_bin; bin++){
-  HCalE_proton[bin] = new TH1D(Form("HCalE_proton_%i",bin),Form("HCalE_proton_bin_%i",bin),num_bin,Emin,Emax);
-  HCalE_cut_proton[bin] = new TH1D(Form("HCalE_cut_proton_%i",bin),Form("HCalE_cut_proton_bin_%i",bin),num_bin,Emin,Emax);
 
-  HCalE_neutron[bin] = new TH1D(Form("HCalE_neutron_%i",bin),Form("HCalE_neutron_bin_%i",bin),num_bin,Emin,Emax);
-  HCalE_cut_neutron[bin] = new TH1D(Form("HCalE_cut_neutron_%i",bin),Form("HCalE_cut_neutron_bin_%i",bin),num_bin,Emin,Emax);
+  //Have a histo_max that is able to accomodate multiple values depending on which bin. This is mainly to help get better fits
+  //need to make sure both axes scale properly or else integral function does it wrong due to variations in bin width
+  	if(bin < (num_bin/1.9)){
+	histo_max = Emax/1.6;
+	my_bin = num_bin/1.6;
+	}
+	if(bin < (num_bin/4.75)){
+	histo_max = Emax/2.5;
+	my_bin = num_bin/2.5;
+	}
+	if(bin < (num_bin/9.5)){
+	histo_max = Emax/4.0;
+	my_bin = num_bin/4.0;
+	}
+  
+  HCalE_proton[bin] = new TH1D(Form("HCalE_proton_%i",bin),Form("HCalE_proton_bin_%i",bin),my_bin,Emin,histo_max);
+  HCalE_cut_proton[bin] = new TH1D(Form("HCalE_cut_proton_%i",bin),Form("HCalE_cut_proton_bin_%i",bin),my_bin,Emin,histo_max);
+
+  HCalE_neutron[bin] = new TH1D(Form("HCalE_neutron_%i",bin),Form("HCalE_neutron_bin_%i",bin),my_bin,Emin,histo_max);
+  HCalE_cut_neutron[bin] = new TH1D(Form("HCalE_cut_neutron_%i",bin),Form("HCalE_cut_neutron_bin_%i",bin),my_bin,Emin,histo_max);
   }
 
 
@@ -387,13 +487,13 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
 		}
 		
 		//We got a proton that should have been a neutron
-		//if(n==0 &&(((int) (mc_fnucl))==0) ){
-		//continue;
-		//}
+		if(n==0 &&(((int) (mc_fnucl))==0) ){
+		continue;
+		}
 		//We got a nuetron that should have been a proton
-		//if(n==1 && (((int) (mc_fnucl))==1)){
-		//continue;
-		//}
+		if(n==1 && (((int) (mc_fnucl))==1)){
+		continue;
+		}
 
 	
   	//Calculate using MC nucleon momenta
@@ -445,6 +545,7 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
 			cout << "Warning nucleon momentum bin out of bounds at " << bin_i << endl;
                         continue;
 			}
+		//Denominator
 		HCalE_proton[bin_i]->Fill(ehcal);
 		}            
 
@@ -475,7 +576,7 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
                         cout << "Warning nucleon momentum bin out of bounds at " << bin_i << endl;
                         continue;
                         }
-
+		//Denominator
 		HCalE_neutron[bin_i]->Fill(ehcal);
 		}
 
@@ -497,8 +598,6 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
 		//Reject lower energy peaks
 		if(max_bin_p < 2){
 			while(HCalE_proton[bin]->GetBinContent(max_bin_p+1) <= HCalE_proton[bin]->GetBinContent(max_bin_p)){
-			cout << HCalE_proton[bin]->GetBinContent(max_bin_p+1) << " "<< HCalE_proton[bin]->GetBinContent(max_bin_p)<<" " << bin << " " << max_bin_p << endl;
-			//cout << "Part 3" << endl;
 			max_bin_p++;
 			}
 		HCalE_proton[bin]->GetXaxis()->SetRange(max_bin_p+1, HCalE_proton[bin]->GetNbinsX());
@@ -508,7 +607,7 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
 		bin_width_p = HCalE_proton[bin]->GetBinWidth(max_bin_p);
 		stdDev_p = HCalE_proton[bin]->GetStdDev();
 		} //end of if condition
-	//Fit the histogram
+	//Fit the histogram using the bin information as first guess
 	double lower_bin_p = Emin + max_bin_p*bin_width_p - stdDev_p;
 	double upper_bin_p = Emin + max_bin_p*bin_width_p + stdDev_p;
 	proton_gaus_fit->SetLineWidth(4);
@@ -540,14 +639,14 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
 			while(HCalE_neutron[bin]->GetBinContent(max_bin_n+1) <= HCalE_neutron[bin]->GetBinContent(max_bin_n)){
                         max_bin_n++;
                         }
-                HCalE_neutron[bin]->GetXaxis()->SetRange(max_bin_n+1, HCalE_neutron[bin]->GetNbinsX());
+                //HCalE_neutron[bin]->GetXaxis()->SetRange(max_bin_n+1, HCalE_neutron[bin]->GetNbinsX());
                 max_bin_n = HCalE_neutron[bin]->GetMaximumBin();
                 max_bin_center_n = HCalE_neutron[bin]->GetXaxis()->GetBinCenter(max_bin_n);
                 max_count_n = HCalE_neutron[bin]->GetMaximum();
                 bin_width_n = HCalE_neutron[bin]->GetBinWidth(max_bin_n);
         	stdDev_n = HCalE_neutron[bin]->GetStdDev();
             	} //end of if condition
-	//Fit the histogram
+	//Fit the histogram using the bin information as first guess
 	double lower_bin_n = Emin + max_bin_n*bin_width_n - stdDev_n;
         double upper_bin_n = Emin + max_bin_n*bin_width_n + stdDev_n;
 	neutron_gaus_fit->SetLineWidth(4);
@@ -618,6 +717,7 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
   
   //Check for energy above threshold
   	if(ehcal > threshold_proton[bin_i]){
+	//Numerator
 	HCalE_cut_proton[bin_i]->Fill(ehcal);
 	hEdepvP_p_Ecut->Fill(mc_p,ehcal);
 	}
@@ -630,6 +730,7 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
 
    //Check for energy above threshold
     if(ehcal > threshold_neutron[bin_i]){
+	//Numerator
         HCalE_cut_neutron[bin_i]->Fill(ehcal);
         hEdepvP_n_Ecut->Fill(mc_p,ehcal);
         }
@@ -641,7 +742,11 @@ TFile *file_out = new TFile(outfile_name,"RECREATE");
 C->Reset();
 }//end nucleon loop
 
+ h_det_eff_p->GetYaxis()->SetRangeUser(80, 100.0);
+ h_det_eff_p->Draw("same");
 
+ h_det_eff_n->GetYaxis()->SetRangeUser(80, 100.0);
+ h_det_eff_n->Draw("same");
 
  //Draw relevant graphs
 
@@ -711,10 +816,10 @@ TCanvas *c2 = new TCanvas("c2","HCal Efficiency Ratio (N/P)(E_{T}=1/4 E_{peak})"
 TCanvas *c3 = new TCanvas("c3","HCal Efficiency Ratio (N/P)(E_{T}=1/4 E_{peak})",1600,1200);
 TCanvas *c4 = new TCanvas("c4","HCal dx Sigma vs proton p (MC)",1600,1200);
 TCanvas *c5 = new TCanvas("c5","HCal dx Sigma vs neutron p (MC)",1600,1200);
-TCanvas *c6 = new TCanvas("c6","HCal X Res vs Nucleon p (MC)",1600,1200);
+TCanvas *c6 = new TCanvas("c6",Form("HCal X Res vs Nucleon p (MC), %s",kin.Data()),1600,1200);
 TCanvas *c7 = new TCanvas("c7","HCal dy Sigma vs proton p (MC)",1600,1200);
 TCanvas *c8 = new TCanvas("c8","HCal dy Sigma vs neutron p (MC)",1600,1200);
-TCanvas *c9 = new TCanvas("c9","HCal Y Res vs Nucleon p (MC)",1600,1200);
+TCanvas *c9 = new TCanvas("c9",Form("HCal Y Res vs Nucleon p (MC), %s",kin.Data()),1600,1200);
 TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,1200);
 
  //Now we will calculation efficiencies
@@ -726,6 +831,10 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   double proton_eff = ((HCalE_cut_proton[b]->Integral())/(HCalE_proton[b]->Integral()))*100; 
   double neutron_eff = ((HCalE_cut_neutron[b]->Integral())/(HCalE_neutron[b]->Integral()))*100;
 
+  h_det_eff_p->SetBinContent(b,proton_eff);
+  h_det_eff_n->SetBinContent(b,neutron_eff);
+
+  //cout << "Bin: " << b << " Proton: " << proton_eff << " Neutron: " << neutron_eff << endl;
   HCalEff_proton[b] = proton_eff;
   HCalEff_neutron[b] = neutron_eff;
 
@@ -738,8 +847,10 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   bin_p_neu_array = bin_p_neu.data();
   double * HCalEff_neutron_arr = HCalEff_neutron.data();
   double * HCalEff_proton_arr = HCalEff_proton.data();
+   
+  gStyle->SetOptFit(0);
   c2->cd();
-  //Draw graphs
+  //Draw graph for efficiency for proton
   auto graph_p = new TGraph(num_bin,bin_p_pro_array,HCalEff_proton_arr);
   graph_p->SetTitle("Proton");
   graph_p->SetMarkerColor(kRed);
@@ -749,6 +860,33 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   graph_p->SetLineWidth(0);
   m_graph->Add(graph_p);
 
+  //fit the data points
+  proton_det_eff = new TF1("proton_det_eff",poly4_fit,pmin+0.4,pmax,5);  
+  proton_det_eff->SetLineStyle(5);
+  proton_det_eff->SetLineColor(kRed);
+  graph_p->Fit("proton_det_eff","SRMQEF+"); 
+  
+  
+  //get the error on the fit
+  for(int i=0; i< num_params;i++){
+  param_p_error[i] = proton_det_eff->GetParError(i);
+  //store the values for the fit
+  param_p[i] = proton_det_eff->GetParameter(i);
+  }  
+  
+  //do a better calculation
+  det_eff_err_p = calc_pol_error(param_p_error,4);
+
+  //calculate the efficiency at each kinematic from the fit
+  prot_det_eff_sbs4 = calc_det_eff(sbs4_nucleonp,param_p);
+  prot_det_eff_sbs7 = calc_det_eff(sbs7_nucleonp,param_p);
+  prot_det_eff_sbs8 = calc_det_eff(sbs8_nucleonp,param_p);
+  prot_det_eff_sbs9 = calc_det_eff(sbs9_nucleonp,param_p);
+  prot_det_eff_sbs11 = calc_det_eff(sbs11_nucleonp,param_p);
+  prot_det_eff_sbs14 = calc_det_eff(sbs14_nucleonp,param_p);
+
+
+  //draw the graph for the efficiency for the neutron
   auto graph_n = new TGraph(num_bin,bin_p_neu_array,HCalEff_neutron_arr);
   graph_n->SetTitle("Neutron");
   graph_n->SetMarkerColor(kCyan);
@@ -758,7 +896,34 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   graph_n->SetLineWidth(0);
   m_graph->Add(graph_n);
 
-  m_graph->SetTitle(Form("HCAL Efficiency (E_{T}=1/%0.0d E_{Peak}) (4x4 cluster)",proton_thresh_fac));
+  //fit the graph
+  neutron_det_eff = new TF1("neutron_det_eff",poly4_fit,pmin,pmax,5);
+  neutron_det_eff->SetLineStyle(5);
+  neutron_det_eff->SetLineColor(kCyan);
+  graph_n->Fit("neutron_det_eff","SRMQEF+");
+
+  
+  
+  //get the error on the fit
+  for(int i=0; i< num_params;i++){
+  param_n_error[i] = neutron_det_eff->GetParError(i);
+  //store the value from the fit
+  param_n[i] = neutron_det_eff->GetParameter(i);
+  }   
+
+
+  //do a better calculation
+  det_eff_err_n = calc_pol_error(param_n_error,4);
+
+  //calculate the efficiency at each kinematic from the fit
+  neut_det_eff_sbs4 = calc_det_eff(sbs4_nucleonp,param_n);
+  neut_det_eff_sbs7 = calc_det_eff(sbs7_nucleonp,param_n);
+  neut_det_eff_sbs8 = calc_det_eff(sbs8_nucleonp,param_n);
+  neut_det_eff_sbs9 = calc_det_eff(sbs9_nucleonp,param_n);
+  neut_det_eff_sbs11 = calc_det_eff(sbs11_nucleonp,param_n);
+  neut_det_eff_sbs14 = calc_det_eff(sbs14_nucleonp,param_n);
+
+  m_graph->SetTitle(Form("HCAL Efficiency (E_{T}=1/%0.0f E_{Peak}) (4x4 cluster), %s",proton_thresh_fac,kin.Data()));
   m_graph->GetXaxis()->SetTitle("Nucleon Momentum (GeV/c)");
   m_graph->GetYaxis()->SetTitle("Efficiency (%)");
   m_graph->Draw("AP");
@@ -766,8 +931,148 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   m_graph->GetYaxis()->SetRangeUser(80.,105.);
 
   c2->Modified();
+  
+  c2->BuildLegend(0.8,0.8,0.9,0.9,"","");
+ 
+  //Get efficiency information from bins
+  tax_h_det_eff_n = h_det_eff_n->GetXaxis();
+  tax_h_det_eff_p = h_det_eff_p->GetXaxis();
 
-  c2->BuildLegend();
+  prot_bin_det_eff_sbs4 = h_det_eff_p->GetBinContent(tax_h_det_eff_p->FindBin(sbs4_nucleonp));
+  prot_bin_det_eff_sbs7 = h_det_eff_p->GetBinContent(tax_h_det_eff_p->FindBin(sbs7_nucleonp));
+  prot_bin_det_eff_sbs8 = h_det_eff_p->GetBinContent(tax_h_det_eff_p->FindBin(sbs8_nucleonp));
+  prot_bin_det_eff_sbs9 = h_det_eff_p->GetBinContent(tax_h_det_eff_p->FindBin(sbs9_nucleonp));
+  prot_bin_det_eff_sbs14 = h_det_eff_p->GetBinContent(tax_h_det_eff_p->FindBin(sbs14_nucleonp));
+  prot_bin_det_eff_sbs11 = h_det_eff_p->GetBinContent(tax_h_det_eff_p->FindBin(sbs11_nucleonp));
+
+  neut_bin_det_eff_sbs4 = h_det_eff_n->GetBinContent(tax_h_det_eff_n->FindBin(sbs4_nucleonp));
+  neut_bin_det_eff_sbs7 = h_det_eff_n->GetBinContent(tax_h_det_eff_n->FindBin(sbs7_nucleonp));
+  neut_bin_det_eff_sbs8 = h_det_eff_n->GetBinContent(tax_h_det_eff_n->FindBin(sbs8_nucleonp));
+  neut_bin_det_eff_sbs9 = h_det_eff_n->GetBinContent(tax_h_det_eff_n->FindBin(sbs9_nucleonp));
+  neut_bin_det_eff_sbs14 = h_det_eff_n->GetBinContent(tax_h_det_eff_n->FindBin(sbs14_nucleonp));
+  neut_bin_det_eff_sbs11 = h_det_eff_n->GetBinContent(tax_h_det_eff_n->FindBin(sbs11_nucleonp));
+
+  //Draw lines for each kinematic
+  TLine *tl_sbs4 = new TLine(sbs4_nucleonp, 80, sbs4_nucleonp, 100);
+  tl_sbs4->SetLineStyle(3);
+  tl_sbs4->Draw("SAME");
+
+  TLine *tl_sbs7 = new TLine(sbs7_nucleonp, 80, sbs7_nucleonp, 100);
+  tl_sbs7->SetLineStyle(3);
+  tl_sbs7->Draw("SAME");
+
+  TLine *tl_sbs8 = new TLine(sbs8_nucleonp, 80, sbs8_nucleonp, 100);
+  tl_sbs8->SetLineStyle(3);
+  tl_sbs8->Draw("SAME");
+
+  TLine *tl_sbs9 = new TLine(sbs9_nucleonp, 80, sbs9_nucleonp, 100);
+  tl_sbs9->SetLineStyle(3);
+  tl_sbs9->Draw("SAME");
+
+  TLine *tl_sbs14 = new TLine(sbs14_nucleonp, 80, sbs14_nucleonp, 100);
+  tl_sbs14->SetLineStyle(3);
+  tl_sbs14->Draw("SAME");
+
+  TLine *tl_sbs11 = new TLine(sbs11_nucleonp, 80, sbs11_nucleonp, 100);
+  tl_sbs11->SetLineStyle(3);
+  tl_sbs11->Draw("SAME");
+
+  //Draw information for showing efficienicies based on kinematic and fits
+  tpt_det_eff_fits = new TPaveText(8.15, 82, 9.25, 92.5);
+  tpt_det_eff_fits->SetFillColor(kAzure+10);
+  tpt_det_eff_fits->SetBorderSize(1);
+
+  tpt_det_eff_fits->AddText("Efficiencies from Fit");
+  tpt_det_eff_fits->AddText("");
+  tpt_det_eff_fits->AddText("SBS4:");
+  tpt_det_eff_fits->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_det_eff_sbs4, neut_det_eff_sbs4));
+  tpt_det_eff_fits->AddText("");
+
+  tpt_det_eff_fits->AddText("SBS7:");
+  tpt_det_eff_fits->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_det_eff_sbs7, neut_det_eff_sbs7));
+  tpt_det_eff_fits->AddText("");
+
+  tpt_det_eff_fits->AddText("SBS8:");
+  tpt_det_eff_fits->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_det_eff_sbs8, neut_det_eff_sbs8));
+  tpt_det_eff_fits->AddText("");
+
+  tpt_det_eff_fits->AddText("SBS9:");
+  tpt_det_eff_fits->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_det_eff_sbs9, neut_det_eff_sbs9));
+  tpt_det_eff_fits->AddText("");
+
+  tpt_det_eff_fits->AddText("SBS14:");
+  tpt_det_eff_fits->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_det_eff_sbs14, neut_det_eff_sbs14));
+  tpt_det_eff_fits->AddText("");
+
+  tpt_det_eff_fits->AddText("SBS11:");
+  tpt_det_eff_fits->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_det_eff_sbs11, neut_det_eff_sbs11));
+
+  tpt_det_eff_fits->Draw("same");
+  
+  TText *txt_sbs4 = new TText(sbs4_nucleonp - 0.001, 82.5, "SBS4");
+  txt_sbs4->SetTextAngle(90);
+  txt_sbs4->SetTextSize(0.035f);
+  txt_sbs4->Draw("same");
+
+  TText *txt_sbs7 = new TText(sbs7_nucleonp - 0.001, 82.5, "SBS7");
+  txt_sbs7->SetTextAngle(90);
+  txt_sbs7->SetTextSize(0.035f);
+  txt_sbs7->Draw("same");
+
+  TText *txt_sbs8 = new TText(sbs8_nucleonp - 0.05, 82.5, "SBS8");
+  txt_sbs8->SetTextAngle(90);
+  txt_sbs8->SetTextSize(0.035f);
+  txt_sbs8->Draw("same");
+
+  TText *txt_sbs9 = new TText(sbs9_nucleonp + 0.15, 82.5, "SBS9");
+  txt_sbs9->SetTextAngle(90);
+  txt_sbs9->SetTextSize(0.035f);
+  txt_sbs9->Draw("same");
+
+  TText *txt_sbs14 = new TText(sbs14_nucleonp - 0.001, 82.5, "SBS14");
+  txt_sbs14->SetTextAngle(90);
+  txt_sbs14->SetTextSize(0.035f);
+  txt_sbs14->Draw("same");
+
+  TText *txt_sbs11 = new TText(sbs11_nucleonp - 0.001, 82.5, "SBS11");
+  txt_sbs11->SetTextAngle(90);
+  txt_sbs11->SetTextSize(0.035f);
+  txt_sbs11->Draw("same");
+
+  //Draw efficiency information based on bins
+  tpt_det_eff_bins = new TPaveText(6.4, 82, 7.475, 92.5);
+  tpt_det_eff_bins->SetFillColor(kGreen);
+  tpt_det_eff_bins->SetBorderSize(1);
+
+  tpt_det_eff_bins->AddText("Efficiencies from p Bin");
+  tpt_det_eff_bins->AddText("");
+  tpt_det_eff_bins->AddText("SBS4:");
+  tpt_det_eff_bins->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_bin_det_eff_sbs4, neut_bin_det_eff_sbs4));
+  tpt_det_eff_bins->AddText("");
+
+  tpt_det_eff_bins->AddText("SBS7:");
+  tpt_det_eff_bins->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_bin_det_eff_sbs7, neut_bin_det_eff_sbs7));
+  tpt_det_eff_bins->AddText("");
+
+  tpt_det_eff_bins->AddText("SBS8:");
+  tpt_det_eff_bins->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_bin_det_eff_sbs8, neut_bin_det_eff_sbs8));
+  tpt_det_eff_bins->AddText("");
+
+  tpt_det_eff_bins->AddText("SBS9:");
+  tpt_det_eff_bins->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_bin_det_eff_sbs9, neut_bin_det_eff_sbs9));
+  tpt_det_eff_bins->AddText("");
+
+  tpt_det_eff_bins->AddText("SBS14:");
+  tpt_det_eff_bins->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_bin_det_eff_sbs14, neut_bin_det_eff_sbs14));
+  tpt_det_eff_bins->AddText("");
+
+  tpt_det_eff_bins->AddText("SBS11:");
+  tpt_det_eff_bins->AddText(Form("p: %0.1f%%, n: %0.1f%%", prot_bin_det_eff_sbs11, neut_bin_det_eff_sbs11));
+
+
+  tpt_det_eff_bins->Draw("same");
+
+
 
   c2->Write();
 
@@ -778,7 +1083,7 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
  double * HCalEff_np_ratio_arr = HCalEff_np_ratio.data();
 
  auto gr_r = new TGraph(num_bin,bin_p_pro_array,HCalEff_np_ratio_arr);
- gr_r->SetTitle("HCal Efficiency Ratio (N/P)(E_{T}=1/4 E_{peak})");
+ gr_r->SetTitle(Form("HCal Efficiency Ratio (N/P)(E_{T}=1/4 E_{peak}), %s",kin.Data()));
  gr_r->SetMarkerColor(kMagenta);
  gr_r->SetMarkerStyle(20);
  gr_r->SetMarkerSize(1);
@@ -879,6 +1184,7 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   double * dbin_p_arr = dbin_p.data();
   double * dxsig_p_arr = dxsig_p.data();
 
+  gStyle->SetOptFit(0);
   hdxvp_p->Draw("colz");
   c4->Update();
 
@@ -926,7 +1232,7 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   c6->SetGrid();
   c6->cd();
 
-  dx_mg->SetTitle("HCal X Res vs Nucleon p (MC)");
+  dx_mg->SetTitle(Form("HCal X Res vs Nucleon p (MC), %s", kin.Data()));
   dx_mg->GetXaxis()->SetTitle("Nucleon p (GeV)");
   dx_mg->GetYaxis()->SetTitle("dx sigma (m)");
   dx_mg->Draw("AP");
@@ -985,7 +1291,7 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   c9->SetGrid();
   c9->cd();
 
-  dy_mg->SetTitle("HCal Y Res vs Nucleon p (MC)");
+  dy_mg->SetTitle(Form("HCal Y Res vs Nucleon p (MC), %s",kin.Data()));
   dy_mg->GetXaxis()->SetTitle("Nucleon p (GeV)");
   dy_mg->GetYaxis()->SetTitle("dy sigma (m)");
   dy_mg->Draw("AP");
@@ -996,7 +1302,7 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   c10->SetGrid();
   c10->cd();
 
-  all_mg->SetTitle("HCal Spatial Resolution (4x4 cluster)");
+  all_mg->SetTitle(Form("HCal Spatial Resolution (4x4 cluster), %s",kin.Data()));
   all_mg->GetXaxis()->SetTitle("Nucleon momentum (GeV/c)");
   all_mg->GetYaxis()->SetTitle("X and Y Resolution (RMS) (m)");
   all_mg->Draw("AP");

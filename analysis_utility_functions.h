@@ -322,7 +322,7 @@ class kinematic_obj{
 //Define some private variables we will fill later.
 private:
 TString kinematic;
-double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist,Q2;
+double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist,Q2,electron_p,nucleon_p;
 public:
 //Let's make a constructor which will just directly parse the kinematic file and store the info 
 kinematic_obj(const char *kinematic_file_name,TString Kin){
@@ -351,7 +351,9 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
                 hcaltheta = (((TObjString*) (*myobjs)[6])->GetString()).Atof();
                 hcaldist = (((TObjString*) (*myobjs)[7])->GetString()).Atof();
 		Q2 = (((TObjString*) (*myobjs)[8])->GetString()).Atof();
-                //cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist << " Q^2 " << Q2  << endl;
+		electron_p = (((TObjString*) (*myobjs)[9])->GetString()).Atof();
+		nucleon_p = (((TObjString*) (*myobjs)[10])->GetString()).Atof();
+                //cout << "Kinematic " << datKin << "  Beam Energy " << Ebeam << " BB Angle  " << bbtheta << " BB Dist " << bbdist << " SBS Angle  " << sbstheta << " SBS Dist  " << sbsdist << " HCal Angle " << hcaltheta <<  " HCal Dist  " << hcaldist << " Q^2 " << Q2 << " electron_p " << electron_p << " nucelon_p " << nucelon_p  << endl;
 		gotKin = true;
                 //cout << gotRun << endl;
  		}
@@ -403,6 +405,12 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
  double getQ2(){
         return Q2;
         }
+ double getElectronP(){
+	return electron_p;
+	}
+ double getNucleonP(){
+        return nucleon_p;
+        }
  
  void printKinInfo(){
         cout << "------------------------"                              << endl
@@ -417,7 +425,10 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
              << Form("HCal angle in Degress: %f,",getHCalAngle_Deg())   << endl
              << Form("HCal angle in Radians: %f,",getHCalAngle_Rad())   << endl
              << Form("HCal Distance: %f,",getHCalDist())                << endl
-             << "------------------------"                              << endl;
+	     << Form("Q2: %f,",getQ2())			                << endl
+	     << Form("Electron p: %f,",getElectronP())                  << endl
+             << Form("Nucleon p: %f,",getNucleonP())                    << endl
+	     << "------------------------"                              << endl;
  }
 };
 
@@ -428,7 +439,7 @@ class data_object{
 //Define some private variables we will fill later.
 private:
 TString pass,kinematic,target,input_file;
-double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist;
+double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist,Q2,electron_p,nucleon_p;
 int run,sbs_field;
 string input_directory = "/work/halla/sbs/sbs-gmn";
 
@@ -504,6 +515,9 @@ public:
  sbsdist = datKin.getSBSDist();
  hcaltheta = datKin.getHCalAngle_Deg();
  hcaldist = datKin.getHCalDist();
+ Q2=datKin.getQ2();
+ electron_p = datKin.getElectronP();
+ nucleon_p = datKin.getNucleonP();
 
  input_file = makeInputFileName();
 }
@@ -554,6 +568,16 @@ public:
  double getHCalDist(){
         return hcaldist;
         }
+ double getQ2(){
+        return Q2;
+        }
+ double getElectronP(){
+        return electron_p;
+        }
+ double getNucleonP(){
+        return nucleon_p;
+        }
+
  string getInputDir(){
 	return input_directory;
 	}
@@ -577,6 +601,9 @@ public:
              << Form("HCal angle in Degress: %f,",getHCalAngle_Deg())   << endl
              << Form("HCal angle in Radians: %f,",getHCalAngle_Rad())   << endl
              << Form("HCal Distance: %f,",getHCalDist())                << endl
+	     << Form("Q2: %f,",getQ2())                                 << endl
+             << Form("Electron p: %f,",getElectronP())                  << endl
+             << Form("Nucleon p: %f,",getNucleonP())                    << endl
              << "------------------------"                              << endl;
  }
 };
