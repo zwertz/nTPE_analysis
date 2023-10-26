@@ -24,7 +24,7 @@ double tdiffmax, tdiff; // Max deviation from coin via tdctrig cut
 TString Exp,kin,data_file_name,kinematic_file_name,targ;
 int SBS_field,useAlshield;
 double dx_low,dx_high,dy_low,dy_high,dxO_p,dyO_p,dxsig_p,dysig_p; //used for fitting proton information
-
+double thetapq_low,thetapq_high;
 //Use for Earm fit tuning
 double W2_mean,W2_sigma; // min and max value in W2 plot range
 double W2fitmax; //Max value in W2 plot range
@@ -98,21 +98,6 @@ return tot_func;
 
 }
 
-
-double poly4_fit(double *x, double *param){
-
-double e = param[0];
-double d = param[1];
-double c = param[2];
-double b = param[3];
-double a = param[4];
-
-double func =a*(pow(x[0],4))+b*(pow(x[0],3))+ c*(pow(x[0],2))+d*(x[0])+e;
-return func;
-
-}
-
-
 TH1D *hW2elastic;
 double W2total(double *x, double *par){ //get poly fit to bg with scaled fit to "pure elastics"
   double W2 = x[0];
@@ -122,7 +107,7 @@ double W2total(double *x, double *par){ //get poly fit to bg with scaled fit to 
 }
 
 TH1D *hW2elasticdxanticutresiduals;
-Double_t W2totaldxanticutresiduals(double *x, double *par){ //get poly fit to bg with scaled fit to "pure elastics"
+double W2totaldxanticutresiduals(double *x, double *par){ //get poly fit to bg with scaled fit to "pure elastics"
   double W2 = x[0];
   double sig_scale = par[0];
   double signal = sig_scale * hW2elasticdxanticutresiduals->Interpolate(W2);
@@ -149,8 +134,8 @@ void parseMainConfig(const char *setup_file_name){
 	 if(!myline.BeginsWith("#")){
 	 TObjArray *demObjs = myline.Tokenize(" ");
 		int numObjs = demObjs->GetEntries();
-	 		for(int i=0;i < numObjs;i++){
-	 		//store the run numbers in the vector as ints
+	 		for(int i=0;i < numObjs;i++){	 		
+			//store the run numbers in the vector as ints
 	 		int runnum_temp = (((TObjString*) (*demObjs)[i])->GetString()).Atoi();
 	 		runnums.push_back(runnum_temp);
 			//cout << runnum_temp << " ";
@@ -281,6 +266,14 @@ void parseMainConfig(const char *setup_file_name){
                         else if(key == "hcalemin"){
                         hcalemin = val.Atof();
                         //cout << "hcalemin" << hcalemin << endl;
+                        }
+			else if(key == "thetapq_low"){
+                        thetapq_low = val.Atof();
+                        //cout << "thetapq_low" << thetapq_low << endl;
+                        }
+			else if(key == "thetapq_high"){
+                        thetapq_high = val.Atof();
+                        //cout << "thetapq_high" << thetapq_high << endl;
                         }                        
 			else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
@@ -343,7 +336,7 @@ void HCalEfficiency( const char *setup_file_name){
  //BBCal variables
   double BBtr_px[MAXNTRACKS], BBtr_py[MAXNTRACKS], BBtr_pz[MAXNTRACKS], BBtr_p[MAXNTRACKS];
   double vx[MAXNTRACKS], vy[MAXNTRACKS], vz[MAXNTRACKS],BBtr_chi2[MAXNTRACKS],BBtr_tgth[MAXNTRACKS],BBtr_tgph[MAXNTRACKS];
-  double BBtr_n, BBps_x, BBps_y, BBps_e, BBsh_x, BBsh_y, BBsh_e, GEMtr_hits, BBeoverp;  
+  double BBtr_n, BBps_x, BBps_y, BBps_e, BBsh_x, BBsh_y, BBsh_e, nhits, BBeoverp;  
 
 
   //HCal variables
@@ -352,7 +345,7 @@ void HCalEfficiency( const char *setup_file_name){
   double xhcal,yhcal,ehcal,nclus,nblk, hcal_atime,hcal_tdctime,bbcal_atime;
   double TDCT_id[maxTDCTrigChan], TDCT_tdc[maxTDCTrigChan], hodo_tmean[maxTDCTrigChan];
   int TDCTndata;
-  double kineW2;
+  double kineW2,kineQ2,kine_bbthetaprime,kine_nu,kine_omega,kine_phq,kine_thetaq;
  
 
   //Cut on global parameters from setup config
@@ -385,6 +378,12 @@ void HCalEfficiency( const char *setup_file_name){
   C->SetBranchStatus("bb.gem.track.nhits", 1);
   C->SetBranchStatus("bb.etot_over_p",1);
   C->SetBranchStatus("e.kine.W2",1);
+  C->SetBranchStatus( "e.kine.Q2", 1 );
+  C->SetBranchStatus( "e.kine.angle", 1 );
+  C->SetBranchStatus( "e.kine.nu", 1 );
+  C->SetBranchStatus( "e.kine.omega", 1 );
+  C->SetBranchStatus( "e.kine.ph_q", 1 );
+  C->SetBranchStatus( "e.kine.th_q", 1 );
 
   C->SetBranchStatus("sbs.hcal.x",1);
   C->SetBranchStatus("sbs.hcal.y",1);
@@ -405,8 +404,8 @@ void HCalEfficiency( const char *setup_file_name){
   C->SetBranchStatus( "sbs.hcal.tdctimeblk", 1 );
 
   C->SetBranchAddress("bb.tr.n",&ntrack);
-  C->SetBranchAddress("bb.tr.vz",vx);
-  C->SetBranchAddress("bb.tr.vz",vy);
+  C->SetBranchAddress("bb.tr.vx",vx);
+  C->SetBranchAddress("bb.tr.vy",vy);
   C->SetBranchAddress("bb.tr.vz",vz);
   C->SetBranchAddress("bb.tr.px",BBtr_px);
   C->SetBranchAddress("bb.tr.py",BBtr_py);
@@ -444,7 +443,13 @@ void HCalEfficiency( const char *setup_file_name){
   C->SetBranchAddress( "bb.sh.atimeblk", &bbcal_atime );
   C->SetBranchAddress( "Ndata.bb.tdctrig.tdcelemID", &TDCTndata );
   C->SetBranchAddress( "e.kine.W2", &kineW2 );
-  C->SetBranchAddress( "bb.gem.track.nhits", &GEMtr_hits );
+  C->SetBranchAddress( "e.kine.Q2", &kineQ2 );
+  C->SetBranchAddress( "e.kine.angle", &kine_bbthetaprime );
+  C->SetBranchAddress( "e.kine.omega", &kine_omega );
+  C->SetBranchAddress( "e.kine.ph_q", &kine_phq );
+  C->SetBranchAddress( "e.kine.th_q", &kine_thetaq );
+
+  C->SetBranchAddress( "bb.gem.track.nhits", &nhits );
   C->SetBranchAddress( "bb.etot_over_p", &BBeoverp );
   
   //Declare output file
@@ -483,7 +488,7 @@ void HCalEfficiency( const char *setup_file_name){
   double dxmin = dxO_p - 2*dxsig_p;
   double dxmax = dxO_p + 2*dxsig_p;
   double dymin = dyO_p - 2*dysig_p;
-  double dymax = dxO_p + 2*dxsig_p;
+  double dymax = dyO_p + 2*dxsig_p;
 
   //3sig dx
   double dxmin3 = dxO_p - 3*dxsig_p;
@@ -520,8 +525,10 @@ void HCalEfficiency( const char *setup_file_name){
   TH1D *hdx_BBcut_dycut_MC = new TH1D("hdx_BBcut_dycut_MC","dx, BBelas and dy cut, MC param;x_{HCAL}-x_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
   TH1D *hW2_dycut = new TH1D( "hW2_dycut","W^{2}, hcal dy cut;W^{2} (GeV^{2});", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *hdx_allcut = new TH1D("hdx_allcut","dx, W^{2} and dy cut;x_{HCAL}-x_{expect} (m)",hcalbins, hcalfit_l, hcalfit_h);
-  TH1D *hdx_allcut_MC = new TH1D("hdx_allcut_MC","dx, W^{2} and dy cut, MC param;x_{HCAL}-x_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
-  
+  TH1D *hdx_cut_MC = new TH1D("hdx_cut_MC","dx, W^{2} and dy cut, MC param;x_{HCAL}-x_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
+  TH1D *hdx_anticut_MC = new TH1D("hdx_anticut_MC","dx, W^{2} and dy anticut, MC param;x_{HCAL}-x_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
+  TH1D *hdy_cut_MC = new TH1D("hdy_cut_MC","dy, W^{2} and dy cut, MC param;y_{HCAL}-y_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
+  TH1D *hdy_anticut_MC = new TH1D("hdy_anticut_MC","dy, W^{2} and dy anticut, MC param;y_{HCAL}-y_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
 
   //Anticuts
   TH1D *hW2_badYcut = new TH1D( "hW2_badYcut","W^{2}, hcal dy anticut;W^{2} (GeV)", binfac*W2fitmax, 0.0, W2fitmax );
@@ -534,24 +541,61 @@ void HCalEfficiency( const char *setup_file_name){
   TH1D *hdx_fgcut_MC = new TH1D( "hdx_fgcut_MC","hcal dx, failed global anticut, MC param;x_{HCAL}-x_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
   TH1D *hW2_anticut = new TH1D( "hW2_anticut","W^{2} elastic anticut (global e-arm and hcal dy/dx);W^{2} (GeV^{2});", binfac*W2fitmax, 0.0, W2fitmax );
 
+  //Check global cut information
+  TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
+  TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2);
+  TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), Cuts;",250,0.0,2.2);
+  TH1D *h_vert_z = new TH1D( "vert_z", "Vertex Position z-direction (m); m", 200, -0.2, 0.2 );
+  TH1D *h_vert_z_cut = new TH1D( "vert_z_cut", "Vertex Position z-direction (m), Cuts; m", 200, -0.2, 0.2 );
+  TH1D *h_HCal_E = new TH1D( "HCal_E", "HCal Cluster Energy (GeV); GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_nclus = new TH1D("HCal_nclus","HCal number of clusters meeting threshold;", 250,0,10);
+  TH1D *h_HCal_nclus_cut = new TH1D("HCal_nclus_cut","HCal number of clusters meeting threshold, Cuts;", 250,0,10);
+  TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,4.0);
+  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,4.0);
+  TH1D *h_nhits = new TH1D("nhits","Number of hits on track;",150, 0, 6);
+  TH1D *h_nhits_cut = new TH1D("nhits_cut","Number of hits on track;",150, 0, 6);
+  TH1D *h_bbtrp_nocut = new TH1D("bbtrp_nocut","BigBite Track Momentum (GeV), no cut;",300, 0.0, 4.0);
+  TH1D *h_bbtrp_cut = new TH1D("bbtrp_cut","BigBite Track Momentum (GeV), cuts;",300, 0.0, 4.0);
+  TH1D *h_bbEoverp_nocut = new TH1D("bbEoverp_nocut","BigBite E over p, no cut;",100, 0.0, 2.0);
+  TH1D *h_bbEoverp_cut = new TH1D("bbEoverp_cut","BigBite E over p, cuts;",100, 0.0, 2.0);
+
+
   //Diagnostic or useful quantities
-  TH1D *hE_eloss = new TH1D("E_eloss","Scattered Electron Energy Loss in Target",500,0.0, Ebeam *0.001);
-  TH1D *hE_ecorr = new TH1D("E_ecorr","Corrected Scattered Electron Energy",500,0.0,Ebeam*1.25);
-  TH2D *hE_ecorr_vs_vertex = new TH2D("hE_ecorr_vs_vertex",";z_{vertex} (m); E_{corr} (GeV)", 250, -0.125, 0.125, 500, 0,0.001);
+  TH1D *hE_eloss = new TH1D("E_eloss","Scattered Electron Energy Loss in Target (GeV)",500,0.0, Ebeam *0.001);
+  TH1D *hE_ecorr = new TH1D("E_ecorr","Corrected Scattered Electron Energy (GeV)",500,0.95*Ebeam,Ebeam*1.05);
+  TH2D *hE_ecorr_vs_vertex = new TH2D("hE_ecorr_vs_vertex",";z_{vertex} (m); E_{corr} (GeV)", 250, -0.125, 0.125, 500, 0.95*Ebeam,1.05*Ebeam);
   TH1D *hE_ep = new TH1D("E_ep","Scattered Electron Energy",500,0.0,Ebeam*1.25);
   hE_ep->GetXaxis()->SetTitle("GeV");
   TH1D *hE_pp = new TH1D("E_pp","Scattered Proton Energy",500, 0.0, Ebeam*1.25);
   hE_pp->GetXaxis()->SetTitle("GeV");
   TH1D *hKE_p = new TH1D( "KE_p", "Scattered Proton Kinetic Energy", 500, 0.0, Ebeam*1.25 );
   hKE_p->GetXaxis()->SetTitle("GeV");
+  TH1D *hE_ep_cut = new TH1D("E_ep_cut","Scattered Electron Energy, cut",500,0.0,Ebeam*1.25);
+  hE_ep_cut->GetXaxis()->SetTitle("GeV");
+  TH1D *hE_pp_cut = new TH1D("E_pp_cut","Scattered Proton Energy, cut",500, 0.0, Ebeam*1.25);
+  hE_pp_cut->GetXaxis()->SetTitle("GeV");
+  TH1D *hKE_p_cut = new TH1D( "KE_p_cut", "Scattered Proton Kinetic Energy, cut", 500, 0.0, Ebeam*1.25 );
+  hKE_p_cut->GetXaxis()->SetTitle("GeV");
 
   TH1D *hQ2 = new TH1D("Q2","Q2",250,0.5,6.0);
   hQ2->GetXaxis()->SetTitle("GeV");
-  TH1D *hvz = new TH1D( "hvz", "Vertex Position (m); m", 250, -0.2, 0.2 );
+  TH1D *hQ2_cut = new TH1D("Q2_cut","Q2, cut",250,0.5,6.0);
+  hQ2_cut->GetXaxis()->SetTitle("GeV");
+  
   TH1D *h_dpel_nocut = new TH1D("h_dpel_nocut","d_pel;p/p_{elastic}(#theta)-1;",250,-1.0,0.5);
   TH1D *h_dpel_BBcut = new TH1D("h_dpel_BBcut","d_pel;p/p_{elastic}(#theta)-1;",250,-1.0,0.5);
+  TH1D *h_Ep = new TH1D("h_Ep","Total E over p",400,0.0,2.0);
+  h_Ep->GetXaxis()->SetTitle("GeV");
+  TH1D *h_p_proton = new TH1D("h_p_proton","Scatter Proton momentum",500,1.0,8.0);
+  h_p_proton->GetXaxis()->SetTitle("GeV");
+  TH1D *h_p_proton_cut = new TH1D("h_p_proton_cut","Scatter Proton momentum, cut",500,1.0,8.0);
+  h_p_proton_cut->GetXaxis()->SetTitle("GeV");
  
- //Accounting and diagnostic variables
+  TH1D *h_theta_pq = new TH1D("h_theta_pq","Theta pq for proton",120,0.0,0.6);
+  TH1D *h_theta_pq_cut = new TH1D("h_theta_pq_cut","Theta pq for proton, cut",120,0.9*thetapq_low,1.1*thetapq_high);
+  TH1D *h_theta_pq_anticut = new TH1D("h_theta_pq_anticut","Theta pq for proton, anticut",120,0.0,0.6);
+//Accounting and diagnostic variables
  long nevent = 0;
  int treenum = 0, currenttreenum = 0,currentrun =0;
  double progress = 0.0;
@@ -583,10 +627,11 @@ void HCalEfficiency( const char *setup_file_name){
   hE_eloss->Fill(Eloss);
   double Ecorr = Ebeam-Eloss;
   hE_ecorr->Fill(Ecorr);
-
+  hE_ecorr_vs_vertex->Fill(vz[0],Ecorr);
   //Physics calculations
   double pcorr = BBtr_p[0]-Eloss_outgoing; //neglecting outgoing electron mass
   double p_ep = BBtr_p[0]; // Obtain the magnitude of scattered electron momentum
+  h_Ep->Fill(BBeoverp);
   double etheta = acos( BBtr_pz[0]/p_ep); //Use the uncorrected track momentum to reconstruct e' thetha
   double ephi = atan2( BBtr_py[0], BBtr_px[0] );
   TVector3 vertex( 0, 0, vz[0] ); //z location of vertex in hall coordinates
@@ -603,7 +648,7 @@ void HCalEfficiency( const char *setup_file_name){
   double phinucleon = ephi + TMath::Pi(); //assume coplanarity
   double thetanucleon = acos( (Ecorr - BBtr_pz[0])/pp ); //use elastic constraint on nucleon kinematics
   TVector3 pNhat( sin(thetanucleon)*cos(phinucleon),sin(thetanucleon)*sin(phinucleon),cos(thetanucleon));
-
+  h_p_proton->Fill(pp);
    //Define HCal coordinate system
    TVector3 hcal_zaxis (sin(-hcaltheta),0,cos(-hcaltheta));
    TVector3 hcal_xaxis(0,-1,0);
@@ -647,11 +692,22 @@ void HCalEfficiency( const char *setup_file_name){
     double proton_deflection = tan( 0.3 * BdL / qvect_recon.Mag() ) * (hcaldist - (sbs_dist + Dgap/2.0) );
     TVector3 ProtonDirection = (hcalpos + proton_deflection * hcal_xaxis - vertex).Unit();
     double thetapq = acos( ProtonDirection.Dot( qvect_recon.Unit() ) ); 
- 
+    h_theta_pq->Fill(thetapq);
+
   //define dx,dy
   double dx = xhcal - xhcal_expect;
   double dy = yhcal - yhcal_expect;
  
+
+  //Fill histos for global cuts
+  h_ntracks->Fill(ntrack);
+  h_PS_E->Fill(BBps_e);
+  h_vert_z->Fill(vz[0]);
+  h_HCal_E->Fill(ehcal);
+  h_HCal_nclus->Fill(nclus);
+  h_TPS_SH->Fill(BBps_e+BBsh_e);
+  h_nhits->Fill(nhits);
+  h_bbtrp_nocut->Fill(BBtr_p[0]);
 
 
   bool inboundsW2 = (W2>0.0) && (W2<W2fitmax);
@@ -683,7 +739,7 @@ void HCalEfficiency( const char *setup_file_name){
   hdx_nocut_MC->Fill( dx );  //Subtract W2/dy anticut version from this
   hdy_nocut_MC->Fill( dy );
   h_dpel_nocut->Fill(dpel);
-  hvz->Fill(vertex.Z());
+  
  
 
  //anti-cuts
@@ -723,13 +779,33 @@ void HCalEfficiency( const char *setup_file_name){
   
   
   //Make strongest possible hcal-only anticut to obtain background
-  if( thetapq>0.04&&(dx<dxmin3||dx>dxmax3)&&(dy<dymin||dy>dymax)&&failedglobal==1 ){
+  if( (thetapq>thetapq_high || thetapq<thetapq_low)&&(dx<dxmin3||dx>dxmax3)&&(dy<dymin||dy>dymax)&&failedglobal==1 ){
   hW2_anticut->Fill( W2 );
+  h_theta_pq_anticut->Fill(thetapq);
+  hdx_anticut_MC->Fill(dx);
+  hdy_anticut_MC->Fill(dy);
   }
 
   //And tightest cut possible
-  if( thetapq<0.04&& (dx>dxmin3&&dx<dxmax3)&&(dy>dymin&&dy<dymax)&&failedglobal==0 ){
+  if( (thetapq<thetapq_high && thetapq>thetapq_low) && (dx>dxmin3&&dx<dxmax3) && (dy>dymin&&dy<dymax) && failedglobal==0 ){
   hW2_allcut->Fill( W2 );
+  hE_ep_cut->Fill(E_ep);
+  hE_pp_cut->Fill(E_pp);
+  hKE_p_cut->Fill(KE_p);
+  hQ2_cut->Fill(Q2);
+  h_p_proton_cut->Fill(pp);
+  h_theta_pq_cut->Fill(thetapq);
+  hdx_cut_MC->Fill(dx);
+  hdy_cut_MC->Fill(dy);
+  
+  h_vert_z_cut->Fill(vz[0]);
+  h_PS_E_cut->Fill(BBps_e);
+  h_HCal_E_cut->Fill(ehcal);
+  h_HCal_nclus_cut->Fill(nclus);
+  h_TPS_SH_cut->Fill(BBps_e+BBsh_e);
+  h_nhits_cut->Fill(nhits);
+  h_bbtrp_cut->Fill(BBtr_p[0]);
+
   }                                
 
 
@@ -966,9 +1042,9 @@ void HCalEfficiency( const char *setup_file_name){
    
    //Set the initial fit params
    hcaltotalfit->SetParameters(&myParam[0]);
-   hcaltotalfit->SetParLimits(5,10000,100000);
-   hcaltotalfit->SetParLimits(6,-1.,0.0);
-   hcaltotalfit->SetParLimits(7,0.05,0.5);
+  // hcaltotalfit->SetParLimits(5,10000,100000);
+  // hcaltotalfit->SetParLimits(6,-1.,0.0);
+  // hcaltotalfit->SetParLimits(7,0.05,0.5);
 
    //Fit the dy cut HCal dx histogram with total fit
    hcaltotalfit->SetLineColor(kGreen);
@@ -1105,16 +1181,18 @@ void HCalEfficiency( const char *setup_file_name){
 
      //calculate some qtys (elastic divergence from bg begin: 0.5, end: 1.3)
      //Double_t bgint = bg->Integral(0.,W2fitmax)*binfac; //175715
-     double bgint_dxanticutresiduals = bgdxanticutresiduals->Integral(0.4,1.3)*binfac; //175715
+     //double bgint_dxanticutresiduals = bgdxanticutresiduals->Integral(0.4,1.3)*binfac; //175715
+     double bgint_dxanticutresiduals = bgdxanticutresiduals->Integral(0.4,W2fitmax-0.1)*binfac; //175715
      //int W2elasb = 0.0*binfac;
      int W2elasb_dxanticutresiduals = 0.4*binfac;
      //Int_t W2elase = W2fitmax*binfac;
-     int W2elase_dxanticutresiduals = 1.3*binfac;
+     int W2elase_dxanticutresiduals = (W2fitmax-0.1)*binfac;
      double W2nocutint_dxanticutresiduals = hW2_totfitdxanticutresiduals->Integral(W2elasb_dxanticutresiduals,W2elase_dxanticutresiduals);
      //Double_t tfitint = tfit->Integral(0.0,W2fitmax)*binfac;
-     double totfitint_dxanticutresiduals = totfitdxanticutresiduals->Integral(0.4,1.3)*binfac;
+     //double totfitint_dxanticutresiduals = totfitdxanticutresiduals->Integral(0.4,1.3)*binfac;
+     //double totfitint_dxanticutresiduals = totfitdxanticutresiduals->Integral(0.4,W2fitmax-0.1,1.E-6)*binfac;
      double W2elas_dxanticutresiduals = W2nocutint_dxanticutresiduals - bgint_dxanticutresiduals;
-     double W2elasfits_dxanticutresiduals = totfitint_dxanticutresiduals - bgint_dxanticutresiduals;
+     //double W2elasfits_dxanticutresiduals = totfitint_dxanticutresiduals - bgint_dxanticutresiduals;
     
     
     //Add a legend to the canvas
@@ -1158,16 +1236,18 @@ void HCalEfficiency( const char *setup_file_name){
  
     //calculate some qtys (elastic divergence from bg begin: 0.4, end: 1.3)
     //Double_t bgint = bg->Integral(0.,W2fitmax)*binfac; //175715
-    double W2bgint = W2_bkgd->Integral(0.4,1.3)*binfac; //175715
+   // double W2bgint = W2_bkgd->Integral(0.4,1.3)*binfac; 
+     double W2bgint = W2_bkgd->Integral(0.4,W2fitmax-0.1)*binfac; 
     //Int_t W2elasb = 0.*binfac;
     int W2elasb = 0.4*binfac;
     //Int_t W2elase = W2fitmax*binfac;
-    int W2elase = 1.3*binfac;
+    int W2elase = (W2fitmax-0.1)*binfac;
     double W2nocutint = hW2_totfit->Integral(W2elasb,W2elase);
     //Double_t tfitint = tfit->Integral(0.0,W2fitmax)*binfac;
-    double totfitint = W2_totfit->Integral(0.4,1.3)*binfac;
+    //double totfitint = W2_totfit->Integral(0.4,1.3)*binfac;
+    //double totfitint = W2_totfit->Integral(0.4,W2fitmax-0.1,1.E-6)*binfac;
     double  W2elas = W2nocutint - W2bgint;
-    double W2elas_fits = totfitint - W2bgint;
+    //double W2elas_fits = totfitint - W2bgint;
     
     double effres = ((W2elas-W2elas_dxanticutresiduals) / W2elas)*100.;
 

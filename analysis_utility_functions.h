@@ -263,8 +263,46 @@ param[5] = 15000; //used for proton amplitude
 param[6] = 0.01886; //used for proton mean
 param[7] = 0.0517; //used for proton sigma
 }
-
-
+else if(myKin == "SBS4" && sbs_field == 30 && targ == "LH2"){
+param[0] = 0.0; //used for background p0
+param[1] = 1.0;//used for background p1
+param[2] = 1.0;//used for background p2
+param[3] = 1.0 ;//used for background p3
+param[4] = 1.0; //used for background p4
+param[5] = 15000; //used for proton amplitude
+param[6] = -0.64517; //used for proton mean
+param[7] = 0.064257; //used for proton sigma
+}
+else if(myKin == "SBS8" && sbs_field == 0 && targ == "LH2"){
+param[0] = 0.0; //used for background p0
+param[1] = 1.0;//used for background p1
+param[2] = 1.0;//used for background p2
+param[3] = 1.0 ;//used for background p3
+param[4] = 1.0; //used for background p4
+param[5] = 15000; //used for proton amplitude
+param[6] = 0.10208; //used for proton mean
+param[7] = 0.082366; //used for proton sigma
+}
+else if(myKin == "SBS8" && sbs_field == 70 && targ == "LH2"){
+param[0] = 0.0; //used for background p0
+param[1] = 1.0;//used for background p1
+param[2] = 1.0;//used for background p2
+param[3] = 1.0 ;//used for background p3
+param[4] = 1.0; //used for background p4
+param[5] = 15000; //used for proton amplitude
+param[6] = -0.801244; //used for proton mean
+param[7] = 0.105871; //used for proton sigma
+}
+else if(myKin == "SBS9" && sbs_field == 70 && targ == "LH2"){
+param[0] = 0.0; //used for background p0
+param[1] = 1.0;//used for background p1
+param[2] = 1.0;//used for background p2
+param[3] = 1.0 ;//used for background p3
+param[4] = 1.0; //used for background p4
+param[5] = 15000; //used for proton amplitude
+param[6] = -0.85169; //used for proton mean
+param[7] = 0.079424; //used for proton sigma
+}
 else{
 //cout << "kin: " << myKin << " SBS_field:  " << sbs_field << " targ:  " << targ << endl;
 //Error message
