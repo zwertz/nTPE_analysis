@@ -15,7 +15,7 @@
 #include "analysis_utility_functions.h"
 #include "BlindFactor.h"
 #include <vector>
-
+#include "TMatrixD.h"
 
 //Define max number of tracks per event
 int MAXNTRACKS;
@@ -724,6 +724,14 @@ void HCalEfficiency( const char *setup_file_name){
  if( offhcal ) continue;
  hxy_hactivecut->Fill(yhcal_expect,xhcal_expect);
 
+
+ ////////////////////////
+ //HCAL CLUSTER ANALYSIS
+ 
+ //clone cluster vector for selection analysis
+ //vector<double> clone_cluster_intime;
+
+
  //all cut bools
  bool gW2 = abs(W2-W2_mean) < W2confac*W2_sigma; //W2 cut around elastic peak . One could implement this in W2_mean and W2_sigma form. But I am not sure this is better
  bool gdy = abs(dy-dyO_p)< confac*dysig_p; //dy cut around elastic peak
@@ -1149,7 +1157,7 @@ void HCalEfficiency( const char *setup_file_name){
    c4->Write();
 
    TH1D *hW2_totfit = (TH1D*)(hW2_nocut->Clone("hW2_totfit"));
-
+   TH1D *hW2_bkgdfit = (TH1D*)(hW2_nocut->Clone("hW2_bkgdfit"));
    TH1D *hdx_totfit;
    TH1D *hW2_totfitdxanticutresiduals = (TH1D*)(hW2_anticut->Clone("hW2_totfitdxanticutresiduals"));
     //Make canvas for hcal W2 anticut analysis
@@ -1162,12 +1170,24 @@ void HCalEfficiency( const char *setup_file_name){
     TF1 *totfitdxanticutresiduals = new TF1("totfitdxanticutresiduals",W2totaldxanticutresiduals,0,W2fitmax,6); //tfit npar = 1+pNfit_npar+1
     TF1 *bgdxanticutresiduals = new TF1("bgdxanticutresiduals",poly4_fit,0.,W2fitmax,5);
     totfitdxanticutresiduals->SetLineColor(kGreen);
+    //Need TFitResultPtr for error later
+    TFitResultPtr W2totfitresidual_ptr = hW2_totfitdxanticutresiduals->Fit("totfitdxanticutresiduals","S");
     hW2_totfitdxanticutresiduals->Fit("totfitdxanticutresiduals","RBM");
     
     double *totpardxanticutresiduals = totfitdxanticutresiduals->GetParameters();
     
+    //for(int i =0; i<6 ;i++){
+    //cout << "totpardxanticutresiduals " << i << " " << totpardxanticutresiduals[i] << endl;
+    //}
+
     //Get fit parameters for bg function and draw identical function on canvas
     bgdxanticutresiduals->SetParameters(&totpardxanticutresiduals[1]);
+    double *bkgddxanticutresiduals = bgdxanticutresiduals->GetParameters();
+    
+    //for(int j =0; j<5 ;j++){
+    //cout << "bkgddxanticutresiduals " << j << " " << bkgddxanticutresiduals[j] << endl;
+    //}
+
     bgdxanticutresiduals->SetLineColor(kRed);
     bgdxanticutresiduals->SetFillColor(kRed);
     bgdxanticutresiduals->SetFillStyle(3005);
@@ -1178,7 +1198,6 @@ void HCalEfficiency( const char *setup_file_name){
     hW2elasticdxanticutresiduals->SetFillStyle(3003);
     hW2elasticdxanticutresiduals->Draw("same");
     
-
      //calculate some qtys (elastic divergence from bg begin: 0.5, end: 1.3)
      //Double_t bgint = bg->Integral(0.,W2fitmax)*binfac; //175715
      //double bgint_dxanticutresiduals = bgdxanticutresiduals->Integral(0.4,1.3)*binfac; //175715
@@ -1190,10 +1209,10 @@ void HCalEfficiency( const char *setup_file_name){
      double W2nocutint_dxanticutresiduals = hW2_totfitdxanticutresiduals->Integral(W2elasb_dxanticutresiduals,W2elase_dxanticutresiduals);
      //Double_t tfitint = tfit->Integral(0.0,W2fitmax)*binfac;
      //double totfitint_dxanticutresiduals = totfitdxanticutresiduals->Integral(0.4,1.3)*binfac;
-     //double totfitint_dxanticutresiduals = totfitdxanticutresiduals->Integral(0.4,W2fitmax-0.1,1.E-6)*binfac;
+     double totfitint_dxanticutresiduals = totfitdxanticutresiduals->Integral(0.4,W2fitmax-0.1,1.E-4)*binfac;
      double W2elas_dxanticutresiduals = W2nocutint_dxanticutresiduals - bgint_dxanticutresiduals;
-     //double W2elasfits_dxanticutresiduals = totfitint_dxanticutresiduals - bgint_dxanticutresiduals;
-    
+     double W2elasfits_dxanticutresiduals = totfitint_dxanticutresiduals - bgint_dxanticutresiduals;
+     //cout <<"W2nocutint_dxanticutresiduals: " << W2nocutint_dxanticutresiduals << " totfitint_dxanticutresiduals: " << totfitint_dxanticutresiduals << endl; 
     
     //Add a legend to the canvas
     auto interplegenddxanticutresiduals = new TLegend(0.1,0.6,0.5,0.9);
@@ -1214,15 +1233,22 @@ void HCalEfficiency( const char *setup_file_name){
     
     //Add background extraction
     hW2elastic = (TH1D*)(hW2_allcut->Clone("hW2elastic"));
-    TF1 *W2_totfit = new TF1("W2_totfit",W2total,0,W2fitmax,6); //tfit npar = 1+pNfit_npar+1
+    TF1 *W2_totfit = new TF1("W2_totfit",W2total,0.,W2fitmax,6); //tfit npar = 1+pNfit_npar+1
     TF1 *W2_bkgd = new TF1("W2_bkgd",poly4_fit,0.,W2fitmax,5);
     W2_totfit->SetLineColor(kGreen);
+    //Need TFitResultPtr for error later
+    TFitResultPtr W2totfit_ptr = hW2_totfit->Fit("W2_totfit","S");
     hW2_totfit->Fit("W2_totfit","RBM");
-    
     double *tpar = W2_totfit->GetParameters();
-    
+    //for(int i =0; i<6 ;i++){
+    //cout << "tpar " << i << " " << tpar[i] << endl;
+    //}
     //Get fit parameters for bg function and draw identical function on canvas
     W2_bkgd->SetParameters(&tpar[1]);
+    double *bkgd_par = W2_bkgd->GetParameters();
+    //for(int j =0; j<5 ;j++){
+    //cout << "bkgd_par " << j << " " << bkgd_par[j] << endl;
+    //}
     W2_bkgd->SetLineColor(kRed);
     W2_bkgd->SetFillColor(kRed);
     W2_bkgd->SetFillStyle(3005);
@@ -1244,12 +1270,14 @@ void HCalEfficiency( const char *setup_file_name){
     int W2elase = (W2fitmax-0.1)*binfac;
     double W2nocutint = hW2_totfit->Integral(W2elasb,W2elase);
     //Double_t tfitint = tfit->Integral(0.0,W2fitmax)*binfac;
-    //double totfitint = W2_totfit->Integral(0.4,1.3)*binfac;
-    //double totfitint = W2_totfit->Integral(0.4,W2fitmax-0.1,1.E-6)*binfac;
-    double  W2elas = W2nocutint - W2bgint;
-    //double W2elas_fits = totfitint - W2bgint;
+    double totfitint = W2_totfit->Integral(0.4,W2fitmax-0.1,1.E-4)*binfac;
+    //cout << "W2nocutint: " << W2nocutint << " totfitint: " << totfitint << endl;
+    double  W2elas = W2nocutint - W2bgint; 
+    double W2elas_fits = totfitint - W2bgint;
     
-    double effres = ((W2elas-W2elas_dxanticutresiduals) / W2elas)*100.;
+
+    //The efficiency that I am using
+    double effres = ((W2elas_fits-W2elasfits_dxanticutresiduals) / W2elas_fits)*100.;
 
 
   //Add a legend to the canvas
@@ -1264,7 +1292,7 @@ void HCalEfficiency( const char *setup_file_name){
   
   c6->Write();  
 
-     //Calculate error assuming fit error is negligable, might need to reevaluate that later
+     //other method errors, not needed really
      //Binomial
      double eff = hcalelastics/elastics;
      double eff_alt = hcalelastics_antiW2/elastics_alt;
@@ -1275,20 +1303,56 @@ void HCalEfficiency( const char *setup_file_name){
      double efferr_alt2 = sqrt(eff_alt2*(1-eff_alt2)/elastics_alt);
      //Double_t efferr_althybrid = sqrt(eff_althybrid*(1-eff_althybrid)/elastics_alt);
      
+     //Need to TFitResultPtr to get covariance matrix to make error work. Have the bkgdfit just be subset of that matrix.
+     TMatrixD m_totfitresidual = W2totfitresidual_ptr->GetCovarianceMatrix();
+     //m_totfitresidual.Print();
+     TMatrixD m_bkgdfitresidual = m_totfitresidual.GetSub(1,5,1,5);
+     //m_bkgdfitresidual.Print();
+     //Get the error for W2elasfits_dxanticutresiduals from the fit integral
+     double totfitint_dxanticutresiduals_error = totfitdxanticutresiduals->IntegralError(0.4,W2fitmax-0.1,totpardxanticutresiduals,m_totfitresidual.GetMatrixArray(),1.E-0)*binfac;
+    // double totfitint_dxanticutresiduals_error = sqrt(totfitint_dxanticutresiduals);
+     double bgint_dxanticutresiduals_error = bgdxanticutresiduals->IntegralError(0.4,W2fitmax-0.1,bkgddxanticutresiduals,m_bkgdfitresidual.GetMatrixArray(),1.E-0)*binfac;
+     double W2elas_dxanticutresiduals_error = sqrt(pow(totfitint_dxanticutresiduals_error,2)+pow(bgint_dxanticutresiduals_error,2)) ;
+     //cout << "totfitint_error: " << totfitint_error << " W2bgint_error: "<< W2bgint_error << " W2elas_error: "<< W2elas_error << endl;
+     //cout << "totfitint_dxanticutresiduals_error: " << totfitint_dxanticutresiduals_error << " bgint_dxanticutresiduals_error: " << bgint_dxanticutresiduals_error << " W2elas_dxanticutresiduals_error: " << W2elas_dxanticutresiduals_error << endl;
+                              
+     //Need to TFitResultPtr to get covariance matrix to make error work. Have the bkgdfit just be subset of that matrix.
+     TMatrixD m_totfit = W2totfit_ptr->GetCovarianceMatrix();
+     //m_totfit.Print();
+     TMatrixD m_bkgdfit = m_totfit.GetSub(1,5,1,5);
+     //m_bkgdfit.Print();
+     //calculate binomial error from ratio information, do not include information from fits yet
+     //Get the error for W2elas_fits directly from the fit integral
+     double totfitint_error = W2_totfit->IntegralError(0.4,W2fitmax-0.1,W2totfit_ptr->GetParams(),m_totfit.GetMatrixArray(),1.E-0)*binfac;
+     //double totfitint_error = sqrt(totfitint);
+     double W2bgint_error = W2_bkgd->IntegralError(0.4,W2fitmax-0.1,bkgd_par,m_bkgdfit.GetMatrixArray(),1.E-0)*binfac;
+     double W2elas_error = sqrt(pow(totfitint_error,2)+pow(W2bgint_error,2));
+     //the top error makes sense, since we are subtractng 2 quantities we need to propagate error this way by taking the square root of the sum of the squares
+     double effres_top_error = sqrt(pow(W2elas_error,2) + pow(W2elas_dxanticutresiduals_error,2));
+     double effres_bot_error = W2elas_error; // This is true since the bottom is just W2elas_fits and we already calculated it
+     double effres_toterror = effres*sqrt((pow(effres_top_error/(W2elas_fits-W2elasfits_dxanticutresiduals),2)+pow(effres_bot_error/W2elas_fits,2)));
+     double effres_error_binomial = (sqrt((effres/100.0)*(1.0-(effres/100.0))/W2elas_fits))*100.0;
+     //cout << "effres_top_error: " << effres_top_error << " effres_bot_error: " << effres_bot_error << " effres_toterror: " << effres_toterror <<" error_binomial: "<< effres_error_binomial << endl;
+
    TString reportfile = makeReportFileName(Exp,kin,SBS_field,targ);   
 
 
     
    //Declare outfile
    ofstream report;
-   
+   report.open( reportfile );   
+
    cout << "Chi^2 for total fit: " << W2_totalfit->GetChisquare() << endl;
    report << "Chi^2 for total fit: " << W2_totalfit->GetChisquare() << endl;
    
-   report.open( reportfile );
-   report << "HCal detection efficiency report for SBS" << kin << " LH2 data at " << sbs_field << " percent field" << endl << endl;
+   cout << "Number of degrees of freedom for total fit: " << W2_totalfit->GetNDF() << endl;
+   report << "Number of degrees of freedom for total fit: " << W2_totalfit->GetNDF() << endl;
+
+   report << "HCal detection efficiency report for " << kin << " LH2 data at " << sbs_field << " percent field" << endl << endl;
    
-   cout << "Total elastics detected in HCal: " << hcalelastics << endl;
+
+   //other inaccurate methods, might bring one or 2 back if I figure it out
+   /*cout << "Total elastics detected in HCal: " << hcalelastics << endl;
    report << "Total elastics detected in HCal: " << hcalelastics << endl << endl;
    
    cout << "Total elastics detected in Bigbite with e-arm cuts only: " << elastics << endl;
@@ -1304,14 +1368,20 @@ void HCalEfficiency( const char *setup_file_name){
    report << "Total elastics detected in Bigbite with e-arm cuts only (alt): " << elastics_alt << endl << endl;
   
    cout << "Total entries in W2 plot: " << earmEvents << endl << endl;
-   report << "Total entries in W2 plot: " << earmEvents << endl << endl;
+   report << "Total entries in W2 plot: " << earmEvents << endl << endl; */
    
-   cout << "Total elastics from W2 Tight elastic cut (global, dx, dy, thetapq) " << W2elas << endl;
-   report << "Total elastics from W2 Tight elastic cut (global, dx, dy, thetapq) " << W2elas << endl;
+   cout << "Total elastics from W2 Tight elastic cut (global, dx, dy, thetapq) " << W2elas_fits << endl;
+   report << "Total elastics from W2 Tight elastic cut (global, dx, dy, thetapq) " << W2elas_fits << endl;
 
-    cout << "Total elastics from W2 residual Tight elastic cut (global, dx, dy, thetapq) " << W2elas_dxanticutresiduals << endl;
-   report << "Total elastics from W2 residual Tight elastic cut (global, dx, dy, thetapq) " << W2elas_dxanticutresiduals << endl;
- 
+    cout << "Total elastics from W2 anti Tight elastic cut (global, dx, dy, thetapq) " << W2elasfits_dxanticutresiduals << endl;
+   report << "Total elastics from W2 anti Tight elastic cut (global, dx, dy, thetapq) " << W2elasfits_dxanticutresiduals << endl;
+  
+   cout << "Total error from adding in quadrature (as percentage) " << effres_toterror << endl;
+   report << "Total error from adding in quadrature (as percentage) " << effres_toterror << endl;
+
+   cout << "Total error from binomial error (as percentage) " << effres_error_binomial << endl;
+   report << "Total error from binomial error (as percentage) " << effres_error_binomial << endl;
+  /*
   cout << "==============================================================" << endl;
   cout << "Total HCal elastic detection efficiency (fits): " << eff << " +/- " << efferr << endl;
   cout << "==============================================================" << endl << endl;
@@ -1338,6 +1408,7 @@ void HCalEfficiency( const char *setup_file_name){
   report << "===================================================================" << endl;
   report << "Total HCal elastic detection efficiency (anticut dy): " << eff_alt2 << " +/- " << efferr_alt2 << endl;
   report << "===================================================================" << endl << endl;
+  */
 
   cout << "===================================================================" << endl;
   cout << "Total HCal elastic detection efficiency  Tight elastic cut (global, dx, dy, thetapq): " << effres << " +/- " << "" << endl;
