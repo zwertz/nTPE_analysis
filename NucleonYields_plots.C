@@ -316,12 +316,12 @@ void NucleonYields_plots( const char *setup_file_name){
   double hcaltheta = myData[0].getHCalAngle_Rad();//HCal Angle, same for all data being considered
   double bbtheta = myData[0].getBBAngle_Rad();//BB angle, same for all data
   double sbs_dist = myData[0].getSBSDist(); //SBS dist
-
+  double hcal_offset = getHCalOffset(kin);
   double ntrack, nhits;
  //BBCal variables
   double BBtr_px[MAXNTRACKS], BBtr_py[MAXNTRACKS], BBtr_pz[MAXNTRACKS], BBtr_p[MAXNTRACKS];
   double vx[MAXNTRACKS], vy[MAXNTRACKS], vz[MAXNTRACKS];
-  double BBtr_n, BBps_x, BBps_y, BBps_e, BBsh_x, BBsh_y, BBsh_e,SHnclus,PSnclus, BB_E_over_p;
+  double BBps_x, BBps_y, BBps_e, BBsh_x, BBsh_y, BBsh_e,SHnclus,PSnclus, BB_E_over_p;
 
   //HCal variables
   double xhcal,yhcal,ehcal,nblk,nclus;
@@ -444,7 +444,6 @@ void NucleonYields_plots( const char *setup_file_name){
  // TH1D *h_atime = new TH1D( "atime", "HCal ADC Time, All Channels; ns", 160, 0, 160 );
  // TH2D *h_CvCh = new TH2D( "CvCh", "HCal Coeff Single Block Clusters; channel, GeV", maxHCalChan, 0, maxHCalChan, 200, 0, 1.0 );
  // TH1D *h_E_exp = new TH1D( "E_exp", "Expected Energy Dep in HCal; GeV", 100, 0, 0.2 );
-  TH2D *hdxVE = new TH2D("dxVE","dx vs VE;x_{HCAL}-x_{expect} (m); GeV", 100, -4.0, 2.0, 100, 0, 0.5 );
   TH1D *hKElow = new TH1D( "KElow", "Lowest Elastic E Sampled in HCal (GeV)", 500, 0.0, 0.2 );
   TH1D *h_hcalatime = new TH1D("HCal_atime","HCal ADC Time; ns", 160,-50,200);
   TH1D *h_bbcalatime = new TH1D("BBCal_atime","BBCal ADC Time; ns", 160,-60,60); 
@@ -469,8 +468,9 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV) with cuts; GeV", 250, -1.0, 3.0 );
   TH1D *htimeDiff = new TH1D( "hDiff","HCal time - BBCal time (ns)", 1300, -500, 800 );
   TH1D *htimeDiff_cut = new TH1D( "hDiff_cut","HCal time - BBCal time (ns), All Cuts", 150, 450, 600 );
+  TH1D *hdx = new TH1D( "dx", "HCal dx (m); m", 250, dx_low, dx_high );
+  TH1D *hdy = new TH1D( "dy", "HCal dy (m); m", 250, dy_low, dy_high );
   TH1D *h_W2_pncut = new TH1D( "W2_pncut", "W2_pncut; GeV", 250, -1.0, 3.0 );
-  
 
   //Various HCal related yield plots
   TH2D *hxy_nocut = new TH2D("hxy_nocut","HCal X  vs Y, no cuts;HCal Y  (m); HCal X  (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
@@ -478,11 +478,6 @@ void NucleonYields_plots( const char *setup_file_name){
   TH2D *hxy_expect_nocut = new TH2D("hxy_expect_nocut","HCal X Expect vs Y Expect, no cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_cut = new TH2D("hxy_cut","HCal X  vs Y, cuts;HCal Y (m); HCal X (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
   TH2D *hxy_expect_cut = new TH2D("hxy_expect_cut","HCal X Expect vs Y Expect, cuts;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
-  
-  TH2D *hdxdy_cut = new TH2D("dxdy_cut","HCal dxdy Cuts, All Channels;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 350, -1.25, 1.25, 350, dx_low, dx_high );
-  TH2D *hdxdy_nocut = new TH2D("dxdy_nocut","HCal dxdy ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
-  TH1D *hdx = new TH1D( "dx", "HCal dx (m); m", 250, dx_low, dx_high );
-  TH1D *hdy = new TH1D( "dy", "HCal dy (m); m", 250, dy_low, dy_high );
   TH1D *hX = new TH1D( "X", "HCal X (m); m", 250, dx_low, dx_high );
   TH1D *hX_expect = new TH1D( "X_expect", "HCal X Expect (m); m", 250, dx_low, dx_high+1 );
   TH1D *hY = new TH1D( "Y", "HCal Y (m); m", 250, dy_low, dy_high );
@@ -493,6 +488,8 @@ void NucleonYields_plots( const char *setup_file_name){
   TH1D *hX_expect_cut = new TH1D( "X_expect_cut", "HCal X Expect (m), cuts; m", 250, dx_low, dx_high+1 );
   TH1D *hY_cut = new TH1D( "Y_cut", "HCal Y (m), cuts; m", 250, dy_low, dy_high );
   TH1D *hY_expect_cut = new TH1D( "Y_expect_cut", "HCal Y Expect (m),  cuts; m", 250, dy_low, dy_high );
+  TH2D *hdxdy_cut = new TH2D("dxdy_cut","HCal dxdy Cuts, All Channels;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 350, -1.25, 1.25, 350, dx_low, dx_high );
+  TH2D *hdxdy_nocut = new TH2D("dxdy_nocut","HCal dxdy ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH2D *hdxdy_pcut = new TH2D("hdxdy_pcut","HCal dxdy, proton fiducial;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH2D *hdxdy_ncut = new TH2D("hdxdy_ncut","HCal dxdy, nuetron fiducial;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH2D *hdxdy_pncut = new TH2D("hdxdy_pncut","HCal dxdy, just pn;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
@@ -507,18 +504,19 @@ void NucleonYields_plots( const char *setup_file_name){
   TH2D *hxy_expect_ncut = new TH2D("hxy_expect_ncut","HCal X Expect vs Y Expect, ncuts;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
   TH1D *hdx_anticut = new TH1D( "dx_anticut", "HCal dx (m),  anticut; m", 250, dx_low, dx_high );
   TH2D *hdxdy_anticut = new TH2D("dxdy_anticut","HCal dxdy anticut;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 350, -1.25, 1.25, 350, dx_low, dx_high );
-  
+  TH2D *hdxVE = new TH2D("dxVE","dx vs VE;x_{HCAL}-x_{expect} (m); GeV", 100, -4.0, 2.0, 100, 0, 0.5 );
 
   //Fiducial cut histograms
-  TH2D *hdxdy_fidcut = new TH2D("hdxdy_fidcut","HCal dxdy, fiducial cut;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH1D *hdx_fidcut = new TH1D( "dx_fidcut","HCal dx fiducial cut; x_{HCAL}-x_{expect} (m)", 250, dx_low, dx_high );
   TH1D *hdy_fidcut = new TH1D( "dy_fidcut","HCal dy fiducial cut; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
+  TH2D *hdxdy_fidcut = new TH2D("hdxdy_fidcut","HCal dxdy, fiducial cut;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",350,-1.25,1.25,350,dx_low,dx_high);
   TH2D *hxy_fidcut = new TH2D("hxy_fidcut","HCal X vs Y, fiducial cut;y_{HCAL} (m); x_{HCAL} (m)",300, -2.0, 2.0, 500, -2.5, 2.5);
   TH1D *h_W2_fidcut = new TH1D( "W2_fidcut", "W2_fidcut; GeV", 250, -1.0, 3.0 );
   TH2D *hxy_expect_fidcut = new TH2D("hxy_expect_fidcut","HCal X Expect vs Y Expect, fiducial cut;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
   TH1D *hdx_fidanticut = new TH1D( "dx_fidanticut", "HCal dx (m), Fid  anticut; m", 250, dx_low, dx_high );  
   TH2D *hdxdy_fidanticut = new TH2D("dxdy_fidanticut","HCal dxdy Fid anticut;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 350, -1.25, 1.25, 350, dx_low, dx_high );
-
+  TH2D *h_W2_dx = new TH2D("W2_dx","W2 vs dx, no cuts; dx (m); W2 (GeV)",250,dx_low, dx_high,250, -1.0, 6.0);
+  TH2D *h_W2_dx_fidcut = new TH2D("W2_dx_fidcut","W2 vs dx, cuts; dx (m); W2 (GeV)",250,dx_low, dx_high,250, -1.0, 3.0);
   //From physics calculations
   TH1D *h_dpel = new TH1D("h_dpel","d_pel;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
   TH1D *h_dpel_cut = new TH1D("h_dpel_cut","d_pel, Cuts;p/p_{elastic}(#theta)-1;",250,-0.25,0.25);
@@ -616,7 +614,7 @@ void NucleonYields_plots( const char *setup_file_name){
    TVector3 hcal_zaxis (sin(-hcaltheta),0,cos(-hcaltheta));
    TVector3 hcal_xaxis(0,-1,0);
    TVector3 hcal_yaxis = hcal_zaxis.Cross( hcal_xaxis ).Unit();
-   TVector3 hcal_origin = hcaldist *hcal_zaxis +HCALHeight*hcal_xaxis;
+   TVector3 hcal_origin = hcaldist *hcal_zaxis +hcal_offset*hcal_xaxis;
    TVector3 hcalpos = hcal_origin + xhcal * hcal_xaxis + yhcal * hcal_yaxis;
   //Define interesection points for hadron vector
   double sintersect = (hcal_origin-vertex).Dot( hcal_zaxis )/pNhat.Dot( hcal_zaxis );
@@ -686,7 +684,7 @@ void NucleonYields_plots( const char *setup_file_name){
   h_nhits->Fill(nhits);
   h_bbtrp_nocut->Fill(BBtr_p[0]); 
   h_bbEoverp_nocut->Fill(BB_E_over_p);
-
+  h_W2_dx->Fill(dx,W2);
  //cout << hcal_time << " " << bbcal_time << endl;
   //double diff = hcal_time - bbcal_time;
   //
@@ -721,6 +719,7 @@ void NucleonYields_plots( const char *setup_file_name){
   double HCal_right = posHCalYi_MC+HCalblk_l_h_MC;
   double HCal_top = posHCalXi_MC+HCalblk_l_v_MC;
   double HCal_bot = posHCalXf_MC-HCalblk_l_v_MC;
+
   
   //Primary Cuts
   bool offhcal =
@@ -815,6 +814,7 @@ void NucleonYields_plots( const char *setup_file_name){
 
 
  /* if(find_both){
+ * 
   if(neutron_hyp && proton_hyp){
         hdxdy_pncut->Fill(dy,dx);
         hdx_pncut->Fill(dx);
@@ -857,7 +857,8 @@ void NucleonYields_plots( const char *setup_file_name){
  bool neutron_hyp_fid = ((xhcal_expect - dxmax) >= HCal_fid_top) && xhcal_expect <= HCal_bot ;
  bool proton_hyp_fid = ((xhcal_expect + dxmax) <= HCal_fid_bot) && xhcal_expect >= HCal_top ;
  
- bool inFiducial = (neutron_hyp_fid || proton_hyp_fid);
+ //change the or to an and, then rerun some data
+ bool inFiducial = (neutron_hyp_fid && proton_hyp_fid);
       if(inFiducial){
         hdxdy_fidcut->Fill(dy,dx);
         hdx_fidcut->Fill(dx);
@@ -865,6 +866,7 @@ void NucleonYields_plots( const char *setup_file_name){
         h_W2_fidcut->Fill(W2);
         hxy_fidcut->Fill(yhcal,xhcal);
         hxy_expect_fidcut->Fill(yhcal_expect,xhcal_expect);
+        h_W2_dx_fidcut->Fill(dx,W2);
       }
      /* else{
       //else for fiducial cut
@@ -935,7 +937,7 @@ hdx_BGSub->GetXaxis()->SetTitle("m");
  c1->Divide(2,1);
  //place holder till I do fiducials
  c1->cd(1);
- hdxdy_fidcut->Draw("colz"); 
+ hdxdy_cut->Draw("colz"); 
 
  TEllipse el_pro;
  el_pro.SetFillStyle(4005);
@@ -1005,15 +1007,17 @@ hdx_BGSub->GetXaxis()->SetTitle("m");
  proton->SetNpx(500);
  neutron->SetNpx(500);
  
-/* bkgd->SetParameters(&myFParam[0]);
- proton->SetParameters(&myFParam[5]);
- neutron->SetParameters(&myFParam[8]);*/
+ //bkgd->SetParameters(&myFParam[0]);
+ //proton->SetParameters(&myFParam[5]);
+ //neutron->SetParameters(&myFParam[8]);
  
  bkgd->SetParameters(&myParam[0]);
  proton->SetParameters(&myParam[5]);
  neutron->SetParameters(&myParam[8]);
 
-
+ reject_bkgd=true;
+ hdx_fidcut_clone->Fit("bkgd","RB+");
+ reject_bkgd=false;
 
  bkgd->Draw("same");
  proton->Draw("same");

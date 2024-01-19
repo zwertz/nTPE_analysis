@@ -12,81 +12,103 @@
 //////////////////////////////
 //////Static Detector Parameters
 //Trigger TDC
-const Int_t maxTDCTrigChan = 10; // Set to accomodate original 5 TDCTrig channels with buffer
-const Double_t tdiffwidecut = 50; // Set at 50ns from nominal 510ns (passed by user) from GMn
+const int maxTDCTrigChan = 10; // Set to accomodate original 5 TDCTrig channels with buffer
+const double tdiffwidecut = 50; // Set at 50ns from nominal 510ns (passed by user) from GMn
 //HCal - Note that actual measurement of vertical length is 381.6cm, indicating that the MC figures are correct
-const Int_t maxHCalChan = 288; // Total HCal channels
-const Int_t maxHCalRows = 24; // Total HCal rows
-const Int_t maxHCalCols = 12; // Total HCal cols
-const Int_t maxClusters = 10; // Total HCal clusters with information saved
-const Double_t HCALHeight = -0.2897; // Height of HCal above beamline in m
-const Double_t HCalblk_l = 0.15; // Width and height of HCAL blocks in m
-const Double_t HCalblk_l_h_MC = 0.15494; // Horizontal length of all HCAL blocks in m from MC database
-const Double_t HCalblk_l_v_MC = 0.15875; // Vertical length of all HCAL blocks in m from MC database
-const Double_t posHCalXi = -2.165; // Distance from beam center to top of HCal in m
-const Double_t posHCalXf = 1.435; // Distance from beam center to bottom of HCal in m
-const Double_t posHCalYi = -0.9; // Distance from beam center to opposite-beam side of HCal in m
-const Double_t posHCalYf = 0.9; // Distance from beam center to beam side of HCal in m
-const Double_t posHCalXi_MC = -2.3531; // Distance from beam center to top of HCal in m from MC database
-const Double_t posHCalXf_MC = 1.45309; // Distance from beam center to bottom of HCal in m from MC database
-const Double_t posHCalYi_MC = -0.93155; // Distance from beam center to opposite-beam side of HCal in m from MC database
-const Double_t posHCalYf_MC = 0.93155; // Distance from beam center to beam side of HCal in m from MC database
-const Double_t HCalSampFrac = 0.077;  //Re-evaluated with MC GEn settings using second to outermost shower column for kin2
+const int maxHCalChan = 288; // Total HCal channels
+const int maxHCalRows = 24; // Total HCal rows
+const int maxHCalCols = 12; // Total HCal cols
+const int maxClusters = 100; // Total HCal clusters with information saved
+//const double HCALHeight = -0.2897; // Height of HCal above beamline in m
+const double HCalblk_l = 0.15; // Width and height of HCAL blocks in m, for pass 1
+const double HCalblk_l_h_MC = 0.15494; // Horizontal length of all HCAL blocks in m from MC database, pass 2
+const double HCalblk_l_v_MC = 0.15875; // Vertical length of all HCAL blocks in m from MC database, pass 2
+const double posHCalXi = -2.16014; // Distance from beam center to top of HCal in m, pass 1
+const double posHCalXf = 1.43826; // Distance from beam center to bottom of HCal in m, pass 1
+const double posHCalYi = -0.9; // Distance from beam center to opposite-beam side of HCal in m, pass 1
+const double posHCalYf = 0.9; // Distance from beam center to beam side of HCal in m, pass 1
+const double posHCalXi_MC = -2.655; // Distance from beam center to top of HCal in m from MC database, pass 2
+const double posHCalXf_MC = 1.155; // Distance from beam center to bottom of HCal in m from MC database, pass 2
+const double posHCalYi_MC = -0.92964; // Distance from beam center to opposite-beam side of HCal in m from MC database, pass 2
+const double posHCalYf_MC = 0.92964; // Distance from beam center to beam side of HCal in m from MC database, pass 2
+const double HCalSampFrac = 0.077;  //Re-evaluated with MC GEn settings using second to outermost shower column for kin2
 
 //BBCal
-const Int_t maxBBCalShChan = 189; // Total BBCal Shower Channels
-const Int_t maxBBCalShRows = 27;
-const Int_t maxBBCalShCols = 7;
-const Int_t maxBBCalPSChan = 52; // Total BBCal Preshower Channels
-const Int_t maxBBCalPSRows = 26;
-const Int_t maxBBCalPSCols = 2;
+const int maxBBCalShChan = 189; // Total BBCal Shower Channels
+const int maxBBCalShRows = 27;
+const int maxBBCalShCols = 7;
+const int maxBBCalPSChan = 52; // Total BBCal Preshower Channels
+const int maxBBCalPSRows = 26;
+const int maxBBCalPSCols = 2;
 
 //Beamline
-const Int_t chargeConvert = 3318; // See D.Flay Doc DB sbs.jlab.org/DocDB/0001/000164/002/dflay_bcm-ana-update_02-21-22.pdf p.8
-const Int_t clockActual = 103700; // Needed to convert the 104kHz clock to the actual counting rate
+const int chargeConvert = 3318; // See D.Flay Doc DB sbs.jlab.org/DocDB/0001/000164/002/dflay_bcm-ana-update_02-21-22.pdf p.8
+const int clockActual = 103700; // Needed to convert the 104kHz clock to the actual counting rate
 
 //SBS Magnet
-const Double_t Dgap = 48.0*2.54/100.0; //about 1.22 m
-const Double_t maxSBSfield = 1.26; //Tesla
-const Double_t SBSfield = 1.0; //fraction of max field. TODO: should be variable per run
-const Double_t SBSdist = 2.25; //m
-const Double_t dipGap = 1.22; //m
-const Double_t sbsmaxfield = 3.1 * atan( 0.85/(11.0 - 2.25 - 1.22/2.0 ))/0.3/1.22/0.7;
+const double Dgap = 48.0*2.54/100.0; //about 1.22 m
+const double maxSBSfield = 1.26; //Tesla
+const double dipGap = 1.22; //m
 
 //GEMs
-const Double_t GEMpitch = 10*TMath::DegToRad();
+const double GEMpitch = 10*TMath::DegToRad();
 
 ///////////////
 /////Physics/Math
-const Double_t PI = TMath::Pi();
-const Double_t M_e = 0.00051;
-const Double_t M_p = 0.938272;
-const Double_t M_n = 0.939565;
+const double PI = TMath::Pi();
+const double M_e = 0.00051;
+const double M_p = 0.938272;
+const double M_n = 0.939565;
 const UInt_t us = 1000000; //For conversion to seconds used by reporting time delays
-const Int_t proton = 2212; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
-const Int_t neutron = 2112; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
-const Int_t electron = 11; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
-const Int_t photon = 22; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+const int proton = 2212; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+const int neutron = 2112; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+const int electron = 11; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
+const int photon = 22; //pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
 
 ////////////////////////////
 //////Static Target/Scattering Chamber Parameters
-const Double_t l_tgt = 0.15; // Length of the target (m), keep in m and convert in equation
-const Double_t rho_tgt = 0.0723; // Density of target (g/cc)
-const Double_t rho_Al = 2.7; // Density of aluminum windows (g/cc)
-const Double_t celldiameter = 1.6*2.54; //cm, this is to properly cancel units
-const Double_t Ztgt = 1.0;
-const Double_t Atgt = 1.0;
-const Double_t Mmol_tgt = 1.008; //g/mol
-const Double_t dEdx_tgt=0.00574; //According to NIST ESTAR, the collisional stopping power of hydrogen is about 5.74 MeV*cm2/g at 2 GeV energy
-const Double_t dEdx_Al = 0.0021; //According to NIST ESTAR, the collisional stopping power of Aluminum is about 2.1 MeV*cm2/g between 1-4 GeV
-const Double_t uwallthick_LH2 = 0.0145; //cm
-const Double_t dwallthick_LH2 = 0.015; //cm
-const Double_t cellthick_LH2 = 0.02; //cm, this is a guess;
-const Double_t Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch 
+const double l_tgt = 0.15; // Length of the target (m), keep in m and convert in equation
+const double rho_tgt = 0.0723; // Density of target (g/cc)
+const double rho_Al = 2.7; // Density of aluminum windows (g/cc)
+const double celldiameter = 1.6*2.54; //cm, this is to properly cancel units
+const double Ztgt = 1.0;
+const double Atgt = 1.0;
+const double Mmol_tgt = 1.008; //g/mol
+const double dEdx_tgt=0.00574; //According to NIST ESTAR, the collisional stopping power of hydrogen is about 5.74 MeV*cm2/g at 2 GeV energy
+const double dEdx_Al = 0.0021; //According to NIST ESTAR, the collisional stopping power of Aluminum is about 2.1 MeV*cm2/g between 1-4 GeV
+const double uwallthick_LH2 = 0.0145; //cm
+const double dwallthick_LH2 = 0.015; //cm
+const double cellthick_LH2 = 0.02; //cm, this is a guess;
+const double Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch 
 
 
 
 //This belongs to the header file, not the class. So that way an output file can come from multiple data objects
+ 
+ // Height of HCal above beamline in m
+ const double getHCalOffset(TString myKin){
+ double hcal_offset = 0.0;
+
+ if(myKin == "SBS4"){
+ hcal_offset = -0.2897;
+ }else if(myKin == "SBS7"){
+ hcal_offset = -0.2897;
+ }else if(myKin == "SBS11"){
+ hcal_offset = -0.3334;
+ }else if(myKin == "SBS14"){
+ hcal_offset = -0.3334;
+ }else if(myKin == "SBS8"){
+ hcal_offset = -0.3334;
+ }else if(myKin == "SBS9"){
+ hcal_offset = -0.3288;
+ }else{
+ //We should never get here, cause then we have kinematic for data we dont have
+ cout << "Error! No hcal_offset for this kinematic: " << myKin <<" Figure it out nerd!" << endl;
+ return hcal_offset;
+ }
+
+ return hcal_offset; 
+ }
 
  string out_dir_temp = "yields_output";
  TString output_directory = TString(out_dir_temp);
@@ -192,47 +214,47 @@ param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 else if(myKin == "SBS8" && sbs_field == 70 && targ == "LD2"){
-param[0] = 2380.80; //used for background
-param[1] = -688.796;//used for background
-param[2] = -468.258;//used for background
-param[3] = 103.072 ;//used for background
-param[4] = 44.8213; //used for background
-param[5] = 38169.9; //used for proton
-param[6] = -0.769101; //used for proton
-param[7] = 0.183487; //used for proton
-param[8] = 13360.4; //used for neutron
-param[9] = 0.0816066; //used for neutron
-param[10] = 0.155811; //used for neutron
+param[0] = 2350.72; //used for background
+param[1] = -416.286;//used for background
+param[2] = -510.634;//used for background
+param[3] = 69.4098 ;//used for background
+param[4] = 39.7214; //used for background
+param[5] = 35194.1; //used for proton
+param[6] = -0.840632; //used for proton
+param[7] = 0.172817; //used for proton
+param[8] = 14330.5; //used for neutron
+param[9] = 0.035024; //used for neutron
+param[10] = 0.15335; //used for neutron
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 else if(myKin == "SBS8" && sbs_field == 100 && targ == "LD2"){
-param[0] = 290.667; //used for background
-param[1] = -93.4792;//used for background
-param[2] = -55.806;//used for background
-param[3] = 13.9312 ;//used for background
-param[4] = 5.26703; //used for background
-param[5] = 4274.15; //used for proton
-param[6] = -1.12882; //used for proton
-param[7] = 0.193342; //used for proton
-param[8] = 1636.95; //used for neutron
-param[9] = 0.0910029; //used for neutron
-param[10] = 0.146692; //used for neutron
+param[0] = 176.537; //used for background
+param[1] = -55.9134;//used for background
+param[2] = -45.936;//used for background
+param[3] = 10.2497 ;//used for background
+param[4] = 4.418; //used for background
+param[5] = 2568.24; //used for proton
+param[6] = -1.21766; //used for proton
+param[7] = 0.18222; //used for proton
+param[8] = 1269.11; //used for neutron
+param[9] = 0.0298255; //used for neutron
+param[10] = 0.145682; //used for neutron
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 else if(myKin == "SBS8" && sbs_field == 50 && targ == "LD2"){
-param[0] = 304.939; //used for background
-param[1] = -73.2219;//used for background
-param[2] = -54.0288;//used for background
-param[3] = 9.19629 ;//used for background
-param[4] = 4.34144; //used for background
-param[5] = 5338.41; //used for proton
-param[6] = -0.525136; //used for proton
-param[7] = 0.173936; //used for proton
-param[8] = 1895.43; //used for neutron
-param[9] = 0.086927; //used for neutron
-param[10] = 0.149202; //used for neutron
+param[0] = 207.189; //used for background
+param[1] = -30.5982;//used for background
+param[2] = -46.3422;//used for background
+param[3] = 4.49068;//used for background
+param[4] = 3.3200; //used for background
+param[5] = 4225.19; //used for proton
+param[6] = -0.595098; //used for proton
+param[7] = 0.14183; //used for proton
+param[8] = 1727.74; //used for neutron
+param[9] = 0.038772; //used for neutron
+param[10] = 0.14773; //used for neutron
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
@@ -340,9 +362,24 @@ TString outfile = Form("%s/yields_Zeke_%s_%s_%s_%i.root",(getOutputDir()).Data()
 //cout << outfile << endl;
 return outfile;
 }
+TString makeOutputFileName_BS(TString exp, TString Kin, int SBS_field,TString target,int first_event, int last_event){
+TString outfile = Form("%s/yields_Zeke_bootstrap_%s_%s_%s_%i_event_%i_%i.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field,first_event,last_event);
+//cout << outfile << endl;
+return outfile;
+}
 
+TString makeOutputFileName_MC(TString exp, TString Kin, int SBS_field,double sf,TString target){
+TString outfile = Form("%s/MC_Zeke_%s_%s_%s_%i_sf%.1f.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field,sf);
+//cout << outfile << endl;
+return outfile;
+}
 TString makeReportFileName(TString exp, TString Kin, int SBS_field,TString target){
 TString outfile = Form("%s/efficiencyRep_Zeke_%s_%s_%s_%i.txt",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field);
+//cout << outfile << endl;
+return outfile;
+}
+TString makeReportFileName_BS(TString exp, TString Kin, int SBS_field,TString target,int first_event, int last_event){
+TString outfile = Form("%s/efficiencyRep_Zeke_%s_%s_%s_%i_event_%i_%i.txt",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field,first_event,last_event);
 //cout << outfile << endl;
 return outfile;
 }

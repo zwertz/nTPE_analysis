@@ -26,7 +26,7 @@ int MAXNTRACKS;
 //for in-time
 double coin_mean,coin_sigma,coin_sig_fac;
 TString Exp,kin,data_file_name,kinematic_file_name,targ;
-int SBS_field,useAlshield;
+int SBS_field,useAlshield,first_event,last_event;
 double dx_low,dx_high,dy_low,dy_high,dxO_p,dyO_p,dxsig_p,dysig_p; //used for fitting proton information
 double thetapq_low,thetapq_high;
 //Use for Earm fit tuning
@@ -281,8 +281,16 @@ void parseMainConfig(const char *setup_file_name){
                         }
 			else if(key == "thetapq_high"){
                         thetapq_high = val.Atof();
-                        //cout << "thetapq_high" << thetapq_high << endl;
-                        }                        
+                        cout << "thetapq_high " << thetapq_high << endl;
+                        }
+			else if(key == "first_event"){
+                        first_event = val.Atoi();
+                        cout << "first_event " << first_event << endl;
+                        }    
+			else if(key == "last_event"){
+                        last_event = val.Atoi();
+                        cout << "last_event " << last_event << endl;
+                        }                    
 			else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
 			cout << "Found a key: "<< key << " that this script can't handle. Fix that!" << endl;
@@ -304,7 +312,7 @@ void parseMainConfig(const char *setup_file_name){
 	}
 }
 
-void HCalEfficiency( const char *setup_file_name){
+void HCalEfficiency_bootstrap( const char *setup_file_name){
  
  // Define a clock to check macro processing time
  TStopwatch *watch = new TStopwatch();
@@ -468,10 +476,11 @@ void HCalEfficiency( const char *setup_file_name){
   
   //Declare output file
   //Setup the name for the output file
-  TString outfile = makeOutputFileName(Exp,kin,SBS_field,targ);
+  TString outfile = makeOutputFileName_BS(Exp,kin,SBS_field,targ,first_event,last_event);
   TFile *fout = new TFile(outfile,"RECREATE");
 
  int nentries = C->GetEntries();
+ cout << "Total events in TChain: " <<nentries << endl;
  //global variables for script
  
   double Emin = 0.0; // Minimum HCal energy to be considered as a hit, added for hard check on 1D distributions
@@ -626,22 +635,20 @@ void HCalEfficiency( const char *setup_file_name){
    TH1D *hcoin = new TH1D( "hcoin", "HCal ADCt - BBCal ADCt, no cut; ns", 200, -100, 100 );
    TH1D *hcoin_cut = new TH1D( "hcoin_cut", "HCal ADCt - BBCal ADCt, cuts; ns", 200, -100, 100 );
 //Accounting and diagnostic variables
- long nevent = 0;
+ //long nevent = (long)first_event;
  int treenum = 0, currenttreenum = 0,currentrun =0;
  double progress = 0.0;
 
  cout << "Processing events.." << endl;
  
- //create loop to display the progress bar
- while (progress < 1.0){
- //cout << progress<< " " << nevent<< " " <<nentries << endl;
- int barwidth = 70;
- int step =1;
- if(nevent >= nentries){
- //cout << "Hello" << endl;
- break;
- }
-  while(C->GetEntry(nevent++)){
+
+//Enable a loop over the entry range we care about instead
+  for(long nevent= (long)first_event;nevent <= (long)last_event;nevent++){
+  if(nevent%50000==0){
+  cout << "nevent " << nevent << " last event " << last_event << endl;
+  }
+  C->GetEntry(nevent);
+  //cout << "The loop " << nevent << endl;
     currenttreenum = C->GetTreeNumber();
     if( nevent == 1 || currenttreenum != treenum ){
     //  cout << "My leaves" << endl;
@@ -916,45 +923,10 @@ for(int d=0; d<num_hcal_clusid;d++){
   h_nhits_cut->Fill(nhits);
   h_bbtrp_cut->Fill(BBtr_p[0]);
   hcoin_cut->Fill(coin_bestclus);
-  }                                
-
-
-  cout << "[";
-  int pos = barwidth*progress;
-  
-  for(int i=0; i<barwidth; ++i){
-  //cout << step << endl;
-  if(i<pos){
-  cout << "_";
-  }else if(i==pos){
-   if(step%4==0){
-   cout << "(>0_0)>";
-   }
-   if(step%4==1){
-   cout << "<(0_0)>";
-   }
-   if(step%4==2){
-   cout << "<(0_0<)";
-   }
-   if(step%4==3){
-   cout << "<( ; )>";
-   }
-  }
-  else{
-  cout << " ";
-  }
-  }
- progress = (double) ((nevent+1.0)/nentries);
- cout << "]" << (int) (progress*100) << "%\r";
- cout.flush();
- if(nevent%10000==0){
- step++;
- }
+  }                              
  //cout << progress<< " " << nevent<< " " <<nentries << endl;
- 
- }
 }// This ends the double loop over the events
-
+ 
  //dy anti-cut BG subtraction methods
  TH1D *hdx_nocut_MC_clone = (TH1D*)(hdx_nocut_MC->Clone("hdx_nocut_MC_clone")); //for later fit option
 
@@ -1224,7 +1196,7 @@ for(int d=0; d<num_hcal_clusid;d++){
    W2_totalfit->SetParLimits(3,gliml[0],glimh[0]);
    W2_totalfit->SetParLimits(4,gliml[1],glimh[1]);
    W2_totalfit->SetParLimits(5,gliml[2],glimh[2]);
-
+  
    //Fit the W2 histogram with total fit
    W2_totalfit->SetLineColor(kGreen);
    W2_totalfit->SetLineWidth(4);
@@ -1519,7 +1491,7 @@ for(int d=0; d<num_hcal_clusid;d++){
      //cout << "effres_top_error: " << effres_top_error << " effres_bot_error: " << effres_bot_error << " effres_toterror: " << effres_toterror <<" error_binomial: "<< effres_error_binomial << endl;
      //cout << "partial_eff_tot: " << partial_eff_tot << " partial_eff_miss: " << partial_eff_miss << endl;
 
-   TString reportfile = makeReportFileName(Exp,kin,SBS_field,targ);   
+   TString reportfile = makeReportFileName_BS(Exp,kin,SBS_field,targ,first_event,last_event);   
 
 
     
