@@ -1502,7 +1502,7 @@ for(int d=0; d<num_hcal_clusid;d++){
      //double totfitint_error = sqrt(totfitint);
      double W2bgint_error = W2_bkgd->IntegralError(0.4,W2fitmax-0.1,bkgd_par,m_bkgdfit.GetMatrixArray(),1.E-0)*binfac;
      double W2elas_error = sqrt(pow(totfitint_error,2)+pow(W2bgint_error,2));
-     //cout << "totfitint_error: " << totfitint_error << " W2bgint_error: "<< W2bgint_error << " W2elas_error: "<< W2elas_error << endl;
+     cout << "totfitint_error: " << totfitint_error << " W2bgint_error: "<< W2bgint_error << " W2elas_error: "<< W2elas_error << endl;
    
      //Generalized error using partial derivatives and uncertainties
      //Consider the choice of eff = 1 - (miss/tot)

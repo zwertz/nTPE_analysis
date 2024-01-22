@@ -842,6 +842,10 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
 
   }//End for loop to determine efficiency
  
+  //Create a TGraphErrors to represent the error band for the first graph
+  TGraphErrors* errorBand1 = new TGraphErrors();
+  errorBand1->SetName("errorBand1"); 
+
   //Convert to array because graph doesnt like vector
   bin_p_pro_array = bin_p_pro.data();
   bin_p_neu_array = bin_p_neu.data();
@@ -866,7 +870,29 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   proton_det_eff->SetLineColor(kRed);
   graph_p->Fit("proton_det_eff","SRMQEF+"); 
   
+  //need to populate the first TGraphErrors with values representing error
+  int num_points1 = graph_p->GetN();
+
+  for(int k = 0; k < num_points1; ++k){
+
+  double x_1 = graph_p->GetX()[k];
+  double fitVal_1 = proton_det_eff->Eval(x_1);
+  //calculate a binomial error for the fit function
+  double tot_1 = HCalE_proton[k]->Integral();
+  double error_1 = TMath::Sqrt((fitVal_1/100)*(1-fitVal_1/100)/tot_1)*100;
+  errorBand1->SetPoint(k,x_1,fitVal_1);
+  errorBand1->SetPointError(k,0,error_1);
+
+  }
   
+  //set features for graphing
+  errorBand1->SetFillStyle(1001);
+  errorBand1->SetFillColorAlpha(kRed,0.2);
+  errorBand1->SetLineWidth(1);
+
+  m_graph->Add(errorBand1, "E3");
+
+
   //get the error on the fit
   for(int i=0; i< num_params;i++){
   param_p_error[i] = proton_det_eff->GetParError(i);
@@ -886,6 +912,10 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   prot_det_eff_sbs14 = calc_det_eff(sbs14_nucleonp,param_p);
 
 
+  //Create a TGraphErrors to represent the error band for the first graph
+  TGraphErrors* errorBand2 = new TGraphErrors();
+  errorBand2->SetName("errorBand2");
+
   //draw the graph for the efficiency for the neutron
   auto graph_n = new TGraph(num_bin,bin_p_neu_array,HCalEff_neutron_arr);
   graph_n->SetTitle("Neutron");
@@ -902,7 +932,27 @@ TCanvas *c10 = new TCanvas("c10","HCal Spatial Resolution (4x4 cluster)",1600,12
   neutron_det_eff->SetLineColor(kCyan);
   graph_n->Fit("neutron_det_eff","SRMQEF+");
 
+  //need to populate the first TGraphErrors with values representing error
+  int num_points2 = graph_n->GetN();
+
+  for(int j = 0; j < num_points2; ++j){
+
+  double x_2 = graph_n->GetX()[j];
+  double fitVal_2 = neutron_det_eff->Eval(x_2);
+  //calculate a binomial error for the fit function
+  double tot_2 = HCalE_neutron[j]->Integral();
+  double error_2 = TMath::Sqrt((fitVal_2/100)*(1-fitVal_2/100)/tot_2)*100;
+  errorBand2->SetPoint(j,x_2,fitVal_2);
+  errorBand2->SetPointError(j,0,error_2);
+  }
   
+  //set features for graphing
+  errorBand2->SetFillStyle(1001);
+  errorBand2->SetFillColorAlpha(kCyan,0.2);
+  errorBand2->SetLineWidth(1);
+
+  m_graph->Add(errorBand2, "E3");
+
   
   //get the error on the fit
   for(int i=0; i< num_params;i++){
