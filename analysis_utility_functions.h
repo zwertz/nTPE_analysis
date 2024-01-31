@@ -199,17 +199,17 @@ param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }
 else if(myKin == "SBS4" && sbs_field == 50 && targ == "LD2"){
-param[0] = 122.570; //used for background p0
-param[1] = -44.2312;//used for background p1
-param[2] = -38.1333;//used for background p2
-param[3] = 9.83748 ;//used for background p3
-param[4] = 4.55384; //used for background p4
-param[5] = 1041.39; //used for proton amplitude
-param[6] = -1.08320; //used for proton mean
-param[7] = 0.184155; //used for proton sigma
-param[8] = 429.021; //used for neutron amplitude
-param[9] = 0.015794; //used for neutron mean
-param[10] = 0.157336; //used for neutron sigma
+param[0] = 168.644; //used for background p0
+param[1] = -61.7178;//used for background p1
+param[2] = -50.2905;//used for background p2
+param[3] = 11.5387 ;//used for background p3
+param[4] = 5.26307; //used for background p4
+param[5] = 915.273; //used for proton amplitude
+param[6] = -1.09932; //used for proton mean
+param[7] = 0.195644; //used for proton sigma
+param[8] = 346.476; //used for neutron amplitude
+param[9] = 0.0300381; //used for neutron mean
+param[10] = 0.173472; //used for neutron sigma
 param[11] = -3.0; // min value for fit
 param[12] = 2.0; // max value for fit
 }

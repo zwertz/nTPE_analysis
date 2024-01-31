@@ -510,16 +510,16 @@ void HCalEfficiency( const char *setup_file_name){
   //cout << "max:" << dxmax3 << " min: " << dxmin3 << endl;
 
   //Parameters for acceptance matching using MC values. Includes info handle any magnetic field. Not just zero field data. These parameters should work for pass 2 data
-  double HCal_right_MC = posHCalYf_MC-HCalblk_l_h_MC+dysig_p;
-  double HCal_left_MC = posHCalYi_MC+HCalblk_l_h_MC-dysig_p;
-  double HCal_bot_MC = posHCalXi_MC+HCalblk_l_v_MC+dxsig_p-dxO_p;
-  double HCal_top_MC = posHCalXf_MC-HCalblk_l_v_MC-dxsig_p-dxO_p;
+  double HCal_left_MC = posHCalYf_MC-HCalblk_l_h_MC+dysig_p;
+  double HCal_right_MC = posHCalYi_MC+HCalblk_l_h_MC-dysig_p;
+  double HCal_top_MC = posHCalXi_MC+HCalblk_l_v_MC+dxsig_p-dxO_p;
+  double HCal_bot_MC = posHCalXf_MC-HCalblk_l_v_MC-dxsig_p-dxO_p;
 
   //Only valid for pass 1 data
-  double HCal_right = posHCalYf-HCalblk_l+dysig_p; 
-  double HCal_left = posHCalYi+HCalblk_l-dysig_p;
-  double HCal_bot = posHCalXi+HCalblk_l+dxsig_p-dxO_p;
-  double HCal_top = posHCalXf-HCalblk_l-dxsig_p-dxO_p;
+  double HCal_left = posHCalYf-HCalblk_l+dysig_p; 
+  double HCal_right = posHCalYi+HCalblk_l-dysig_p;
+  double HCal_top = posHCalXi+HCalblk_l+dxsig_p-dxO_p;
+  double HCal_bot = posHCalXf-HCalblk_l-dxsig_p-dxO_p;
 
 //Histograms
 //HCal detections
@@ -822,15 +822,15 @@ for(int d=0; d<num_hcal_clusid;d++){
       xhcal_expect > (HCal_top_MC) ||
       xhcal_expect < (HCal_bot_MC);*/
 
-  bool offhcal =
-      yhcal_expect > (HCal_right) ||
-      yhcal_expect < (HCal_left) ||
-      xhcal_expect > (HCal_top) ||
+  bool onhcal =
+      yhcal_expect > (HCal_right) &&
+      yhcal_expect < (HCal_left) &&
+      xhcal_expect > (HCal_top) &&
       xhcal_expect < (HCal_bot);
 
  //Need to make Active Area cut for HCal face use. xhcal and yhcal for diagnostic later
  //Base level cut for all detection efficiency analysis
- if( offhcal ) continue;
+ if( !onhcal ) continue;
  hxyexp_hactivecut->Fill(yhcal_expect,xhcal_expect);
 
  //all cut bools

@@ -32,7 +32,7 @@ int MAXNTRACKS;
 double tdiffmax,dx_low,dx_high,dy_low,dy_high,dxsig_n_fac,dxsig_p_fac,dysig_fac; 
 TString Exp,kin,data_file_name,kinematic_file_name,targ;
 int SBS_field,useAlshield;
-double W2_low,W2_high,tdiff,dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dxmax;
+double W2_low,W2_high,tdiff,dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dxmax,W2_mean,W2_sig,W2_sigfac;
 
 //Define some fits to be used for analysis
 //Background fit of a fourth-order polynomial
@@ -168,14 +168,18 @@ void parseMainConfig(const char *setup_file_name){
                 	SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
 			}
-			else if(key == "W2_low"){
-                	W2_low = val.Atof();
-                        //cout << "W2 low " << W2_low << endl;
+			else if(key == "W2_mean"){
+                	W2_mean = val.Atof();
+                        //cout << "W2 mean " << W2_mean << endl;
 			}
-			else if(key == "W2_high"){
-			W2_high = val.Atof();
-                        //cout << "W2 high " << W2_high << endl;
+			else if(key == "W2_sig"){
+			W2_sig = val.Atof();
+                        //cout << "W2 sig " << W2_sig << endl;
 			}
+			else if(key == "W2_sigfac"){
+                        W2_sigfac = val.Atof();
+                        //cout << "W2 sig fac " << W2_sigfac << endl;
+                        }
 			else if(key == "targ"){
 			targ = val;
 			//cout << "Target " << targ << endl;
@@ -295,6 +299,9 @@ void NucleonYields_plots( const char *setup_file_name){
  //this function will inialize the global parameters: globalcut,Exp,kin,data_file_name,kinematic_file_name,SBS_field,W2_low,W2_high,targ,runnums
  parseMainConfig(setup_file_name);
 
+ W2_low = W2_mean - W2_sigfac * W2_sig;
+ W2_high = W2_mean + W2_sigfac * W2_sig;
+
  //Load in information about the data files specified in The One config file. 
  //We will store the information in data_objects and put those in a vector
  vector<data_object> myData;
@@ -331,6 +338,23 @@ void NucleonYields_plots( const char *setup_file_name){
   double TDCT_id[maxTDCTrigChan], TDCT_tdc[maxTDCTrigChan], hodo_tmean[maxTDCTrigChan];
   int TDCTndata;
   double kineW2;
+
+  //Parameters for acceptance matching using MC values. Includes info handle any magnetic field. Not just zero field data. These parameters should work for pass 2 data
+  double HCal_left_MC = posHCalYf_MC-HCalblk_l_h_MC;
+  double HCal_right_MC = posHCalYi_MC+HCalblk_l_h_MC;
+  double HCal_top_MC = posHCalXi_MC+HCalblk_l_v_MC;
+  double HCal_bot_MC = posHCalXf_MC-HCalblk_l_v_MC;
+
+  //Only valid for pass 1 data
+  double HCal_left = posHCalYf-HCalblk_l;
+  double HCal_right = posHCalYi+HCalblk_l;
+  double HCal_top = posHCalXi+HCalblk_l;
+  double HCal_bot = posHCalXf-HCalblk_l;
+
+  double HCal_fid_top = HCal_top + dxsig_p;
+  double HCal_fid_bot = HCal_bot - dxsig_n;
+  double HCal_fid_left = HCal_left - dysig_p; //currently dysig is same for both p and n
+  double HCal_fid_right = HCal_right + dysig_p;
 
   // Cut on global parameters from setup config
   TTreeFormula *GlobalCut = new TTreeFormula( "GlobalCut", globalcut, C );
@@ -513,6 +537,9 @@ void NucleonYields_plots( const char *setup_file_name){
   TH2D *hxy_fidcut = new TH2D("hxy_fidcut","HCal X vs Y, fiducial cut;y_{HCAL} (m); x_{HCAL} (m)",300, -2.0, 2.0, 500, -2.5, 2.5);
   TH1D *h_W2_fidcut = new TH1D( "W2_fidcut", "W2_fidcut; GeV", 250, -1.0, 3.0 );
   TH2D *hxy_expect_fidcut = new TH2D("hxy_expect_fidcut","HCal X Expect vs Y Expect, fiducial cut;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
+  TH2D *hxy_expect_fidcutp = new TH2D("hxy_expect_fidcutp","HCal X Expect vs Y Expect, proton passed fiducial;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
+ TH2D *hxy_expect_fidcutn = new TH2D("hxy_expect_fidcutn","HCal X Expect vs Y Expect, neutron passed fiducial;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
+  TH2D *hxy_expect_failedfid = new TH2D("hxy_expect_failedfid","HCal X Expect vs Y Expect, failed fiducial cut;HCal Y Expect (m); HCal X Expect (m)", 300, -2.0, 2.0, 500, -2.5, 2.5 );
   TH1D *hdx_fidanticut = new TH1D( "dx_fidanticut", "HCal dx (m), Fid  anticut; m", 250, dx_low, dx_high );  
   TH2D *hdxdy_fidanticut = new TH2D("dxdy_fidanticut","HCal dxdy Fid anticut;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)", 350, -1.25, 1.25, 350, dx_low, dx_high );
   TH2D *h_W2_dx = new TH2D("W2_dx","W2 vs dx, no cuts; dx (m); W2 (GeV)",250,dx_low, dx_high,250, -1.0, 6.0);
@@ -713,28 +740,24 @@ void NucleonYields_plots( const char *setup_file_name){
   h_hcaltdctime_bbcalatime->Fill(hcaltdc_bbcal);
   h_hcalatime_bbcalatime->Fill(hcala_bbcal);
 
-  //Define some HCal parameters
-  //No events which project hadrons off the face of HCal should be considered. Call this acceptance cut. This inherently relies on the MC DB values. Could also consider not that.
-  double HCal_left = posHCalYf_MC-HCalblk_l_h_MC;
-  double HCal_right = posHCalYi_MC+HCalblk_l_h_MC;
-  double HCal_top = posHCalXi_MC+HCalblk_l_v_MC;
-  double HCal_bot = posHCalXf_MC-HCalblk_l_v_MC;
-
   
   //Primary Cuts
-  bool offhcal =
-  (yhcal < HCal_right) ||
-  (yhcal > HCal_left) ||
-  (xhcal < HCal_top) ||
-  (xhcal > HCal_bot);
+  bool onhcal =
+  (yhcal_expect > HCal_right) &&
+  (yhcal_expect < HCal_left) &&
+  (xhcal_expect > HCal_top) &&
+  (xhcal_expect < HCal_bot);
 
   //Base level acceptance cut for yield analysis
-  if( offhcal ) continue;
-  
+  if( !onhcal ){
+  hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect);  
+  continue;
+  }
   hxy_acceptancecut ->Fill(yhcal,xhcal);
    
   bool goodW2 = (W2 >= W2_low) && (W2 <= W2_high);  
-  bool bad_dy = (abs(dy-dyO_n) > (dysig_fac*dysig_n)) || (abs(dy-dyO_p)>(dysig_fac*dysig_p));
+  //get rid of bad dy cut and implement a y_expect cut in the fiducial cut
+  //Will need some sort of dy cut
   if(goodW2 && !failedglobal){  //Observed W2 peak
   
   h_bbEoverp_cut->Fill(BB_E_over_p);
@@ -746,7 +769,6 @@ void NucleonYields_plots( const char *setup_file_name){
   hxy_expect_cut->Fill(yhcal_expect,xhcal_expect);
   
   //cut on dy to make life easier
-  if(!bad_dy){
 
   h_W2_cut->Fill(W2);
   h_vert_z_cut->Fill(vz[0]);
@@ -805,80 +827,34 @@ void NucleonYields_plots( const char *setup_file_name){
  if(find_n){
  hdxdy_ncut->Fill(dy,dx);
  }
-
  
- //We need to make sure we will see both neutrons and protons giving the kinematic information
- //fills only if true
- bool neutron_hyp = ((xhcal_expect - dxmax) >= HCal_top) && xhcal_expect <= HCal_bot ;
- bool proton_hyp = ((xhcal_expect + dxmax) <= HCal_bot) && xhcal_expect >= HCal_top ;
-
-
- /* if(find_both){
- * 
-  if(neutron_hyp && proton_hyp){
-        hdxdy_pncut->Fill(dy,dx);
-        hdx_pncut->Fill(dx);
-        hdy_pncut->Fill(dy);
-        h_W2_pncut->Fill(W2);
-        hxy_pncut->Fill(yhcal,xhcal);
-       
-  }*/
-  if(find_n){
- 	if(neutron_hyp){
-	//HCal_bot =(posHCalXi_MC+HCalblk_l_v_MC) = 1.29434 which is the edge of HCal we need to worry about find neutrons at a kinematic
-	hdxdy_pncut->Fill(dy,dx);
-        hdx_pncut->Fill(dx);
-	hdx_ncut->Fill(dx);
-	hdy_pncut->Fill(dy);
-	h_W2_pncut->Fill(W2);
-	hxy_pncut->Fill(yhcal,xhcal);
-	hxy_ncut->Fill(yhcal,xhcal);
-        hxy_expect_ncut->Fill(yhcal_expect,xhcal_expect);     
-	}
- 
- }else if (find_p){
- 	if(proton_hyp){
-	//HCal_top =(posHCalXf_MC-HCalblk_l_v_MC) = -2.19435 which is the edge of HCal we need to worry about find protons at a kinematic
-	hdxdy_pncut->Fill(dy,dx);
-        hdx_pncut->Fill(dx);
-        hdx_pcut->Fill(dx);
-	hdy_pncut->Fill(dy);
-        h_W2_pncut->Fill(W2);
-        hxy_pncut->Fill(yhcal,xhcal);
-        hxy_pcut->Fill(yhcal,xhcal);
-        hxy_expect_pcut->Fill(yhcal_expect,xhcal_expect);	
-	}
-       }
- double HCal_fid_top = HCal_top - dxsig_p;
- double HCal_fid_bot = HCal_bot + dxsig_n;
- double HCal_fid_left = HCal_left + dysig_p; //currently dysig is same for both p and n
- double HCal_fid_right = HCal_right - dysig_p;
  //Actual fiducial cut. This assumes a neutron and proton hypothesis since the expect values for the HCal positions do not account for the deflection of the protons due to the magnetic field.
- bool neutron_hyp_fid = ((xhcal_expect - dxmax) >= HCal_fid_top) && xhcal_expect <= HCal_bot ;
- bool proton_hyp_fid = ((xhcal_expect + dxmax) <= HCal_fid_bot) && xhcal_expect >= HCal_top ;
- 
+ bool neutron_hyp_fid = (xhcal_expect > HCal_fid_top) && (xhcal_expect < HCal_fid_bot) ;
+ bool proton_hyp_fid = ((xhcal_expect - dxmax) > HCal_fid_top) && (xhcal_expect-dxmax) < HCal_fid_bot ;
+ bool y_dir = (yhcal_expect > HCal_fid_right) && (yhcal_expect < HCal_fid_left) ;
  //change the or to an and, then rerun some data
- bool inFiducial = (neutron_hyp_fid && proton_hyp_fid);
+ bool inFiducial = (y_dir && neutron_hyp_fid && proton_hyp_fid);
       if(inFiducial){
-        hdxdy_fidcut->Fill(dy,dx);
+       
+	if(neutron_hyp_fid){
+ 	hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect);
+ 	}
+ 	if(proton_hyp_fid){
+ 	hxy_expect_fidcutp->Fill(yhcal_expect,xhcal_expect-dxmax);
+ 	}
+
+	hdxdy_fidcut->Fill(dy,dx);
         hdx_fidcut->Fill(dx);
         hdy_fidcut->Fill(dy);
         h_W2_fidcut->Fill(W2);
         hxy_fidcut->Fill(yhcal,xhcal);
         hxy_expect_fidcut->Fill(yhcal_expect,xhcal_expect);
         h_W2_dx_fidcut->Fill(dx,W2);
-      }
-     /* else{
+      }else{
       //else for fiducial cut
       //cout << "The Fiducial cut actually failed for once." << endl;
-      hdx_fidanticut->Fill(dx);
-      hdxdy_fidanticut->Fill(dy,dx);
-       }*/
-     }else{
-     //else for dy cut    
-      hdx_anticut->Fill(dx);
-      hdxdy_anticut->Fill(dy,dx);
-     }
+      hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect);
+       }
     }
  cout << "[";
   int pos = barwidth*progress;
@@ -1058,6 +1034,169 @@ hdx_BGSub->GetXaxis()->SetTitle("m");
 
  c1->Write();
 
+
+ // Drawing the active area cuts and the fiducial cuts to visulaize them.
+ double aaXi = HCal_top;
+ double aaXf = HCal_bot;
+ double aaYi = HCal_right;
+ double aaYf = HCal_left;
+
+ double fidXi = HCal_fid_top;
+ double fidXf = HCal_fid_bot;
+ double fidYi = HCal_fid_right;
+ double fidYf = HCal_fid_left;
+
+ //Define lines for active area cut
+ TLine *LineXi = new TLine(aaYi,aaXi,aaYf,aaXi); //horizontal line at aaXi from aaYi to aaYf
+ LineXi->SetLineWidth(2);
+ LineXi->SetLineColor(kRed);
+ 
+ TLine *LineXf = new TLine(aaYi,aaXf,aaYf,aaXf); //horizontal line at aaXf from aaYi to aaYf
+ LineXf->SetLineWidth(2);
+ LineXf->SetLineColor(kRed);
+
+ TLine *LineYi = new TLine(aaYi,aaXi,aaYi,aaXf); //vertical line at aaYi from aaXi to aaXf
+ LineYi->SetLineWidth(2);
+ LineYi->SetLineColor(kRed);
+
+ TLine *LineYf = new TLine(aaYf,aaXi,aaYf,aaXf); //vertical line at aaYf from aaXi to aaXf
+ LineYf->SetLineWidth(2);
+ LineYf->SetLineColor(kRed);
+
+ //Define lines for fid cut
+ TLine *LineFidXi = new TLine(fidYi,fidXi,fidYf,fidXi); //horizontal line at fidXi from fidYi to fidYf
+ LineFidXi->SetLineWidth(2);
+ LineFidXi->SetLineColor(kMagenta);
+
+ TLine *LineFidXf = new TLine(fidYi,fidXf,fidYf,fidXf); //horizontal line at fidXf from fidYi to fidYf
+ LineFidXf->SetLineWidth(2);
+ LineFidXf->SetLineColor(kMagenta);
+
+ TLine *LineFidYi = new TLine(fidYi,fidXi,fidYi,fidXf); //vertical line at fidYi from fidXi to fidXf
+ LineFidYi->SetLineWidth(2);
+ LineFidYi->SetLineColor(kMagenta);
+
+ TLine *LineFidYf = new TLine(fidYf,fidXi,fidYf,fidXf); //vertical line at fidYf from fidXi to fidXf
+ LineFidYf->SetLineWidth(2);
+ LineFidYf->SetLineColor(kMagenta);
+
+ TLine *LineFidXProton = new TLine(fidYi,fidXi+dxmax,fidYf,fidXi+dxmax); //horizontal line at fidXi+dxmax from fidYi to fidYf
+ LineFidXProton->SetLineWidth(2);
+ LineFidXProton->SetLineColor(kMagenta); 
+ LineFidXProton->SetLineStyle(2);
+
+ //Define lines for position
+
+ TLine *LinePosXi = new TLine(posHCalYi,posHCalXi,posHCalYf,posHCalXi); //horizontal line at posHCalXi from posHCalYi to posHCalYf
+ LinePosXi->SetLineWidth(2);
+ LinePosXi->SetLineColor(kGreen);
+ 
+ TLine *LinePosXf = new TLine(posHCalYi,posHCalXf,posHCalYf,posHCalXf); //horizontal line at posHCalXf from posHCalYi to posHCalYf
+ LinePosXf->SetLineWidth(2);
+ LinePosXf->SetLineColor(kGreen);
+
+ TLine *LinePosYi = new TLine(posHCalYi,posHCalXi,posHCalYi,posHCalXf); //vertical line at posHCalYi from posHCalXi to posHCalXf
+ LinePosYi->SetLineWidth(2);
+ LinePosYi->SetLineColor(kGreen);
+
+ TLine *LinePosYf = new TLine(posHCalYf,posHCalXi,posHCalYf,posHCalXf); //horizontal line at posHCalYf from posHCalXi to posHCalXf
+ LinePosYf->SetLineWidth(2);
+ LinePosYf->SetLineColor(kGreen);
+
+ //make the canvas to put this fiducial/acceptance check on
+ TCanvas* c2 = new TCanvas("c2","c2",1600,1200);
+ c2->Divide(3,1);
+
+ //first plot
+ c2->cd(1);
+ hxy_nocut->Draw("colz"); 
+ LineXi->Draw("same");
+ LineXf->Draw("same");
+ LineYi->Draw("same");
+ LineYf->Draw("same");
+ LineFidXi->Draw("same");
+ LineFidXf->Draw("same");
+ LineFidYi->Draw("same");
+ LineFidYf->Draw("same");
+ LinePosXi->Draw("same");
+ LinePosXf->Draw("same");
+ LinePosYi->Draw("same");
+ LinePosYf->Draw("same");
+
+ //second plot
+ c2->cd(2);
+ hxy_expect_fidcut->Draw("colz");
+ LineXi->Draw("same");
+ LineXf->Draw("same");
+ LineYi->Draw("same");
+ LineYf->Draw("same");
+ LineFidXi->Draw("same");
+ LineFidXf->Draw("same");
+ LineFidYi->Draw("same");
+ LineFidYf->Draw("same");
+ LinePosXi->Draw("same");
+ LinePosXf->Draw("same");
+ LinePosYi->Draw("same");
+ LinePosYf->Draw("same");
+ LineFidXProton->Draw("same");
+
+ //third plot
+ c2->cd(3);
+ hxy_expect_failedfid->Draw("colz");
+ LineXi->Draw("same");
+ LineXf->Draw("same");
+ LineYi->Draw("same");
+ LineYf->Draw("same");
+ LineFidXi->Draw("same");
+ LineFidXf->Draw("same");
+ LineFidYi->Draw("same");
+ LineFidYf->Draw("same");
+ LinePosXi->Draw("same");
+ LinePosXf->Draw("same");
+ LinePosYi->Draw("same");
+ LinePosYf->Draw("same");
+ LineFidXProton->Draw("same");
+
+ c2->Write();
+
+//just to see neutron hypothesis vs proton hypothesis
+ TCanvas* c3 = new TCanvas("c3","c3",1600,1200);
+ 
+ c3->Divide(2,1);
+ c3->cd(1);
+ hxy_expect_fidcutn->Draw("colz");
+ LineXi->Draw("same");
+ LineXf->Draw("same");
+ LineYi->Draw("same");
+ LineYf->Draw("same");
+ LineFidXi->Draw("same");
+ LineFidXf->Draw("same");
+ LineFidYi->Draw("same");
+ LineFidYf->Draw("same");
+ LinePosXi->Draw("same");
+ LinePosXf->Draw("same");
+ LinePosYi->Draw("same");
+ LinePosYf->Draw("same");
+ LineFidXProton->Draw("same"); 
+
+ c3->cd(2);
+ hxy_expect_fidcutp->Draw("colz");
+ LineXi->Draw("same");
+ LineXf->Draw("same");
+ LineYi->Draw("same");
+ LineYf->Draw("same");
+ LineFidXi->Draw("same");
+ LineFidXf->Draw("same");
+ LineFidYi->Draw("same");
+ LineFidYf->Draw("same");
+ LinePosXi->Draw("same");
+ LinePosXf->Draw("same");
+ LinePosYi->Draw("same");
+ LinePosYf->Draw("same");
+ LineFidXProton->Draw("same");
+
+ c3->Write();
+
  TString reportfile = makeYieldReportFileName(Exp,kin,SBS_field,targ);
  //Declare outfile
  ofstream report;
@@ -1082,7 +1221,14 @@ hdx_BGSub->GetXaxis()->SetTitle("m");
   //output the info to some files
   TString plotname = outfile;
   plotname.ReplaceAll(".root",".pdf");
-  c1->Print(plotname.Data(),"pdf");
+  TString start = Form("%s%s",plotname.Data(),"(");
+  //middle is the same as the name
+  TString end = Form("%s%s",plotname.Data(),")");
+  
+  c1->Print(start.Data(),"pdf");
+  c2->Print(plotname.Data(),"pdf");
+  c3->Print(end.Data(),"pdf");
+ 
   plotname.ReplaceAll(".pdf",".png");
   c1->Print(plotname.Data(),"png");
   fout->Write();
