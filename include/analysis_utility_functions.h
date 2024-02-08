@@ -488,7 +488,7 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
         }
  
  void printKinInfo(){
-        cout << "------------------------"                              << endl
+        cout << "-------------------------------------------------------------------------------------------------------------------------------------------------"        << endl
              << Form("Kinematic: %s,",(getKinematic()).Data())          << endl
              << Form("Beam Energy: %f,",getBeamEnergy())                << endl
              << Form("BB angle in Degrees: %f,",getBBAngle_Deg())       << endl
@@ -503,7 +503,7 @@ kinematic_obj(const char *kinematic_file_name,TString Kin){
 	     << Form("Q2: %f,",getQ2())			                << endl
 	     << Form("Electron p: %f,",getElectronP())                  << endl
              << Form("Nucleon p: %f,",getNucleonP())                    << endl
-	     << "------------------------"                              << endl;
+	     << "-------------------------------------------------------------------------------------------------------------------------------------------------"        << endl;
  }
 };
 
