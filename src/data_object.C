@@ -3,7 +3,6 @@
 //Companion implementation. Class to represent a data object file for GMn/nTPE analysis. Anything we need to know about data files.
 
 #include "../include/data_object.h"
-#include "../src/kinematic_obj.C"
 #include <iostream>
 #include "TString.h"
 #include "TMath.h"
@@ -79,7 +78,7 @@ TString data_object::makeInputFileName(){
 }//end input file maker
 
 //constructor implementation
-data_object::data_object(int runnum,const char *data_file_name,const char *kinematic_file_name,TString Kin, TString SBS_field, TString targ){
+data_object::data_object(int runnum,const char *data_file_name,const char *kinematic_file_name,TString Kin, TString SBS_field, TString targ, TString daPass){
  //This part of the constructor reads in information about the data file itself
  ifstream datafile(data_file_name);
  //check if there is a problem opening the file
@@ -102,17 +101,21 @@ data_object::data_object(int runnum,const char *data_file_name,const char *kinem
          	sbs_field = (((TObjString*) (*tokens)[4])->GetString()).Atoi();
          	//cout << "Run " << run  << " Pass " << pass << " Kin " << kinematic << " Target " << target << " SBS Field  " << sbs_field << endl;
 			if(!(kinematic == Kin)){
-        		cout << "Error:The run " << run << " has a mismatch in the kinematic, investigate what is going on!" << endl;
+        		cout << "Error: The run " << run << " has a mismatch in the kinematic, investigate what is going on!" << endl;
         		return;
         		}
         		if(!(sbs_field == SBS_field)){
-        		cout << "Error:The run "<< run << " has a mismatch in the sbs field, investigate what is going on!" << endl;
+        		cout << "Error: The run "<< run << " has a mismatch in the sbs field, investigate what is going on!" << endl;
         		return;
         		}
         		if(!(target == targ )){
-        		cout << "Error:The run " << run << " has a mismatch in the target, investigate what is going on!" << endl;
+        		cout << "Error: The run " << run << " has a mismatch in the target, investigate what is going on!" << endl;
         		return;
         		}
+			if(!(pass == daPass )){
+			cout << "Error: The run " << run << " has a mismatch in the pass, investigate what is going on!" << endl;
+			return;
+			}
         	gotRun = true;
          	//cout << gotRun << endl;
          	} else{

@@ -4,7 +4,6 @@
 //implementation for parsing my config files. Should be able to handle all analysis types.
 
 #include "../include/parse_config.h"
-#include "../src/utility.C"
 #include <iostream>
 #include "TCut.h"
 #include <vector>
@@ -86,7 +85,10 @@
                         }else if(key == "kinematic_name"){
                         kinematic_file_name = val;
                         //cout << "Kinematic File " << kinematic_file_name << endl;
-                        }else if(key == "SBS_field"){
+                        }else if(key == "pass"){
+                        pass = val;
+			//cout << "Pass " << pass << endl;
+			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
                         }else if(key == "W2_mean"){
@@ -239,9 +241,9 @@
 
   TString parse_config::getKin(){ return kin; }
 
-  TString parse_config::getKinFileName(){ return data_file_name; }
+  TString parse_config::getKinFileName(){ return kinematic_file_name; }
 
-  TString parse_config::getDataFileName(){ return kinematic_file_name; }
+  TString parse_config::getDataFileName(){ return data_file_name; }
 
   TString parse_config::getTarg(){ return targ; }
 
@@ -250,6 +252,8 @@
   TString parse_config::getNeutronFileName(){ return neutron_root_file; }
 
   TString parse_config::getMCFileName(){ return MC_file; }
+
+  TString parse_config::getPass(){ return pass; }
 
   int parse_config::getSBSField(){ return SBS_field; }
 
