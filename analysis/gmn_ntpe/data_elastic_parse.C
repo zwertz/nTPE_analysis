@@ -85,7 +85,60 @@ void data_elastic_parse(const char *setup_file_name){
   //setup hcal active area with bounds that match database depending on pass
   vector<double> hcalaa = cuts::hcal_ActiveArea_data(1,1,pass);
 
-  //proceed with active area/fid cuts. // Also put output file name makers somewhere
+  int num_runs = runNums.size();
+  double hcalfit_low = exp_constants::hcalposXi_mc; //lower fit/bin limit for hcal dx plots. 
+  double hcalfit_high = exp_constants::hcalposXf_mc; //higher fit/bin limit for hcal dx plots.
+  double hcal_fitrange = exp_constants::hcal_vrange; //Full range of hcal dx plots
+
+  //store all the data information we care about in a vector of data_objects for further use
+  vector<data_object> myData;
+  for(int i=0; i < num_runs; i++ ){
+  //Run Num, date map name, kinematic map name, Kinematic, SBS Field, Target, Pass
+  data_object myObj(runNums[i],data_map,kinematic_file,kin,sbs_field,target,pass);
+  myData.push_back(myObj);
+  myObj.printRunInfo();
+  }
+
+  //setup output file
+  TString outfile = utility::makeOutputFileNameParse(exp,pass,kin,sbs_field,target);
+  TFile *fout = new TFile(outfile,"RECREATE");
+
+
+  //Histograms///////
+
+  //global cuts
+  TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
+  TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2);
+  TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), Cuts;",250,0.0,2.2);
+  TH1D *h_vert_z = new TH1D( "vert_z", "Vertex Position z-direction (m); m", 200, -0.2, 0.2 );
+  TH1D *h_vert_z_cut = new TH1D( "vert_z_cut", "Vertex Position z-direction (m), Cuts; m", 200, -0.2, 0.2 );
+  TH1D *h_HCal_E = new TH1D( "HCal_E", "HCal Cluster Energy (GeV); GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_nclus = new TH1D("HCal_nclus","HCal number of clusters meeting threshold;", 250,0,10);
+  TH1D *h_HCal_nclus_cut = new TH1D("HCal_nclus_cut","HCal number of clusters meeting threshold, Cuts;", 250,0,10);
+  TH1D *h_TPS_SH = new TH1D("h_tps_sh","Total PS and SH cluster energy (GeV);",250,1.5,4.0);
+  TH1D *h_TPS_SH_cut = new TH1D("h_tps_sh_cut","Total PS and SH cluster energy (GeV), All cuts;",250,1.5,4.0);
+  TH1D *h_nhits = new TH1D("nhits","Number of hits on track;",150, 0, 6);
+  TH1D *h_nhits_cut = new TH1D("nhits_cut","Number of hits on track;",150, 0, 6);
+  TH1D *h_bbtrp_nocut = new TH1D("bbtrp_nocut","BigBite Track Momentum (GeV), no cut;",300, 0.0, 4.0);
+  TH1D *h_bbtrp_cut = new TH1D("bbtrp_cut","BigBite Track Momentum (GeV), cuts;",300, 0.0, 4.0);
+  TH1D *h_bbEoverp_nocut = new TH1D("bbEoverp_nocut","BigBite E over p, no cut;",100, 0.0, 2.0);
+  TH1D *h_bbEoverp_cut = new TH1D("bbEoverp_cut","BigBite E over p, cuts;",100, 0.0, 2.0);
+
+  //basic H-arm
+
+  //E-arm
+  
+  //Both arms
+
+
+  //general
+
+  
+
+
+
+
 
   // Send time efficiency report to console
   cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;	

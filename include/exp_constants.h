@@ -88,7 +88,7 @@ namespace exp_constants{
 
   //Make functions to get hcal v offset. since it is pass dependent
   const double getHCalOffset(TString myKin, TString pass);
+  
 
-  //anything related to active area cuts will be handle by a cut class
 }
 #endif

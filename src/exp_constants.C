@@ -4,8 +4,9 @@
 //Really this will just hold getter functions for any parameters that are meant to be constants but are either pass or kinematic dependent and not in config files
 
 #include "../include/exp_constants.h"
+namespace exp_constants{
   //m, height of the center of hcal above beam (m)
-  const double exp_constants::getHCalOffset(TString myKin, TString pass){
+  const double getHCalOffset(TString myKin, TString pass){
   double hcal_offset;
 
   //First segment by pass. Later we may need to segment by kinematic
@@ -20,3 +21,5 @@
 	}//end conditional
   return hcal_offset;
   }//end function
+
+}//end namespace

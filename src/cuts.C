@@ -5,8 +5,9 @@
 
 #include "../include/cuts.h"
 
+namespace cuts {
 //functions to handle defining HCal active area
-vector<double> cuts::hcal_ActiveArea_data(int num_blk_x, int num_blk_y, TString pass){
+vector<double> hcal_ActiveArea_data(int num_blk_x, int num_blk_y, TString pass){
 
 vector<double> hcalaa;
 double hcalaa_Xi; 
@@ -41,7 +42,7 @@ hcalaa.push_back(hcalaa_Yf);
 return hcalaa;
 }//end function
 
-vector<double> cuts::hcal_ActiveArea_MC(int num_blk_x, int num_blk_y){
+vector<double> hcal_ActiveArea_MC(int num_blk_x, int num_blk_y){
 vector<double> hcalaa;
 double hcalaa_Xi = exp_constants::hcalposXi_mc + num_blk_x * exp_constants::hcalblk_div_v; 
 double hcalaa_Xf = exp_constants::hcalposXf_mc - num_blk_x * exp_constants::hcalblk_div_v;
@@ -58,7 +59,7 @@ return hcalaa;
 }//end function
 
 //check position per event against hcal active area. Is True if detected on active area
-bool cuts::hcalaa_ON (double xhcal, double yhcal, vector<double> hcalaa){
+bool hcalaa_ON (double xhcal, double yhcal, vector<double> hcalaa){
 
 double hcalx_top = hcalaa[0];
 double hcalx_bot = hcalaa[1];
@@ -72,7 +73,7 @@ return detect;
 }//end function
 
 //function to define HCal fiducial area
-vector<double> cuts::hcalfid(double dxsig_p, double dxsig_n, double dysig, vector<double> hcalaa,double num_sig_x, double num_sig_y ){
+vector<double> hcalfid(double dxsig_p, double dxsig_n, double dysig, vector<double> hcalaa,double num_sig_x, double num_sig_y ){
 vector<double> hcalfid;
 
 double hcalx_top = hcalaa[0] + num_sig_x * dxsig_p; //-x margin (relevant for proton)
@@ -89,7 +90,7 @@ return hcalfid;
 }//end function
 
 //function determine if event is inside the fiducial region. That is equally count neutrons and protons
-bool cuts::hcalfid_IN(double xhcal_expect, double yhcal_expect, double dx_pn, vector<double> hcalfid){
+bool hcalfid_IN(double xhcal_expect, double yhcal_expect, double dx_pn, vector<double> hcalfid){
 
 double hcalx_top = hcalfid[0]; //-x fid
 double hcalx_bot = hcalfid[1]; //+x fid
@@ -105,3 +106,6 @@ bool inFid = (yhcal_expect > hcaly_left) && (yhcal_expect < hcaly_right) &&  //c
 
 return inFid;
 }//end function
+
+}//end namespace
+
