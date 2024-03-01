@@ -74,7 +74,7 @@
                         Exp = val;
                         //cout << "Experiment: " << Exp << endl;
                         }else if(key == "globalcut"){
-			globalcut += val;
+			globalcut = val;
 			cout << "Applying the following global cut to all data: " <<globalcut <<endl;
 			}else if(key == "kin"){
                         kin = val;
@@ -193,7 +193,10 @@
                         }else if(key == "binfac"){
                         binfac = val.Atof();
                         //cout << "binfac " << binfac << endl;
-                        }else if(key == "W2fitmax"){
+                        }else if(key == "hbinfac"){
+                        hbinfac = val.Atof();
+                        //cout << "hbinfac " << hbinfac << endl;
+			}else if(key == "W2fitmax"){
                         W2fitmax = val.Atof();
                         //cout << "W2fitmax " << W2fitmax << endl;
                         }else if(key == "W2fitmaxwide"){
@@ -332,6 +335,8 @@
   double parse_config::getW2FitMaxWide(){ return W2fitmaxwide; }
 
   double parse_config::getBinFac(){ return binfac; }
+
+  double parse_config::getHBinFac(){ return hbinfac; } 
 
   double parse_config::get_sf(){ return sf; }
 

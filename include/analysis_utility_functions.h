@@ -110,7 +110,7 @@ const double Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch
  return hcal_offset; 
  }
 
- string out_dir_temp = "yields_output";
+ string out_dir_temp = "/work/halla/sbs/ewertz/nTPE_analysis/yields_output";
  TString output_directory = TString(out_dir_temp);
  string output_temp = "";
  TString output_file = TString(output_temp);

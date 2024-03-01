@@ -24,7 +24,7 @@ class parse_config{
   double hcalemin,proton_thresh_fac, neutron_thresh_fac,num_bin, pmin, pmax, Emin, Emax;
 
   //For data HCal Efficiency analysis
-  double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac;
+  double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac;
 
 public:
   //Constructor
@@ -128,6 +128,8 @@ public:
   double getW2FitMaxWide();
  
   double getBinFac();
+
+  double getHBinFac();
 
   double get_sf();
 

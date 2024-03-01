@@ -16,15 +16,15 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "analysis_utility_functions.h"
-#include "BlindFactor.h"
+#include "../../include/analysis_utility_functions.h"
+#include "../../include/BlindFactor.h"
 #include <vector>
 #include "TMatrixD.h"
 
 //Define max number of tracks per event
 int MAXNTRACKS;
 //for in-time
-double coin_mean,coin_sigma,coin_sig_fac;
+double coin_mean,coin_sigma,coin_profile_sigma,coin_sig_fac;
 TString Exp,kin,data_file_name,kinematic_file_name,targ;
 int SBS_field,useAlshield;
 double dx_low,dx_high,dy_low,dy_high,dxO_p,dyO_p,dxsig_p,dysig_p; //used for fitting proton information
@@ -161,15 +161,15 @@ void parseMainConfig(const char *setup_file_name){
 		TString val = ((TObjString*) (*daObjs)[1])->GetString();
 			if(key == "exp"){
 			Exp = val;
-			//cout << "Experiment " << Exp << endl;
+			cout << "Experiment " << Exp << endl;
 			}
 			else if(key == "kin"){
     			kin = val;            	
-                        //cout << "Kinematic " << kin << endl;
+                        cout << "Kinematic " << kin << endl;
 			}
 			else if(key == "data_map_name"){
                 	data_file_name = val;
-                        //cout << "Data File " << data_fiel_name << endl;
+                        cout << "Data File " << data_file_name << endl;
 			}
 			else if(key == "kinematic_name"){
                 	kinematic_file_name = val;
@@ -199,6 +199,10 @@ void parseMainConfig(const char *setup_file_name){
 			coin_sigma = val.Atof();
 			//cout << "coin sigma " << coin_sigma << endl;
 			}
+			else if(key == "coin_profile_sigma"){
+                        coin_profile_sigma = val.Atof();
+                        //cout << "coin profile sigma " << coin_profile_sigma << endl;
+                        }
 			else if(key == "coin_sig_fac"){
 			coin_sig_fac = val.Atof();
 			//cout << "coin sig fac " << coin_sig_fac << endl;
@@ -316,6 +320,7 @@ void HCalEfficiency( const char *setup_file_name){
  //parse function to get in the information that The One Config file has and is manipulated
  //this function will inialize the global parameters: globalcut,Exp,kin,data_file_name,kinematic_file_name,SBS_field,W2_low,W2_high,targ,runnums
  parseMainConfig(setup_file_name);
+
 
  //Load in information about the data files specified in The One config file. 
  //We will store the information in data_objects and put those in a vector
@@ -556,7 +561,8 @@ void HCalEfficiency( const char *setup_file_name){
   TH1D *hdx_anticut_MC = new TH1D("hdx_anticut_MC","dx, W^{2} and dy anticut, MC param;x_{HCAL}-x_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
   TH1D *hdy_cut_MC = new TH1D("hdy_cut_MC","dy, W^{2} and dy cut, MC param;y_{HCAL}-y_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
   TH1D *hdy_anticut_MC = new TH1D("hdy_anticut_MC","dy, W^{2} and dy anticut, MC param;y_{HCAL}-y_{expect} (m)", hcalbins, hcalfit_l_MC, hcalfit_h_MC);
-
+  TH2D *hdxdy_cut_MC = new TH2D("hdxdy_cut_MC","dxdy, cut, MC param;dy_{HCAL} (m); dx_{HCAL} (m)", 250, -0.5, 0.5, 250, -0.5,0.5 );
+  TH2D *hdxdy_anticut_MC = new TH2D("hdxdy_anticut_MC","dxdy, anticut, MC param;dy_{HCAL} (m); dx_{HCAL} (m)", 250, -0.5, 0.5, 250, -0.5,0.5 );
   //Anticuts
   TH1D *hW2_badYcut = new TH1D( "hW2_badYcut","W^{2}, hcal dy anticut;W^{2} (GeV)", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *hdx_badW2cut = new TH1D( "hdx_badW2cut","hcal dx, W^{2} anticut;x_{HCAL}-x_{expect} (m)", hcalbins, hcalfit_l, hcalfit_h);
@@ -762,7 +768,7 @@ void HCalEfficiency( const char *setup_file_name){
          double clus_energy = hcal_clus_e[c];
 
 	 //use hcal atime till after pass 2, wide cut around 5 sigma
-	 bool passCoin = abs(atime_diff - coin_mean)<coin_sig_fac*coin_sigma;
+	 bool passCoin = abs(atime_diff - coin_mean)<coin_sig_fac*coin_profile_sigma;
 	 bool passE = clus_energy > hcalemin;
 
 	 //in-time algorithm with new cluster, sort later
@@ -840,7 +846,7 @@ for(int d=0; d<num_hcal_clusid;d++){
  bool gcoin = abs(coin_bestclus - coin_mean) < coin_sigma *coin_sig_fac;
   //Fill histograms without most cuts, we always have an hcal-active-area/acceptance cut
   
-  if(inboundsW2){
+  if(inboundsW2 && failedglobal == 0){
   hW2_nocut->Fill(W2); //Subtract dy anticut version from this
   }
   
@@ -886,18 +892,33 @@ for(int d=0; d<num_hcal_clusid;d++){
   hW2_BBcut_dycut->Fill( W2 );
 
   }
+
+  double dxsig_p_fac = 4.5;
+  double dysig_fac = 4.5;
+
   
+  //anticut is not quite right with an ecclipse. need to think about this a little more. For now optimizing rectangle
+  bool good_spot = pow((dx_bestclus-dxO_p)/(dxsig_p_fac*dxsig_p),2)+pow((dy_bestclus-dyO_p)/(dysig_fac*dysig_p),2) < pow(1,2);  
+  bool bad_spot = pow((dx_bestclus-dxO_p)/(dxsig_p_fac*dxsig_p),2)+pow((dy_bestclus-dyO_p)/(dysig_fac*dysig_p),2) > pow(1,2);
   
+  bool numerator_cut = ehcal > hcalemin && gcoin && (pow((dx_bestclus-dxO_p)/(dxsig_p_fac*dxsig_p),2) + pow((dy_bestclus-dyO_p)/(dysig_fac*dysig_p),2) <= pow(1,2));
+  bool numerator_anticut = !numerator_cut;
+
+  double dxsig_elastic_fac = 1;
+  double dysig_elastic_fac = 1;
+  bool elastic_cut = ehcal>hcalemin &&  gcoin && (pow((dx_bestclus-dxO_p)/(dxsig_elastic_fac*dxsig_p),2) + pow((dy_bestclus-dyO_p)/(dysig_elastic_fac*dysig_p),2) <= pow(1,2));
   //Make strongest possible hcal-only anticut to obtain background
-  if((thetapq>thetapq_high || thetapq<thetapq_low)&&(dx_bestclus<dxmin3||dx_bestclus>dxmax3)&&(dy_bestclus<dymin||dy_bestclus>dymax)&&failedglobal==1 ){
+  if(/*gcoin && nclus > 0 && ehcal > hcalemin &&(thetapq>thetapq_high || thetapq<thetapq_low)&&(dx_bestclus<dxmin3||dx_bestclus>dxmax3)&&(dy_bestclus<dymin||dy_bestclus>dymax)*/numerator_anticut && !failedglobal ){
   hW2_anticut->Fill( W2 );
   h_theta_pq_anticut->Fill(thetapq);
   hdx_anticut_MC->Fill(dx_bestclus);
   hdy_anticut_MC->Fill(dy_bestclus);
-  }
+  hdxdy_anticut_MC->Fill(dy_bestclus,dx_bestclus); 
+ }
+
 
   //And tightest cut possible
-  if( (thetapq<thetapq_high && thetapq>thetapq_low) && (dx_bestclus>dxmin3&&dx_bestclus<dxmax3) && (dy_bestclus>dymin&&dy_bestclus<dymax) && failedglobal==0 ){
+  if(/*gcoin && nclus > 0 && ehcal>hcalemin && (thetapq<thetapq_high && thetapq>thetapq_low) && (dx_bestclus>dxmin3&&dx_bestclus<dxmax3) && (dy_bestclus>dymin&&dy_bestclus<dymax)*/elastic_cut && failedglobal==0 ){
   hW2_allcut->Fill( W2 );
   hE_ep_cut->Fill(E_ep);
   hE_pp_cut->Fill(E_pp);
@@ -907,7 +928,8 @@ for(int d=0; d<num_hcal_clusid;d++){
   h_theta_pq_cut->Fill(thetapq);
   hdx_cut_MC->Fill(dx_bestclus);
   hdy_cut_MC->Fill(dy_bestclus);
-  
+  hdxdy_cut_MC->Fill(dy_bestclus,dx_bestclus);  
+
   h_vert_z_cut->Fill(vz[0]);
   h_PS_E_cut->Fill(BBps_e);
   h_HCal_E_cut->Fill(ehcal);
