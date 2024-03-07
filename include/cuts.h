@@ -20,5 +20,8 @@ bool hcalaa_ON (double xhcal, double yhcal, vector<double> hcalaa);
 //Function that defines HCal Fiducial region
 vector<double> hcalfid(double dxsig_p, double dxsig_n, double dysig, vector<double> hcalaa,double num_sig_x, double num_sig_y );
 
+//Funtion that defines good W2 elastic cut
+bool goodW2(double W2, double W2_low, double W2_high);
+
 }//end namespace
 #endif

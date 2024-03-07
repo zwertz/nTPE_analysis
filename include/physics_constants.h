@@ -27,6 +27,9 @@ namespace physics_constants{
 
   //atomic
 
+
+  //other
+  static const double alpha = 0.00729927; //unitless, fine structure constant
   
   
 }

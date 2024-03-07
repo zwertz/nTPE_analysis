@@ -75,7 +75,11 @@ void data_elastic_parse(const char *setup_file_name){
   double binfac = mainConfig.getBinFac();
   double hbinfac = mainConfig.getHBinFac();
   double hcal_offset = exp_constants::getHCalOffset(kin,pass);
-  
+  int e_method = mainConfig.get_emethod();
+  double coin_mean = mainConfig.getCoinMean();
+  double coin_sig_fac = mainConfig.getCoinSigFac();
+  double coin_profile_sig = mainConfig.getCoinProfSig();
+  double hcalemin = mainConfig.getHCaleMin();
 
   int W2_low = W2_mean - W2_sigfac*W2_sigma;
   int W2_high = W2_mean + W2_sigfac*W2_sigma;
@@ -199,8 +203,8 @@ void data_elastic_parse(const char *setup_file_name){
   double BBtr_x_out;
   double BBtr_y_out;
   double BBtr_p_out;
-  double coin_mean;
-  double coin_sigma;
+  double coin_mean_out;
+  double coin_sigma_out;
   double dyO_p_out;
   double dyO_n_out; 
   double dysig_p_out;
@@ -245,8 +249,8 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("BBtr_x", &BBtr_x_out, "BBtr_x/D");
   Parse->Branch("BBtr_y", &BBtr_y_out, "BBtr_y/D");
   Parse->Branch("BBtr_p", &BBtr_p_out, "BBtr_p/D");
-  Parse->Branch("coin_mean", &coin_mean, "coin_mean/D");
-  Parse->Branch("coin_sigma", &coin_sigma, "coin_sigma/D");
+  Parse->Branch("coin_mean", &coin_mean_out, "coin_mean/D");
+  Parse->Branch("coin_sigma", &coin_sigma_out, "coin_sigma/D");
   Parse->Branch("dyO_p", &dyO_p_out, "dyO_p/D");
   Parse->Branch("dyO_n", &dyO_n_out, "dyO_n/D");
   Parse->Branch("dysig_p", &dysig_p_out, "dysig_p/D");
@@ -308,8 +312,8 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchAddress("sbs.hcal.index", &idx_hcal);
 
   //HCal cluster branches
-  double hcal_clus_atime[exp_constants::maxclus], hcal_clus_e[exp_constants::maxclus], hcal_clus_x[exp_constants::maxclus], hcal_clus_y[exp_constants::maxclus];
-  int hcal_clusid[exp_constants::maxclus];
+  double hcal_clus_atime[exp_constants::maxclus], hcal_clus_e[exp_constants::maxclus], hcal_clus_x[exp_constants::maxclus], hcal_clus_y[exp_constants::maxclus],hcal_clus_nblk[exp_constants::maxclus];
+  int num_hcal_clusid;
 
   C->SetBranchStatus("sbs.hcal.clus.atime",1);
   C->SetBranchStatus("sbs.hcal.clus.e",1);
@@ -317,12 +321,14 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchStatus("sbs.hcal.clus.y",1);
   C->SetBranchStatus("sbs.hcal.clus.e",1);
   C->SetBranchStatus("Ndata.sbs.hcal.clus.id", 1);
+  C->SetBranchStatus("sbs.hcal.clus.nblk", 1);
 
   C->SetBranchAddress("sbs.hcal.clus.atime", &hcal_clus_atime);
   C->SetBranchAddress("sbs.hcal.clus.e", &hcal_clus_e);
   C->SetBranchAddress("sbs.hcal.clus.x", &hcal_clus_x);
   C->SetBranchAddress("sbs.hcal.clus.y", &hcal_clus_y);
-  C->SetBranchAddress("Ndata.sbs.hcal.clus.id", &hcal_clusid);
+  C->SetBranchAddress("Ndata.sbs.hcal.clus.id", &num_hcal_clusid);
+  C->SetBranchAddress("sbs.hcal.clus.nblk", &hcal_clus_nblk);
 
   //BBCal shower
   double atime_sh, e_sh, nclus_sh, nblk_sh;
@@ -453,7 +459,7 @@ void data_elastic_parse(const char *setup_file_name){
 	//make the vertex, assuming only beam direction
 	TVector3 vertex = physics::getVertex(tr_vz[0]);
 
-	//reconstructed momentum, corrected for mean energy loss. Still need to include losses from Al shielding or target windows later
+	//reconstructed momentum from track momentum information, corrected for mean energy loss. Still need to include losses from Al shielding or target windows later
 	double pcorr = physics::getp_recon_corr(tr_p[0],Eloss_outgoing); 
 
         //four momentum vector for electron beam with correted Energy value
@@ -462,11 +468,189 @@ void data_elastic_parse(const char *setup_file_name){
 	//four momentum for scattered electron based on reconstruction
 	TLorentzVector p_eprime = physics::getp_eprime(tr_px[0],tr_py[0],tr_pz[0],tr_p[0],pcorr);
 
+	//four vector for target
+	TLorentzVector p_targ = physics::getp_targ(target);
+
+	//four vector, virtual photon momentum or momentum transferred to the scattered nucleon
+	TLorentzVector q = physics::getq(pbeam,p_eprime);
+	TVector3 q_vec = q.Vect();
+
+	//Theta for scattered electron using reconstructed track momentum
+	double etheta = physics::get_etheta(p_eprime);
+
+	//Phi for scattered electron using reconstructed track momentum
+	double ephi = physics::get_ephi(p_eprime);
+	
+	//central momentum reconstructed from track angles and beam energy
+	double pcentral = physics::get_pcentral(pbeam,etheta,target);
+
+	//assume coplanarity, get the expected phi for the nucleon 
+	double phi_N_exp = physics::get_phinucleon(ephi,physics_constants::PI);
+
+	//Calculate Mott cross section for this event
+	double Mott_CS = physics::getMott_CS(physics_constants::alpha,etheta,pcorr,Ecorr);
+
+	/* Can reconstruct e' momentum for downstream calculations differently:
+	* v1 - Use four-momentum member functions
+ 	* v2 - Use all available ekine (tree) vars and calculate vectors (should be the same as v1)
+	* v3 - Use reconstructed angles as independent qty (usually preferable given GEM precision at most kinematics)
+ 	* v4 - Use reconstructed momentum as independent qty */
+
+	//four momentum transferred squared
+	double Q2; 
+
+  	//four vector, scattered nucleon momentum
+  	TLorentzVector p_N;
+	TVector3 p_Nhat;
+
+	//scattered nucleon expected momentum
+	double p_N_exp;
+
+	//energy transfer
+	double nu;	
+
+	//scattered nucleon expected angle theta
+	double theta_N_exp;
+
+	//Invariant Mass Squared
+	double W2;
+
+	//conditional to determine remaining e-arm related calculations. Finish implementing functions.
+		if(e_method == 1){
+		//v1
+		Q2 = physics::getQ2(q);
+		p_N = physics::get_pN(q,p_targ);
+		p_Nhat = p_N.Vect().Unit();
+		nu = physics::getnu(q);
+		W2 = physics::getW2(p_N);
+		}else if(e_method == 2){
+		//v2
+		Q2 = physics::getQ2(ekine_Q2);
+		W2 = physics::getW2(ekine_W2);
+		nu = physics::getnu(ekine_nu);
+		p_N_exp = physics::get_pNexp(nu,target);
+		theta_N_exp = physics::get_thetaNexp(pbeam,pcentral,etheta,p_N_exp);	
+		p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
+		p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
+		}else if(e_method == 3){
+		//v3
+		Q2 = physics::getQ2(pbeam,p_eprime,etheta);
+		nu = physics::getnu(pbeam,pcentral);
+		p_N_exp = physics::get_pNexp(nu,target);
+                theta_N_exp = physics::get_thetaNexp(pbeam,pcentral,etheta,p_N_exp);
+		p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
+                p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
+		W2 = physics::getW2(pbeam,p_eprime,Q2,target);
+		}else if(e_method == 4){
+		//v4
+		Q2 = physics::getQ2(pbeam,p_eprime,etheta);
+		nu = physics::getnu(pbeam,p_eprime);
+		p_N_exp = physics::get_pNexp(nu,target);
+                theta_N_exp = physics::get_thetaNexp(pbeam,pcentral,etheta,p_N_exp);
+                p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
+                p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
+                W2 = physics::getW2(pbeam,p_eprime,Q2,target);
+		}else{
+		//Error handling, default version 3
+		cout << "Warning: Method for calculating e-arm physics was not included. Defaulting to method 3." << endl;
+		Q2 = physics::getQ2(pbeam,p_eprime,etheta);
+		nu = physics::getnu(pbeam,pcentral);
+                p_N_exp = physics::get_pNexp(nu,target);
+                theta_N_exp = physics::get_thetaNexp(pbeam,pcentral,etheta,p_N_exp);
+                p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
+                p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
+                W2 = physics::getW2(pbeam,p_eprime,Q2,target);
+		}
+	//W2 elastic boolean
+	bool goodW2 = cuts::goodW2(W2,W2_low,W2_high);
+
+	// ray from Hall origin onto the face of hcal where the nucleon hit
+	TVector3 hcal_intersect = physics::get_hcalintersect(vertex,hcal_origin,hcal_zaxis,p_Nhat );
+
+	//gets expected location of scattered nucleon assuming straight line projections from BB track, x-direction
+	double xhcal_expect = physics::get_xhcalexpect(hcal_intersect,hcal_origin,hcal_xaxis);
+
+	//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
+        double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
+
+
+	//////////////////////
+	//INTIME CLUSTER ANALYSIS
+	//Requires that it has the greatest hcal cluster energy and that hcal cluster analog time is in coincidence with bbcal analog time
+	
+	//intime cluster selection analysis, part 1 of intime algorithm
+	vector<double> clone_cluster_intime = physics::cluster_intime_select(num_hcal_clusid,hcal_clus_atime,atime_sh,hcal_clus_e,coin_mean,coin_sig_fac,coin_profile_sig,hcalemin);
+
+	//sort clusters to get best intime indices from clone cluster, part 2 of intime algorithm
+	int intime_idx = physics::cluster_intime_findIdx(num_hcal_clusid,clone_cluster_intime);
+	
+	//Assume that the itime analysis is sufficient to find the best cluster in HCal
+	int clus_idx_best = intime_idx;
+
+	//calculate important information from best cluster
+	double xhcal_bestclus = hcal_clus_x[clus_idx_best];
+ 	double yhcal_bestclus = hcal_clus_y[clus_idx_best];
+	double dx_bestclus = physics::get_dx(xhcal_bestclus,xhcal_expect);
+ 	double dy_bestclus = physics::get_dy(yhcal_bestclus,yhcal_expect);	
+	double hcal_atime_bestclus = hcal_clus_atime[clus_idx_best];
+	double coin_bestclus = hcal_atime_bestclus - atime_sh;
+	double coin_pclus = hcal_clus_atime[0] - atime_sh;
+	double hcal_e_bestclus = hcal_clus_e[clus_idx_best];
+	int hcal_nblk_bestclus = (int) hcal_clus_nblk[clus_idx_best];	
+
+	//Fill analysis tree variables before making cuts
+	dx_out = dx_bestclus;
+ 	dy_out = dy_bestclus;
+  	xexp_out = xhcal_expect;
+  	yexp_out = yhcal_expect;
+  	xhcal_out = xhcal_bestclus;
+ 	yhcal_out = yhcal_bestclus;
+  	W2_out = W2;
+	Q2_out = Q2;
+  	mott_out = Mott_CS;
+  	ehcal_out = hcal_e_bestclus;
+  	BBtot_e_out = e_sh+e_ps;
+  	BBsh_e_out = e_sh;
+  	BBps_e_out = e_ps;
+  	hcal_atime_out = hcal_atime_bestclus;
+  	BBsh_atime_out = atime_sh;
+  	BBps_atime_out = atime_ps;
+  	BBgem_nhits_out = gem_hits[0];
+  	BBtr_x_out = tr_x[0];
+  	BBtr_y_out = tr_y[0];
+  	BBtr_p_out = tr_p[0];
+  	coin_mean_out = coin_mean;
+  	coin_sigma_out = coin_profile_sig;
+  	dyO_p_out = dyO_p;
+  	dyO_n_out = dyO_n;
+  	dysig_p_out = dysig_p;
+  	dysig_n_out = dysig_n;
+  	dysig_n_fac_out = dysig_n_fac;
+  	dysig_p_fac_out = dysig_p_fac;
+  	dxO_p_out = dxO_p;
+  	dxO_n_out = dxO_n;
+  	dxsig_p_out = dxsig_p;
+  	dxsig_n_out = dxsig_n;
+  	dxsig_n_fac_out = dxsig_n_fac;
+ 	dxsig_p_fac_out = dxsig_p_fac;
+  	W2mean_out = W2_mean;	
+	W2sig_out = W2_sigma;
+  	W2sig_fac_out = W2_sigfac;
+	num_hcal_clusid_out = num_hcal_clusid ;
+ 	hcal_clus_blk_out = hcal_nblk_bestclus;
+  	BBtr_n_out = ntrack;
+  	passFid_out;
+  	run_out = run ;
+  	mag_out = field;
+
+	//add more at parameters here based on available analysis information and potential cuts
+
 	}//end event loop
   }//end loop over the run numbers
 
 
-
+  //Write everything to output file
+  fout->Write();
 
   // Send time efficiency report to console
   cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;	

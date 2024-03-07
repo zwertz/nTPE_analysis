@@ -107,5 +107,13 @@ bool inFid = (yhcal_expect > hcaly_left) && (yhcal_expect < hcaly_right) &&  //c
 return inFid;
 }//end function
 
+//Funtion that defines good W2 elastic cut
+bool goodW2(double W2, double W2_low, double W2_high){
+bool goodW2 = (W2 >= W2_low) && (W2 <= W2_high);
+return goodW2;
+}
+
+
+
 }//end namespace
 

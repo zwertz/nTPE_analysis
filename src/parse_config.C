@@ -91,7 +91,10 @@
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
-                        }else if(key == "W2_mean"){
+                        }else if(key == "e_method"){
+			e_method = val.Atoi();
+			//cout << "e method " << e_method << endl;
+			}else if(key == "W2_mean"){
                         W2_mean = val.Atof();
                         //cout << "W2 mean " << W2_mean << endl;
                         }else if(key == "W2_sigma"){
@@ -187,7 +190,10 @@
                         }else if(key == "coin_sigma"){
                         coin_sigma = val.Atof();
                         //cout << "coin sigma " << coin_sigma << endl;
-                        }else if(key == "coin_sig_fac"){
+                        }else if(key == "coin_profile_sig"){
+                        coin_profile_sig = val.Atof();
+			//cout << "coin profile sig " << coin_profile_sig << endl;
+			}else if(key == "coin_sig_fac"){
                         coin_sig_fac = val.Atof();
                         //cout << "coin sig fac " << coin_sig_fac << endl;
                         }else if(key == "binfac"){
@@ -264,6 +270,8 @@
 
   int parse_config::getMAXNTRACKS(){ return MAXNTRACKS; }
 
+  int parse_config::get_emethod(){ return e_method; }
+
   double parse_config::get_dxOn(){ return dxO_n; }
 
   double parse_config::get_dyOn(){ return dyO_n; }
@@ -307,6 +315,8 @@
   double parse_config::getCoinMean(){ return coin_mean; }
  
   double parse_config::getCoinSig(){ return coin_sigma; }
+
+  double parse_config::getCoinProfSig(){ return coin_profile_sig; }
 
   double parse_config::getCoinSigFac(){ return coin_sig_fac; }
 

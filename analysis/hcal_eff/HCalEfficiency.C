@@ -504,14 +504,17 @@ void HCalEfficiency( const char *setup_file_name){
  double fit_h = W2fitmax;
 
   //2sig 
-  double dxmin = dxO_p - 2*dxsig_p;
-  double dxmax = dxO_p + 2*dxsig_p;
-  double dymin = dyO_p - 2*dysig_p;
-  double dymax = dyO_p + 2*dxsig_p;
+  double dxmin = dxO_p - 1.5*dxsig_p;
+  double dxmax = dxO_p + 1.5*dxsig_p;
+  double dymin = dyO_p - 1.5*dysig_p;
+  double dymax = dyO_p + 1.5*dxsig_p;
+
 
   //3sig dx
-  double dxmin3 = dxO_p - 3*dxsig_p;
-  double dxmax3 = dxO_p + 3*dxsig_p;
+  double dymin3 = dyO_p - 4.5*dysig_p;
+  double dymax3 = dyO_p + 4.5*dxsig_p;
+  double dxmin3 = dxO_p - 4.5*dxsig_p;
+  double dxmax3 = dxO_p + 4.5*dxsig_p;
   //cout << "max:" << dxmax3 << " min: " << dxmin3 << endl;
 
   //Parameters for acceptance matching using MC values. Includes info handle any magnetic field. Not just zero field data. These parameters should work for pass 2 data
@@ -846,7 +849,7 @@ for(int d=0; d<num_hcal_clusid;d++){
  bool gcoin = abs(coin_bestclus - coin_mean) < coin_sigma *coin_sig_fac;
   //Fill histograms without most cuts, we always have an hcal-active-area/acceptance cut
   
-  if(inboundsW2 && failedglobal == 0){
+  if(inboundsW2){
   hW2_nocut->Fill(W2); //Subtract dy anticut version from this
   }
   
@@ -893,22 +896,22 @@ for(int d=0; d<num_hcal_clusid;d++){
 
   }
 
-  double dxsig_p_fac = 4.5;
-  double dysig_fac = 4.5;
+  double dxsig_p_fac = 5;
+  double dysig_fac = 5;
 
   
   //anticut is not quite right with an ecclipse. need to think about this a little more. For now optimizing rectangle
   bool good_spot = pow((dx_bestclus-dxO_p)/(dxsig_p_fac*dxsig_p),2)+pow((dy_bestclus-dyO_p)/(dysig_fac*dysig_p),2) < pow(1,2);  
   bool bad_spot = pow((dx_bestclus-dxO_p)/(dxsig_p_fac*dxsig_p),2)+pow((dy_bestclus-dyO_p)/(dysig_fac*dysig_p),2) > pow(1,2);
   
-  bool numerator_cut = ehcal > hcalemin && gcoin && (pow((dx_bestclus-dxO_p)/(dxsig_p_fac*dxsig_p),2) + pow((dy_bestclus-dyO_p)/(dysig_fac*dysig_p),2) <= pow(1,2));
+  bool numerator_cut = (pow((dx_bestclus-dxO_p)/(dxsig_p_fac*dxsig_p),2) + pow((dy_bestclus-dyO_p)/(dysig_fac*dysig_p),2) <= pow(1,2));
   bool numerator_anticut = !numerator_cut;
 
-  double dxsig_elastic_fac = 1;
-  double dysig_elastic_fac = 1;
-  bool elastic_cut = ehcal>hcalemin &&  gcoin && (pow((dx_bestclus-dxO_p)/(dxsig_elastic_fac*dxsig_p),2) + pow((dy_bestclus-dyO_p)/(dysig_elastic_fac*dysig_p),2) <= pow(1,2));
+  double dxsig_elastic_fac = 3;
+  double dysig_elastic_fac = 3;
+  bool elastic_cut = (pow((dx_bestclus-dxO_p)/(dxsig_elastic_fac*dxsig_p),2) + pow((dy_bestclus-dyO_p)/(dysig_elastic_fac*dysig_p),2) <= pow(1,2));
   //Make strongest possible hcal-only anticut to obtain background
-  if(/*gcoin && nclus > 0 && ehcal > hcalemin &&(thetapq>thetapq_high || thetapq<thetapq_low)&&(dx_bestclus<dxmin3||dx_bestclus>dxmax3)&&(dy_bestclus<dymin||dy_bestclus>dymax)*/numerator_anticut && !failedglobal ){
+  if((ehcal<hcalemin || (dx_bestclus<dxmin3||dx_bestclus>dxmax3)||(dy_bestclus<dymin3||dy_bestclus>dymax3))/*numerator_anticut*/ && !failedglobal ){
   hW2_anticut->Fill( W2 );
   h_theta_pq_anticut->Fill(thetapq);
   hdx_anticut_MC->Fill(dx_bestclus);
@@ -918,7 +921,7 @@ for(int d=0; d<num_hcal_clusid;d++){
 
 
   //And tightest cut possible
-  if(/*gcoin && nclus > 0 && ehcal>hcalemin && (thetapq<thetapq_high && thetapq>thetapq_low) && (dx_bestclus>dxmin3&&dx_bestclus<dxmax3) && (dy_bestclus>dymin&&dy_bestclus<dymax)*/elastic_cut && failedglobal==0 ){
+  if(ehcal>hcalemin && (dx_bestclus>dxmin&&dx_bestclus<dxmax) && (dy_bestclus>dymin&&dy_bestclus<dymax)/*elastic_cut*/ && !failedglobal ){
   hW2_allcut->Fill( W2 );
   hE_ep_cut->Fill(E_ep);
   hE_pp_cut->Fill(E_pp);

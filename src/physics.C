@@ -108,8 +108,252 @@ namespace physics{
   
  //four momentum for scattered electron based on reconstruction
  TLorentzVector getp_eprime(double tr_px, double tr_py, double tr_pz, double tr_p, double pcorr){
- TLorentzVector p_eprime(pcorr*(tr_px/tr_p),(pcorr*(tr_py/tr_p),(pcorr*(tr_pz/tr_p),pcorr);
+ TLorentzVector p_eprime(pcorr*(tr_px/tr_p),pcorr*(tr_py/tr_p),pcorr*(tr_pz/tr_p),pcorr);
  return p_eprime;
+ }
+
+ //four vector for target, currently implement for LD2 and LH2. Not sure if I should somehow implement just neutron
+ TLorentzVector getp_targ(TString target){
+ TLorentzVector ptarg;
+ 
+ 	//LH2
+ 	if(target == "LH2"){
+	ptarg.SetPxPyPzE(0,0,0,physics_constants::M_p);
+	//LD2
+	}else if(target == "LD2"){
+	ptarg.SetPxPyPzE(0,0,0,0.5*(physics_constants::M_p+physics_constants::M_n));
+	}else{
+	//give an error
+	cout << "Error: Target " << target << " is not handled by this function! No value given." << endl;
+	} 
+  return ptarg;
+ }
+
+ //four vector, virtual photon momentum or momentum transferred to the scattered nucleon
+ TLorentzVector getq(TLorentzVector pbeam, TLorentzVector p_eprime){
+ TLorentzVector q = pbeam - p_eprime;
+ return q;
+ }
+
+ //Theta for scattered electron using reconstructed track momentum
+ double get_etheta(TLorentzVector p_eprime){
+ double etheta = acos(p_eprime.Pz()/p_eprime.E());
+ return etheta;
+ }
+
+ //Phi for scattered electron using reconstructed track momentum
+ double get_ephi(TLorentzVector p_eprime){
+ double ephi = atan2(p_eprime.Py(),p_eprime.Px());
+ return ephi;
+ }
+
+ //central momentum reconstructed from track angles and beam energy
+ double get_pcentral(TLorentzVector pbeam,double etheta,TString target){
+ double pcentral;
+ double ebeam = pbeam.E();
+	//LH2
+	if(target == "LH2"){
+	pcentral = ebeam/(1.0 + (ebeam/physics_constants::M_p)*(1.0 - cos(etheta))); 
+        //LD2 
+	}else if(target == "LD2"){
+	double Nmass = 0.5*(physics_constants::M_p+physics_constants::M_n);
+        pcentral = ebeam/(1.0 + (ebeam/Nmass)*(1.0 - cos(etheta)));
+        }else{
+        //give an error
+	cout << "Error: Target " << target << " is not handled by this function! Defaulting to zero." << endl;
+        pcentral = 0;
+	}
+ return pcentral;
+ }
+
+ //assume coplanarity, get the expected phi for the nucleon
+ double get_phinucleon(double ephi,double PI){
+ double phinucleon = ephi + PI;
+ return phinucleon;
+ }
+
+ //Calculate Mott cross section for this event
+ double getMott_CS(double alpha,double etheta,double pcorr, double Ecorr){
+ double Mott_CS = (pow(alpha,2)*pow(cos(etheta/2),2)*pcorr)/(4*pow(Ecorr,3)*pow(sin(etheta/2),4));
+ return Mott_CS;
+ }
+
+ //four momentum transferred squared, overload the function
+ double getQ2(TLorentzVector q){
+ double Q2 = (-q).M2(); 
+ return Q2;
+ }
+
+ double getQ2(double ekineQ2){
+ double Q2 = ekineQ2;
+ return Q2;
+ }
+
+ double getQ2(TLorentzVector pbeam, TLorentzVector p_eprime, double etheta){
+ double Q2 = 2.0*(pbeam.E())*(p_eprime.E())*(1.0 - cos(etheta));
+ return Q2;
+ }
+
+ //four vector or unit vector, scattered nucleon momentum, overload the function
+ TLorentzVector get_pN(TLorentzVector q,TLorentzVector p_targ){
+ TLorentzVector p_N = q + p_targ;
+ return p_N;
+ }
+
+ TLorentzVector get_pN(double p_N_exp,TVector3 p_Nhat, double nu, TLorentzVector p_targ){
+ TLorentzVector p_N(p_N_exp*p_Nhat.X(),p_N_exp*p_Nhat.Y(),p_N_exp*p_Nhat.Z(),nu+p_targ.E());
+ return p_N;
+ }
+
+ TVector3 get_pNhat(double theta_N_exp,double phi_N_exp){
+ TVector3 p_Nhat(sin(theta_N_exp)*cos(phi_N_exp),sin(theta_N_exp)*sin(phi_N_exp),cos(theta_N_exp));
+ return p_Nhat;
+ }
+
+ //energy transfer, overload the funtion
+ double getnu(TLorentzVector q){
+ double nu = q.E();
+ return nu;
+ }
+
+ double getnu(double ekinenu){
+ double nu = ekinenu;
+ return nu;
+ }
+
+ double getnu(TLorentzVector pbeam, double pcentral){
+ double nu = pbeam.E() - pcentral;
+ return nu;
+ }
+
+ double getnu(TLorentzVector pbeam, TLorentzVector p_eprime){
+ double nu = pbeam.E() - p_eprime.E();
+ return nu;
+ }
+
+ //scattered nucleon expected momentum
+ double get_pNexp(double nu,TString target){
+ double p_N_exp;
+ 	 //LH2
+	 if(target == "LH2"){
+         p_N_exp = sqrt(pow(nu,2) + 2.0 * physics_constants::M_p * nu);
+         //LD2
+	 }else if(target == "LD2"){
+         double Nmass = 0.5*(physics_constants::M_p+physics_constants::M_n);
+         p_N_exp = sqrt(pow(nu,2) + 2.0 * Nmass * nu);
+         }else{
+         //give an error
+	 cout << "Error: Target " << target << " is not handled by this function! Defaulting to zero." << endl;
+         p_N_exp = 0;
+         }
+ return p_N_exp;
+ }
+
+ //scattered nucleon expected angle
+ double get_thetaNexp(TLorentzVector pbeam,double pcentral,double etheta,double p_N_exp){
+ double theta_N_exp = acos((pbeam.E()-pcentral*cos(etheta))/p_N_exp);
+ return theta_N_exp;
+ }
+
+ //Invariant Mass Squared, overloaded function
+ double getW2(TLorentzVector p_N){
+ double W2 = p_N.M2();
+ return W2;
+ }
+
+ double getW2(double ekine_W2){
+ double W2 = ekine_W2;
+ return W2;
+ }
+
+ double getW2(TLorentzVector pbeam,TLorentzVector p_eprime, double Q2, TString target){
+ double W2;
+	//LH2
+	if(target == "LH2"){
+	W2 = pow(physics_constants::M_p,2)+2.0*physics_constants::M_p*(pbeam.E() - p_eprime.E())-Q2;
+	//LD2
+	}else if(target == "LD2"){
+        double Nmass = 0.5*(physics_constants::M_p+physics_constants::M_n);
+        W2 = pow(Nmass,2)+2.0*Nmass*(pbeam.E() - p_eprime.E())-Q2;
+        }else{
+        //give an error	
+	cout << "Error: Target " << target << " is not handled by this function! Defaulting to zero." << endl;
+        W2 = 0.0;
+        }
+ return W2;
+ }
+
+ //get the ray from Hall origin onto the face of hcal where the nucleon hit. This defines the intersection point of the nucleon with HCal
+ TVector3 get_hcalintersect(TVector3 vertex,TVector3 hcal_origin,TVector3 hcal_zaxis,TVector3 p_Nhat ){
+ // intersection of a ray with a plane in hcal coordinates
+ double sintersect = ((hcal_origin - vertex).Dot(hcal_zaxis)) / (p_Nhat.Dot(hcal_zaxis));
+ // ray from Hall origin onto the face of hcal where the nucleon hit
+ TVector3 hcal_intersect = vertex + sintersect * p_Nhat;
+ return hcal_intersect;
+ }
+
+ //gets expected location of scattered nucleon assuming straight line projections from BB track, x-direction
+ double get_xhcalexpect(TVector3 hcal_intersect,TVector3 hcal_origin,TVector3 hcal_xaxis){
+ double xhcal_expect = (hcal_intersect - hcal_origin).Dot(hcal_xaxis); 
+ return xhcal_expect;
+ } 
+
+ //gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
+ double get_yhcalexpect(TVector3 hcal_intersect,TVector3 hcal_origin,TVector3 hcal_yaxis){
+ double yhcal_expect = (hcal_intersect - hcal_origin).Dot(hcal_yaxis);
+ return yhcal_expect;
+ }
+
+ //intime cluster selection analysis, part 1 of intime algorithm
+ vector<double> cluster_intime_select(int num_hcal_clusid,double hcal_clus_atime[],double atime_sh,double hcal_clus_e[],double coin_mean,double coin_sig_fac,double coin_profile_sigma,double hcalemin){
+ vector<double> cluster_intime;
+ //loop through all clusters and select without HCal position information
+ 	for(int c = 0; c<num_hcal_clusid; c++){
+	
+	//calculate hcal physics quantities per cluster
+	double atime = hcal_clus_atime[c];
+        double atime_diff = atime - atime_sh; //Assuming best shower time on primary cluster
+        double clus_energy = hcal_clus_e[c];
+
+	//use hcal atime till after pass 2, wide cut around 5 sigma
+	bool passCoin = abs(atime_diff - coin_mean)<coin_sig_fac*coin_profile_sigma;
+        bool passE = clus_energy > hcalemin;
+
+	//in-time algorithm with new cluster, sort later
+	cluster_intime.push_back(clus_energy);
+                if(!passCoin){
+                cluster_intime[c]=0;
+                }
+	}//end for loop over clusters
+ return cluster_intime;
+ }
+
+ //sort clusters to get best intime indices from clone cluster, part 2 of intime algorithm
+ int cluster_intime_findIdx(int num_hcal_clusid, vector<double> clone_cluster_intime){
+ int intime_idx = -1;
+ double intime = 0;
+
+ 	for(int d = 0;d < num_hcal_clusid; d++){
+
+		if(clone_cluster_intime[d] > intime){
+		intime = clone_cluster_intime[d];
+		intime_idx = d;
+		}//end conditional	
+	}//end for loop
+
+ return intime_idx;
+ }
+
+ //define dx
+ double get_dx(double xhcal,double xhcal_expect){
+ double dx = xhcal - xhcal_expect;
+ return dx;
+ }
+
+ //define dy
+ double get_dy(double yhcal,double yhcal_expect){
+ double dy = yhcal - yhcal_expect;
+ return dy;
  }
 
 

@@ -10,8 +10,8 @@ class parse_config{
   
   //common data analysis
   TString Exp,kin,data_file_name,kinematic_file_name,targ,pass;
-  int SBS_field,useAlshield,MAXNTRACKS;  
-  double dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dx_pn,W2_mean,W2_sigma,W2_sigfac,dx_low,dx_high,dy_low,dy_high,dxsig_n_fac,dxsig_p_fac,dysig_n_fac,dysig_p_fac,coin_mean,coin_sigma,coin_sig_fac;
+  int SBS_field,useAlshield,MAXNTRACKS, e_method;  
+  double dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dx_pn,W2_mean,W2_sigma,W2_sigfac,dx_low,dx_high,dy_low,dy_high,dxsig_n_fac,dxsig_p_fac,dysig_n_fac,dysig_p_fac,coin_mean,coin_sigma,coin_sig_fac,coin_profile_sig;
   TCut globalcut;
   vector<int> runnums;
 
@@ -56,6 +56,8 @@ public:
   int getAlshield();
 
   int getMAXNTRACKS();
+
+  int get_emethod();
 
   double get_dxOn();
 
@@ -102,6 +104,8 @@ public:
   double getCoinSig();
 
   double getCoinSigFac();
+
+  double getCoinProfSig();
 
   double getHCaleMin();
 
