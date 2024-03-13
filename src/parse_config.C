@@ -163,7 +163,10 @@
                         }else if(key == "dysig_p_fac"){
                         dysig_p_fac = val.Atof();
                         //cout << "dy sigma factor for proton " << dysig_p_fac << endl;
-                        }else if(key == "proton_thresh_fac"){
+                        }else if(key == "dysig_cut_fac"){
+			dysig_cut_fac = val.Atof();
+			//cout << "dy sigma cut factor " << dysig_cut_fac << endl;
+			}else if(key == "proton_thresh_fac"){
                         proton_thresh_fac = val.Atoi();
                         //cout << "Proton thresh factor: " << proton_thresh_fac << endl;
                         }else if(key == "neutron_thresh_fac"){
@@ -311,6 +314,8 @@
   double parse_config::get_dySignFac(){ return dysig_n_fac; }
 
   double parse_config::get_dySigpFac(){ return dysig_p_fac; }
+
+  double parse_config::get_dySigCutFac(){ return dysig_cut_fac; }
 
   double parse_config::getCoinMean(){ return coin_mean; }
  

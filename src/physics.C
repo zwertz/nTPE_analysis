@@ -314,11 +314,12 @@ namespace physics{
 	double atime = hcal_clus_atime[c];
         double atime_diff = atime - atime_sh; //Assuming best shower time on primary cluster
         double clus_energy = hcal_clus_e[c];
-
+	//cout << c << " " << atime << " " << atime_sh << " " <<clus_energy << endl;
 	//use hcal atime till after pass 2, wide cut around 5 sigma
-	bool passCoin = abs(atime_diff - coin_mean)<coin_sig_fac*coin_profile_sigma;
+	bool passCoin = abs(atime_diff - coin_mean) < coin_sig_fac*coin_profile_sigma;
         bool passE = clus_energy > hcalemin;
-
+	//cout << atime_diff << " " << coin_mean << " " << coin_sig_fac << " " << coin_profile_sigma << endl;
+	//cout << c << " " << passCoin << " " << passE << endl;
 	//in-time algorithm with new cluster, sort later
 	cluster_intime.push_back(clus_energy);
                 if(!passCoin){

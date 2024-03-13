@@ -6,6 +6,43 @@
 #include "../include/cuts.h"
 
 namespace cuts {
+
+//function to define HCal physical position boundaries
+vector<double> hcal_Position_data(TString pass){
+vector<double> hcalpos;
+
+double hcal_Xi;
+double hcal_Xf;
+double hcal_Yi;
+double hcal_Yf;
+
+	if(pass == "pass0"){
+	//slightly different calibration, need different parameters
+	hcal_Xi = exp_constants::hcalposXi_p0;    
+        hcal_Xf = exp_constants::hcalposXf_p0;
+        hcal_Yi = exp_constants::hcalposYi_p0;
+        hcal_Yf = exp_constants::hcalposYf_p0;
+	//better calibration, differerent parameters
+	}else if(pass == "pass1" || pass == "pass2"){
+        hcal_Xi = exp_constants::hcalposXi_mc;      
+        hcal_Xf = exp_constants::hcalposXf_mc;
+        hcal_Yi = exp_constants::hcalposYi_mc;
+        hcal_Yf = exp_constants::hcalposYf_mc;
+        //catch all case in the event we get something not a pass we can handle
+	}else{
+        //put an error message here
+	cout << "Error HCal Position  can't handle the pass: " << pass << "! Do something to fix it." << endl;
+        }// end conditional
+//store the values in a vector to use the information later
+hcalpos.push_back(hcal_Xi);
+hcalpos.push_back(hcal_Xf);
+hcalpos.push_back(hcal_Yi);
+hcalpos.push_back(hcal_Yf);
+
+return hcalpos;
+}
+
+
 //functions to handle defining HCal active area
 vector<double> hcal_ActiveArea_data(int num_blk_x, int num_blk_y, TString pass){
 
@@ -113,7 +150,28 @@ bool goodW2 = (W2 >= W2_low) && (W2 <= W2_high);
 return goodW2;
 }
 
+//Function used in defining globabl cut
+bool failedGlobal(TTreeFormula *GlobalCut){
+bool failedglobal = GlobalCut->EvalInstance(0) == 0;
+return failedglobal;
+}
 
+//Function used to define good coin cut
+bool passCoin(double coin_bestclus,double coin_mean, double coin_sig_fac, double coin_sigma){
+bool passcoin = abs(coin_bestclus - coin_mean) <= coin_sig_fac*coin_sigma;
+return passcoin;
+}
+
+//Function to define a good dy cut
+bool good_dy(double dy_bestclus,double dyO_p, double dysig_cut_fac, double dysig_p){
+bool good_dy = abs(dy_bestclus-dyO_p) <= dysig_cut_fac*dysig_p; 
+return good_dy;
+}
+
+bool passHCalE(double hcal_e,double hcalemin){
+bool passE = hcal_e > hcalemin;
+return passE;
+}
 
 }//end namespace
 
