@@ -24,6 +24,8 @@ namespace utility{
 
   TString makeOutputFileNameParse(TString exp, TString pass, TString Kin, int SBS_field,TString target);
 
+  TString makeOutputFileName_MCParse(TString exp, TString Kin, int SBS_field);
+
   TString makeYieldReportFileName(TString exp, TString pass, TString Kin, int SBS_field,TString target);
 
   TString makeOutputFileNameHCalEffParse(TString exp, TString pass, TString Kin, int SBS_field,TString target);
@@ -37,5 +39,10 @@ namespace utility{
   TString makeOutputFileName_MCsf(TString exp, TString Kin, int SBS_field,double sf,TString target);
  
   TString makeOutputFileName_HCalEffMC(TString exp, TString Kin);
+
+  vector<string> findHistFiles(TString replay_type,TString histDirectory,TString partialName);
+
+  void matchMCFiles(TString replay_type,vector<string>& histFiles,vector<string>& rootFiles, TString rootDirectory);
+
 }
 #endif

@@ -14,11 +14,13 @@ namespace exp_constants{
   	if(pass == "pass0" || pass == "pass1"){
 	hcal_offset = -0.2897;
 	}else if(pass == "pass2"){
+	//depending on how the data looks, may need to shift this so that way all neutron peaks aline with zero
 	hcal_offset = 0.0;
 	}else{
  	//We should never get here, cause then we have kinematic for data we dont have
  	cout << "Error: No hcal_offset for this pass: " << pass <<" Figure it out nerd!" << endl;
 	}//end conditional
+  //cout << "HCal Offset: " << hcal_offset << endl;
   return hcal_offset;
   }//end function
 

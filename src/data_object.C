@@ -9,19 +9,24 @@
 
 
 //private helper function. Requires that private class variables are initialized first
+//need to test this function carefully. Should be correct for data file directory structure
 TString data_object::makeInputFileName(){
  //All of this was to have a modular input directory. So let's make it
- string input_directory = "/volatile/halla/sbs/sbs-gmn/GMN_REPLAYS/pass2_take3";
+ string input_directory_1 = "/work/halla/sbs/sbs-gmn/GMN_REPLAYS/pass2_take3";
+ string input_directory_2 = "/work/halla/sbs/sbs-gmn/GMN_REPLAYS/pass2_take4";
  TString inputfile;
- const char *input_directory_char = input_directory.c_str();
+ const char *input_directory_1_char = input_directory_1.c_str();
+ const char *input_directory_2_char = input_directory_2.c_str();
  const char *pass_char = pass.Data();
  const char *kin_char = kinematic.Data();
  const char *tar_char = target.Data();
  	if((pass == "pass0") || (pass == "pass1")){
+	//pass0 and pass1 data is no longer on work. You have to bring it back from cache yourself
+	cout << "Pass0 and Pass1 no longer on work. Bring it back from tape!" << endl;
+	//This file structure is still correct so I'm not gonna get rid of it
  	inputfile = Form("/work/halla/sbs/sbs-gmn/%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",pass_char,kin_char,tar_char,run);
 	}else if(pass == "pass2"){
-	//need to implement data map file for pass 2. Need to test. May change, ongoing mass replay
-	//need to implement special treatment for SBS8 and SBS11. Due to different file structure.
+	//need to implement special treatment for all kinematics. Due to different file structure.
 		//Only implemented for files in the LH2 and LD2 directories
 		if(kinematic == "SBS8" && ((target == "LH2")||(target == "LD2"))){
 			//Then its segmented by magnet field setting
@@ -33,42 +38,77 @@ TString data_object::makeInputFileName(){
 				//now we need to handle the different parts in SBS 70%
 				//The best way to do this is probably by run number
 				if((run >= 13444) && (run <= 13455)){
-				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part1/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,sbs_field,run);
+				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part1/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,sbs_field,run);
 				}else if((run >= 13482) && (run <= 13505)){
-				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part2/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,sbs_field,run);
+				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part2/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,sbs_field,run);
 				}else if((run >= 13558) && (run <= 13578)){
-				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part3/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,sbs_field,run);
+				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part3/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,sbs_field,run);
 				}else if((run >= 13587) && (run <= 13620)){
-				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part4/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,sbs_field,run);
+				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent_part4/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,sbs_field,run);
 				}else{
 				//We probably got here only if we found a run number that does not meet the other conditionals. So let's give it an error message and provide a default input file similar to the other part of the conditonal
 				cout << "Error: Got a run number that is not in any range for SBS8 70% " << kinematic << " " << sbs_field << " " << run << endl;
-				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,sbs_field,run);
+				inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,sbs_field,run);
 					
 				}//end conditional
 			//Handles SBS 0%, 50%, 100%
 			}else if((sbs_field == 0)||(sbs_field == 50)||(sbs_field == 100)){
-			inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,sbs_field,run);			
+			inputfile = Form("%s/%s/%s/rootfiles/SBS%ipercent/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,sbs_field,run);			
 			}else{
 			//make a catch all error if for some reason we get a magnetic field that doesnt make sense
 			cout << "Error: Trouble with finding the data file! Kinematic: " << kinematic << " Target: " << target << " SBS Field: " << sbs_field << endl;
 			}//end conditional
+		//need to handle SBS8 dummy and optics properly
+		}else if(kinematic == "SBS8" && ((target == "Dummy")||(target == "Optics"))){
+		inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,run);
+		//handle everything for SBS7 and SBS9
+		}else if(kinematic == "SBS7" || kinematic == "SBS9"){
+		inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,run);
 		//Need to handle LD2 for SBS11
 		}else if(kinematic == "SBS11" && (target == "LD2")){
 		//The best way to do this is probably by run number
 			if((run >= 12314) && (run <= 12425)){
-                	inputfile = Form("%s/%s/%s/rootfiles/part1/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,run);
+                	inputfile = Form("%s/%s/%s/part1/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
                		}else if((run >= 12473) && (run <= 12830)){
-               		inputfile = Form("%s/%s/%s/rootfiles/part2/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,run);
-                	}else if((run >= 12894) && (run <= 13063)){
-                        inputfile = Form("%s/%s/%s/rootfiles/part3/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,run);
+               		//really silly file structure here but we must handle it
+				if((run >= 12473) && (run <= 12499)){
+				inputfile = Form("%s/%s/%s/part2/run124XX/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
+				}else if((run >= 12500) && (run <= 12599)){
+				inputfile = Form("%s/%s/%s/part2/run125XX/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
+				}else if((run >= 12614) && (run <= 12699)){
+                                inputfile = Form("%s/%s/%s/part2/run126XX/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
+                                }else if((run >= 12700) && (run <= 12799)){
+                                inputfile = Form("%s/%s/%s/part2/run127XX/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
+                                }else if((run >= 12801) && (run <= 12830)){
+                                inputfile = Form("%s/%s/%s/part2/run128XX/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
+                                }else{
+				cout << "Error: We got a run number: " << run << " that we cannot handle for SBS11 LD2!" << endl;
+				}
+				
+			}else if((run >= 12894) && (run <= 13063)){
+                        inputfile = Form("%s/%s/%s/part3/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
                		}else{
-
+			cout << "Error: Got a run number that is not in any range for SBS11 LD2 " << kinematic << " " << sbs_field << " " << run << endl;
+			inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
 			}//end conditional
+		//need to handle all other targets SBS11
+		}else if(kinematic == "SBS11" && (target == "LH2" || target == "Optics" || target == "Dummy")){	
+		inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
+		//handle SBS14 and SBS4
+		}else if(kinematic == "SBS14" || kinematic == "SBS4"){
+		inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
 		}else{
-		//Everything else but SBS8 LH2 or LD2, and SBS11 LD2 should direct here. Need to test that. So some SBS8 and SBS11, SBS4, SBS7,SBS14, and SBS9
-		inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_char,kin_char,tar_char,run);
-		}//end SBS8 conditional vs everything else
+		//We should never get here unless there is an error, all above conditionals handle file structure already since it is not great.
+			cout << "Error: Got to file making function else statement, something is most likely wrong." << endl; 
+			if(kinematic == "SBS7" || kinematic == "SBS8" || kinematic == "SBS9"){
+			inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_1_char,kin_char,tar_char,run);
+			}else if(kinematic == "SBS11" || kinematic == "SBS14" || kinematic == "SBS4"){
+			inputfile = Form("%s/%s/%s/rootfiles/e1209019_fullreplay_%i_*.root",input_directory_2_char,kin_char,tar_char,run);
+			}else {
+			//We should never get here
+			cout << "Error: Something is serioulsy wrong! Cannot find your data file." << endl;
+			}
+		}//end kinematic conditionals
 	}else{
 	//make an error. Some how we got not pass 0,1, or 2
 	cout << "Error: Pass variable was given that is not pass 0,1, or 2 " << pass << " !" << endl;

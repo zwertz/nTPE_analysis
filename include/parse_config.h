@@ -17,8 +17,9 @@ class parse_config{
 
 
   //common MC data analsyis
-  TString proton_root_file, neutron_root_file, MC_file;
+  TString proton_root_file, neutron_root_file, MC_file,rootfile_dir,histfile_dir,replay_type,partial_name_p,partial_name_n;
   double sf;
+  bool sync_jobs;
 
   //For MC HCal efficiency
   double hcalemin,proton_thresh_fac, neutron_thresh_fac,num_bin, pmin, pmax, Emin, Emax;
@@ -50,6 +51,16 @@ public:
   TString getMCFileName();
 
   TString getPass();
+
+  TString getRootFileDir();
+
+  TString getHistFileDir();
+
+  TString getReplayType();
+
+  TString getPartialNameP();
+
+  TString getPartialNameN();
 
   int getSBSField();
 
@@ -138,6 +149,8 @@ public:
   double getHBinFac();
 
   double get_sf();
+
+  bool get_syncJobs();
 
   TCut getGlobalCut();
 

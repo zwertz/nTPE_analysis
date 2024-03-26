@@ -663,6 +663,9 @@ void data_elastic_parse(const char *setup_file_name){
 	//good fiducial cut
 	bool passFid = cuts::hcalfid_IN(xhcal_expect,yhcal_expect,dx_pn,hcalfid);
 	
+	//pass HCal E
+	bool passHCalE = cuts::passHCalE(hcal_e_bestclus,hcalemin);
+
 
 	//Fill analysis tree variables before making cuts
 	dx_out = dx_bestclus;
@@ -733,7 +736,7 @@ void data_elastic_parse(const char *setup_file_name){
 	hdy_nocut->Fill(dy_bestclus);
 
 	//Fill some histograms here after basic global cuts
-	if(!failglobal){
+	if(!failglobal && passHCalE){
 	//global parameter checks
 	h_ntracks_globcut->Fill(ntrack);
         h_PS_E_globcut->Fill(e_ps);
@@ -757,7 +760,7 @@ void data_elastic_parse(const char *setup_file_name){
 	}
 
 	//Fill some histograms if pass global cut and W2 cut. Mostly just e-arm cuts
-	if(!failglobal && goodW2){
+	if(!failglobal && passHCalE && goodW2){
 	hxy_glob_W2_cut->Fill(yhcal_bestclus,xhcal_bestclus);
         h_W2_glob_W2_cut->Fill(W2);
         hxy_expect_glob_W2_cut->Fill(yhcal_expect,xhcal_expect);
@@ -772,12 +775,12 @@ void data_elastic_parse(const char *setup_file_name){
 	}
 
 	//Now let's add in our first major hadron arm cut along with all the cuts from before.
-	if(!failglobal && goodW2 && hcalaa_ON){
+	if(!failglobal && passHCalE && goodW2 && hcalaa_ON){
 	hxy_acceptancecut->Fill(yhcal_bestclus,xhcal_bestclus);
 	}
 	
 	//e-arm and h-arm cuts, except fiducial
-	if(!failglobal && goodW2 && hcalaa_ON && passCoin && good_dy ){
+	if(!failglobal && passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy ){
 	hdxdy_nofid->Fill(dy_bestclus, dx_bestclus);
 	hdx_cut_nofid->Fill(dx_bestclus);
 		if(!passFid){
@@ -787,7 +790,7 @@ void data_elastic_parse(const char *setup_file_name){
 	}	
 
 	//all cuts
-	if(!failglobal && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
+	if(!failglobal && passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
 	h_ntracks_cut->Fill(ntrack);
         h_PS_E_cut->Fill(e_ps);
         h_vert_z_cut->Fill(tr_vz[0]);
@@ -809,7 +812,8 @@ void data_elastic_parse(const char *setup_file_name){
 	hcoin_cut->Fill(coin_bestclus);
         hcoin_pclus_cut->Fill(coin_pclus);
         hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect);
-        hxy_expect_fidcutp->Fill(yhcal_expect,xhcal_expect-dx_pn);
+	cout << dx_pn << endl;
+	hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn));
 	hdxvE->Fill(hcal_e_bestclus,dx_bestclus);
 	hdxvW2->Fill(W2,dx_bestclus);
 

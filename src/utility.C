@@ -1,5 +1,6 @@
 #include "../include/utility.h"
 #include <iostream>
+#include <filesystem>
 #include <string>
 #include "TMath.h"
 
@@ -53,7 +54,12 @@ namespace utility{
   return outfile;
   }
 
-  //TODO:Will need a function to make file name for compared yield data and MC
+  //Helper function to make output file name for parse mc root file
+  TString makeOutputFileName_MCParse(TString exp, TString Kin, int SBS_field){
+  TString outfile = Form("%s/Zeke_MC_pn_parsed_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),SBS_field);
+  return outfile;
+  }
+
 
   //Helper function to make output file name for yield or ratio information
   TString makeYieldReportFileName(TString exp,TString pass,  TString Kin, int SBS_field,TString target){
@@ -102,7 +108,79 @@ namespace utility{
   TString makeOutputFileName_MCsf(TString exp, TString Kin, int SBS_field,double sf,TString target){
   TString outfile = Form("%s/MC_Zeke_%s_%s_%s_%i_sf%.1f.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field,sf);
   //cout << outfile << endl;
-  return outfile;
+   return outfile;
   }
+
+  //Helper function to find MC histogram files. Right now this only supports John Boyd simulation files. But in future might support others.
+  vector<string> findHistFiles(TString replay_type,TString histDirectory,TString partialName){
+  vector<string> myFiles;
+  const string& histDir_str = histDirectory.Data();  
+  const string& partialName_str = partialName.Data();
+	if(replay_type == "jboyd"){
+		//populate the vector with all matching hist files
+		for(const auto& entry : filesystem::directory_iterator(histDir_str)){
+			//check that the file is a regular file and that the partial name is found somewhere in the filename
+			if(entry.is_regular_file() && (entry.path().filename().string().find(partialName_str) != string::npos) ){
+			//if we find one that should be a match put it on the vector
+			myFiles.push_back(entry.path().string());
+			}
+		}
+	}else{
+	cout << "Error: MC file type not supported. Replay Type: " << replay_type << " This needs fixing!" << endl;
+	}
+  return myFiles;
+  }
+ 
+  //Helper function to match all the MC root files with the already found MC hist files. This function is not ideal, it modifies both of the vectors by the time the function is done. Though it does not have a return type
+  void matchMCFiles(TString replay_type,vector<string>& histFiles,vector<string>& rootFiles, TString rootDirectory){
+	//vector to track file indices that don't match
+	vector<int> unmatchedIndices;
+	int matches = 0;  
+	const string& rootDir_str = rootDirectory.Data();
+	if(replay_type == "jboyd"){
+		//loop over the values in the hist file vector
+		for(size_t i = 0; i < histFiles.size(); ++i){
+		cout << "Looking for hist to root dir  matches, " << i << "/" << histFiles.size() << " total matches " << matches << "\r";
+       		cout.flush();
+		filesystem::path histPath = histFiles[i];
+		string hist_filename = histPath.filename().string();
+
+		//modfiy the filename for the expect root file name
+		string expect_root_filename = "replayed_digitized_" + hist_filename;
+		expect_root_filename = expect_root_filename.substr(0, expect_root_filename.find_last_of('.')) + ".root";
+
+		//boolean to track if we find match
+		bool matchFound = false;
+
+			//iterate over the root file directory and see if there is a match
+			for(const auto& entry : filesystem::directory_iterator(rootDir_str)){
+				//check if there is a match
+				if(entry.is_regular_file() && (entry.path().filename() == expect_root_filename)){
+				//if we did put the file name on the root file vector and update other parameters
+				rootFiles.push_back(entry.path().string());
+				matchFound = true;
+				matches++;
+				break; //Since we found the match we can stop searching for this iteration
+				}//conditional
+			}//inner for loop
+		
+			if(!matchFound){
+			//if match not found indicate that index needs removal
+			unmatchedIndices.push_back(i);
+			}
+		}// end outer for loop
+
+		//Remove any unmatched indices
+		//Need to iterate in reverse because of implementation of vectors and to get correct indices
+		for(auto j = unmatchedIndices.rbegin(); j != unmatchedIndices.rend() ; ++j){
+
+		histFiles.erase(histFiles.begin() + *j);
+		}
+
+	}else{
+        cout << "Error: MC file type not supported during matching. Replay Type: " << replay_type << " This needs fixing!" << endl;
+        }
+  //There is no return here so this is a little confusing but when the function terminates the root file vector should be populate and the non matching hist vector elements should be removed. So this function modifies both vectors to have matching information, since we are sending references to the original vector.
+  }//end matching function
 
 } //end namespace

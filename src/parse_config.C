@@ -49,6 +49,15 @@
 				}else if(key == "MC_file"){
                         	MC_file = val;
                         	//cout << "MC File: " << MC_file << endl;   
+				}else if(key == "rootfile_dir"){
+				rootfile_dir = val;
+				//cout << "Rootfile dir" << rootfile_dir << endl;				
+				}else if(key == "histfile_dir"){
+				histfile_dir = val;
+				//cout << "Histfile_dir" << histfile_dir << endl;
+				}else if(key == "replay_type"){
+				replay_type = val;
+				//cout << "Replay type" << replay_type << endl;
 				}else{
                         	//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
                         	cout << "Error:Found a key that this script can't handle. Fix that! "<< key << endl;
@@ -85,7 +94,13 @@
                         }else if(key == "kinematic_name"){
                         kinematic_file_name = val;
                         //cout << "Kinematic File " << kinematic_file_name << endl;
-                        }else if(key == "pass"){
+                        }else if(key == "partial_name_p"){
+			partial_name_p = val;
+			//cout << "Partial Name P " << partial_name_p << endl;
+			}else if(key == "partial_name_n"){
+                        partial_name_n = val;
+			//cout << "Partial Name N " << partial_name_n << endl;
+			}else if(key == "pass"){
                         pass = val;
 			//cout << "Pass " << pass << endl;
 			}else if(key == "SBS_field"){
@@ -223,8 +238,16 @@
                         }else if(key == "sf"){
                         sf = val.Atof();
                         //cout << "Scale Field " << sf << endl;
-                        }                        
-                	else{
+                        }else if(key == "sync_jobs"){
+                        	if(val == "true"){
+				sync_jobs = true;
+				}else if(val == "false"){
+				sync_jobs = false;
+				}else{
+				cout << "Error: sync_jobs cannot be assigned, not boolean value!" << endl;
+				}
+			//cout << "Sync jobs " << sync_jobs << endl;
+                	}else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
 			cout << "Error:Found a key that this script can't handle. Fix that! "<< key << endl;
                         return;
@@ -239,7 +262,7 @@
     		}//end conditinal
     	}//end conditional
     }//end while
-    if(runnums.empty() && ((proton_root_file.Length() == 0) &&  (neutron_root_file.Length() ==0))){
+    if(runnums.empty() && ((proton_root_file.Length() == 0) &&  (neutron_root_file.Length() ==0) && (rootfile_dir.Length() == 0) && (histfile_dir.Length() == 0) && (replay_type.Length() == 0))){
     // if there are data or MC files we should return true and therefore throw an error
     cout << "Error: No data files in the config file, I can't do anything if I don't know where the data lives!" << endl;
         return;
@@ -266,6 +289,16 @@
   TString parse_config::getMCFileName(){ return MC_file; }
 
   TString parse_config::getPass(){ return pass; }
+
+  TString parse_config::getRootFileDir(){ return rootfile_dir;}
+
+  TString parse_config::getHistFileDir(){ return histfile_dir;}
+
+  TString parse_config::getReplayType(){ return replay_type;}
+
+  TString parse_config::getPartialNameP(){ return partial_name_p;}
+
+  TString parse_config::getPartialNameN(){ return partial_name_n;}
 
   int parse_config::getSBSField(){ return SBS_field; }
 
@@ -355,6 +388,8 @@
 
   double parse_config::get_sf(){ return sf; }
 
+  bool parse_config::get_syncJobs(){ return sync_jobs; }
+
   TCut parse_config::getGlobalCut(){ return globalcut; }
 
   vector<int> parse_config::getRunNums(){ return runnums; }
@@ -384,6 +419,7 @@
        << Form("W2 Sigma: %f",getW2Sigma())												  << endl
        << Form("W2 Sigma Fac: %f",getW2SigFac())											  << endl
        << Form("Target: %s",getTarg().Data())												  << endl
+       << Form("E Method: %i",get_emethod())                                                                                              << endl
        << Form("Maxntracks: %i",getMAXNTRACKS())											  << endl
        << Form("dxO_n: %f",get_dxOn())													  << endl
        << Form("dyO_n: %f",get_dyOn())                                                                                                    << endl
@@ -403,6 +439,14 @@
        << Form("dx sig p fac: %f", get_dxSigpFac())                                                                                       << endl
        << Form("dy sig n fac: %f", get_dySignFac())                                                                                       << endl
        << Form("dy sig p fac: %f", get_dySigpFac())                                                                                       << endl
+       << Form("dy sig cut fac: %f",get_dySigCutFac())                                                                                    << endl
+       << Form("W2 fit max: %f", getW2FitMax())												  << endl
+       << Form("binfac: %f",getBinFac())												  << endl
+       << Form("hbinfac: %f",getHBinFac())												  << endl
+       << Form("Coin Mean: %f",getCoinMean())												  << endl
+       << Form("Coin Sig Fac: %f",getCoinSigFac())											  << endl
+       << Form("Coin Sigma: %f",getCoinSig())												  << endl
+       << Form("HCal E min: %f",getHCaleMin())												  << endl
        << "-------------------------------------------------------------------------------------------------------------------------------------------------"        << endl;
   }
 
@@ -453,6 +497,15 @@
   //only work on MC LD2
   void parse_config::printMCYields(){
   //TODO, will do once I have such config files to begin with
+  cout << "-------------------------------------------------------------------------------------------------------------------------------------------------"        << endl;
+  cout << Form("Global Cuts: %s",getGlobalCut().GetTitle())                                                                               << endl
+       << Form("Experiment: %s",(getExp()).Data())                                                                                        << endl
+       << Form("Kinematic: %s",(getKin()).Data())                                                                                         << endl  
+       << Form("SBS Field: %i",getSBSField())                                                                                             << endl
+       << Form("Root File Dir: %s",(getRootFileDir()).Data())										  << endl
+       << Form("Hist File Dir: %s",(getHistFileDir()).Data())										  << endl
+       << Form("Replay Type: %s",(getReplayType()).Data())										  << endl
+       << "-------------------------------------------------------------------------------------------------------------------------------------------------"        << endl;
   }
 
   //only work on HCal Efficiency MC LH2
