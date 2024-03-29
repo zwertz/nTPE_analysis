@@ -304,9 +304,10 @@ namespace physics{
  return yhcal_expect;
  }
 
- //intime cluster selection analysis, part 1 of intime algorithm
- vector<double> cluster_intime_select(int num_hcal_clusid,double hcal_clus_atime[],double atime_sh,double hcal_clus_e[],double coin_mean,double coin_sig_fac,double coin_profile_sigma,double hcalemin){
- vector<double> cluster_intime;
+ //intime cluster selection analysis,intime algorithm
+ int cluster_intime_select(int num_hcal_clusid,double hcal_clus_atime[],double atime_sh,double hcal_clus_e[],double coin_mean,double coin_sig_fac,double coin_profile_sigma,double hcalemin){
+ double maxE = 0.0;
+ int intime_idx = -1;
  //loop through all clusters and select without HCal position information
  	for(int c = 0; c<num_hcal_clusid; c++){
 	
@@ -317,16 +318,20 @@ namespace physics{
 	//cout << c << " " << atime << " " << atime_sh << " " <<clus_energy << endl;
 	//use hcal atime till after pass 2, wide cut around 5 sigma
 	bool passCoin = abs(atime_diff - coin_mean) < coin_sig_fac*coin_profile_sigma;
-        bool passE = clus_energy > hcalemin;
 	//cout << atime_diff << " " << coin_mean << " " << coin_sig_fac << " " << coin_profile_sigma << endl;
 	//cout << c << " " << passCoin << " " << passE << endl;
-	//in-time algorithm with new cluster, sort later
-	cluster_intime.push_back(clus_energy);
-                if(!passCoin){
-                cluster_intime[c]=0;
-                }
+	//in-time algorithm with new cluster, sort 
+                if(passCoin){
+		//if intime is passed see if the current cluster has the highest energy
+		bool new_maxE = maxE < clus_energy;
+			//if the current cluster has the higher energy update the information
+			if(new_maxE){
+			maxE = clus_energy;
+			intime_idx = c;
+			}
+		}//end conditional
 	}//end for loop over clusters
- return cluster_intime;
+ return intime_idx;
  }
 
  //sort clusters to get best intime indices from clone cluster, part 2 of intime algorithm

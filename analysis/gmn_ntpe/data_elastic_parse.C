@@ -62,7 +62,6 @@ void data_elastic_parse(const char *setup_file_name){
   double dyO_p = mainConfig.get_dyOp();
   double dxsig_p = mainConfig.get_dxsigp();
   double dysig_p = mainConfig.get_dysigp();
-  double dx_pn = mainConfig.get_dxpn();
   double dx_low = mainConfig.get_dxLow();
   double dx_high = mainConfig.get_dxHigh();
   double dy_low = mainConfig.get_dyLow();
@@ -137,6 +136,9 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *h_HCal_E = new TH1D( "HCal_E", "HCal Cluster Energy (GeV); GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_globcut = new TH1D( "HCal_E_globcut", "HCal Cluster Energy (GeV), global cut; GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_best = new TH1D( "HCal_E_best", "HCal Cluster Energy (GeV), best cluster; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_best_globcut = new TH1D( "HCal_E_best_globcut", "HCal Cluster Energy (GeV), best cluster, global cut; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_best_cut = new TH1D( "HCal_E_best_cut", "HCal Cluster Energy (GeV), best cluster, Cuts; GeV", 250, 0, 0.4 );
   TH1D *h_HCal_nclus = new TH1D("HCal_nclus","HCal number of clusters meeting threshold;", 250,0,10);
   TH1D *h_HCal_nclus_globcut = new TH1D("HCal_nclus_globcut","HCal number of clusters meeting threshold, global cut;", 250,0,10);
   TH1D *h_HCal_nclus_cut = new TH1D("HCal_nclus_cut","HCal number of clusters meeting threshold, Cuts;", 250,0,10);
@@ -319,6 +321,7 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("run", &run_out, "run/I");
   Parse->Branch("mag", &mag_out, "mag/I");
 
+  double dx_pn = mainConfig.get_dxpn();
 
   //loop over the run numbers
   for(int j = 0; j<num_runs; j++){
@@ -481,6 +484,7 @@ void data_elastic_parse(const char *setup_file_name){
   //ttree formula variables
   int treenum = 0, currenttreenum = 0;
 
+  
   	//event loop 
   	while(C->GetEntry(nevent++)){
 	
@@ -619,16 +623,14 @@ void data_elastic_parse(const char *setup_file_name){
 	//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
         double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
 
+	//cout << xhcal_expect << endl;
 
 	//////////////////////
 	//INTIME CLUSTER ANALYSIS
 	//Requires that it has the greatest hcal cluster energy and that hcal cluster analog time is in coincidence with bbcal analog time
 	
-	//intime cluster selection analysis, part 1 of intime algorithm
-	vector<double> clone_cluster_intime = physics::cluster_intime_select(num_hcal_clusid,hcal_clus_atime,atime_sh,hcal_clus_e,coin_mean,coin_sig_fac,coin_profile_sig,hcalemin);
-
-	//sort clusters to get best intime indices from clone cluster, part 2 of intime algorithm
-	int intime_idx = physics::cluster_intime_findIdx(num_hcal_clusid,clone_cluster_intime);
+	//intime cluster selection analysis, intime algorithm
+	int intime_idx = physics::cluster_intime_select(num_hcal_clusid,hcal_clus_atime,atime_sh,hcal_clus_e,coin_mean,coin_sig_fac,coin_profile_sig,hcalemin);
 	
 	//Assume that the itime analysis is sufficient to find the best cluster in HCal
 	int clus_idx_best = intime_idx;
@@ -661,8 +663,8 @@ void data_elastic_parse(const char *setup_file_name){
 	bool passCoin = cuts::passCoin(coin_bestclus,coin_mean,coin_sig_fac,coin_profile_sig);
 
 	//good fiducial cut
-	bool passFid = cuts::hcalfid_IN(xhcal_expect,yhcal_expect,dx_pn,hcalfid);
-	
+	bool passFid = cuts::hcalfid_IN(xhcal_expect,yhcal_expect,dx_pn,hcalfid);	
+
 	//pass HCal E
 	bool passHCalE = cuts::passHCalE(hcal_e_bestclus,hcalemin);
 
@@ -725,7 +727,8 @@ void data_elastic_parse(const char *setup_file_name){
 	h_ntracks->Fill(ntrack);	
 	h_PS_E->Fill(e_ps);
 	h_vert_z->Fill(tr_vz[0]);
-	h_HCal_E->Fill(hcal_e_bestclus);
+	h_HCal_E->Fill(e_hcal);
+        h_HCal_E_best->Fill(hcal_e_bestclus);
 	h_HCal_nclus->Fill(nclus_hcal);
 	h_nhits->Fill(gem_hits[0]);
 	h_bbtrp_nocut->Fill(tr_p[0]);
@@ -741,8 +744,9 @@ void data_elastic_parse(const char *setup_file_name){
 	h_ntracks_globcut->Fill(ntrack);
         h_PS_E_globcut->Fill(e_ps);
         h_vert_z_globcut->Fill(tr_vz[0]);
-        h_HCal_E_globcut->Fill(hcal_e_bestclus);
-        h_HCal_nclus_globcut->Fill(nclus_hcal);
+        h_HCal_E_globcut->Fill(e_hcal);
+        h_HCal_E_best_globcut->Fill(hcal_e_bestclus);
+	h_HCal_nclus_globcut->Fill(nclus_hcal);
         h_nhits_globcut->Fill(gem_hits[0]);
         h_bbtrp_globcut->Fill(tr_p[0]);
         h_SH_nclus_globcut->Fill(nclus_sh);
@@ -770,7 +774,7 @@ void data_elastic_parse(const char *setup_file_name){
 	hcoin_glob_W2_cut->Fill(coin_bestclus);
 	hcoin_pclus_glob_W2_cut->Fill(coin_pclus);
 	hxy_expect_n->Fill(yhcal_expect,xhcal_expect);
-	hxy_expect_p->Fill(yhcal_expect,xhcal_expect-dx_pn);
+	hxy_expect_p->Fill(yhcal_expect,(xhcal_expect-dx_pn));
 	hMott_cs->Fill(Mott_CS);
 	}
 
@@ -790,12 +794,13 @@ void data_elastic_parse(const char *setup_file_name){
 	}	
 
 	//all cuts
-	if(!failglobal && passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
+	if(!failglobal &&passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
 	h_ntracks_cut->Fill(ntrack);
         h_PS_E_cut->Fill(e_ps);
         h_vert_z_cut->Fill(tr_vz[0]);
-        h_HCal_E_cut->Fill(hcal_e_bestclus);
-        h_HCal_nclus_cut->Fill(nclus_hcal);
+        h_HCal_E_cut->Fill(e_hcal);
+        h_HCal_E_best_cut->Fill(hcal_e_bestclus);
+	h_HCal_nclus_cut->Fill(nclus_hcal);
         h_nhits_cut->Fill(gem_hits[0]);
         h_bbtrp_cut->Fill(tr_p[0]);
         h_SH_nclus_cut->Fill(nclus_sh);
@@ -812,7 +817,7 @@ void data_elastic_parse(const char *setup_file_name){
 	hcoin_cut->Fill(coin_bestclus);
         hcoin_pclus_cut->Fill(coin_pclus);
         hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect);
-	cout << dx_pn << endl;
+	//cout << dx_pn << endl;
 	hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn));
 	hdxvE->Fill(hcal_e_bestclus,dx_bestclus);
 	hdxvW2->Fill(W2,dx_bestclus);

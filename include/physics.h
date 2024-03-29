@@ -113,7 +113,7 @@ namespace physics{
  double get_yhcalexpect(TVector3 hcal_intersect,TVector3 hcal_origin,TVector3 hcal_yaxis);
 
  //intime cluster selection analysis, part 1 of intime algorithm
- vector<double> cluster_intime_select(int num_hcal_clusid,double hcal_clus_atime[],double atime_sh,double hcal_clus_e[],double coin_mean,double coin_sig_fac,double coin_profile_sigma,double hcalemin);
+ int cluster_intime_select(int num_hcal_clusid,double hcal_clus_atime[],double atime_sh,double hcal_clus_e[],double coin_mean,double coin_sig_fac,double coin_profile_sigma,double hcalemin);
 
  //sort clusters to get best intime indices from clone cluster, part 2 of intime algorithm
  int cluster_intime_findIdx(int num_hcal_clusid, vector<double> clone_cluster_intime);

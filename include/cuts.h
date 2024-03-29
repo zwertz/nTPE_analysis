@@ -10,6 +10,7 @@ namespace cuts{
 
 //function to define HCal physical position boundaries
 vector<double> hcal_Position_data(TString pass);
+vector<double> hcal_Position_MC();
 
 //For HCal Active Area cut and data
 vector<double> hcal_ActiveArea_data(int num_blk_x, int num_blk_y, TString pass);//number of blocks to exclude from top and bottom, number of blocks to exclude from left and right

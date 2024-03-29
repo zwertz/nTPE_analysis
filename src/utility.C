@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <string>
 #include "TMath.h"
+#include <regex>
+
 
 //Author Ezekiel Wertz
 //Implementation for useful task functions
@@ -182,5 +184,47 @@ namespace utility{
         }
   //There is no return here so this is a little confusing but when the function terminates the root file vector should be populate and the non matching hist vector elements should be removed. So this function modifies both vectors to have matching information, since we are sending references to the original vector.
   }//end matching function
+
+  //Function that searches through two vectors of strings and removes entries without a matching pair
+  //since we are sending references to vectors it should modifiy the original reference
+  void syncJobNumbers(vector<string>& proton_vec,vector<string>& neutron_vec){
+  regex jobNumberRegex("job([0-9]+)");
+  std::smatch match;
+  std::unordered_set<string> jobNumbers_pro, jobNumbers_neu;
+
+  	//Get job numbers for proton files
+  	for(const auto& str: proton_vec){
+  		//search for files with the job numbers
+		if(std::regex_search(str,match,jobNumberRegex)){
+		//store references if we find one
+		jobNumbers_pro.insert(match[0]);
+		}
+  	}
+  	//Get job numbers for nuetron files
+  	for(const auto& str: neutron_vec){
+        	//search for files with the job numbers
+        	if(std::regex_search(str,match,jobNumberRegex)){
+        	//store references if we find one
+        	jobNumbers_neu.insert(match[0]);
+        	}
+  	}
+	//remove unpaired entries from proton vec
+	//this codes a little odd, unfamiliar library.
+	//I suspect it is doing something like searching from the begin to end of the vector and removing the string. But the string is made on the fly and is some how checking if one string found in the first vector is also in the second vector
+	proton_vec.erase(std::remove_if(proton_vec.begin(),proton_vec.end(),[&](const string& str){
+			if(std::regex_search(str,match,jobNumberRegex) && jobNumbers_neu.find(match[0]) == jobNumbers_neu.end() ){
+			return true;
+			}
+		return false;
+		}),proton_vec.end());
+	//remove unpaired entries from neutron vec
+        neutron_vec.erase(std::remove_if(neutron_vec.begin(),neutron_vec.end(),[&](const string& str){
+                        if(std::regex_search(str,match,jobNumberRegex) && jobNumbers_pro.find(match[0]) == jobNumbers_pro.end() ){
+                        return true;
+                        }
+                return false;
+                }),neutron_vec.end());
+
+  }// end sync job function
 
 } //end namespace

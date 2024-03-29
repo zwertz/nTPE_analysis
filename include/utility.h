@@ -44,5 +44,7 @@ namespace utility{
 
   void matchMCFiles(TString replay_type,vector<string>& histFiles,vector<string>& rootFiles, TString rootDirectory);
 
+  void syncJobNumbers(vector<string>& proton_vec,vector<string>& neutron_vec);
+
 }
 #endif

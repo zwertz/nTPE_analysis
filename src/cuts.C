@@ -42,6 +42,23 @@ hcalpos.push_back(hcal_Yf);
 return hcalpos;
 }
 
+//function to define HCal physical position boundaries
+vector<double> hcal_Position_MC(){
+vector<double> hcalpos;
+
+double hcal_Xi = exp_constants::hcalposXi_mc;
+double hcal_Xf = exp_constants::hcalposXf_mc;
+double hcal_Yi = exp_constants::hcalposYi_mc;
+double hcal_Yf = exp_constants::hcalposYf_mc;
+
+hcalpos.push_back(hcal_Xi);
+hcalpos.push_back(hcal_Xf);
+hcalpos.push_back(hcal_Yi);
+hcalpos.push_back(hcal_Yf);
+
+return hcalpos;
+}
+
 
 //functions to handle defining HCal active area
 vector<double> hcal_ActiveArea_data(int num_blk_x, int num_blk_y, TString pass){
