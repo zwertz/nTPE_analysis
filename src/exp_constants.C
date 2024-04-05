@@ -6,7 +6,7 @@
 #include "../include/exp_constants.h"
 namespace exp_constants{
   //m, height of the center of hcal above beam (m)
-  const double getHCalOffset(TString myKin, TString pass){
+  const double getHCalOffset( TString pass){
   double hcal_offset;
 
   //First segment by pass. Later we may need to segment by kinematic
@@ -15,6 +15,8 @@ namespace exp_constants{
 	hcal_offset = -0.2897;
 	}else if(pass == "pass2"){
 	//depending on how the data looks, may need to shift this so that way all neutron peaks aline with zero
+	hcal_offset = 0.0;
+	}else if(pass == "mc"){
 	hcal_offset = 0.0;
 	}else{
  	//We should never get here, cause then we have kinematic for data we dont have

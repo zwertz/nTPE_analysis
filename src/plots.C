@@ -52,11 +52,11 @@ myLine->SetLineStyle(style);
 return myLine;
 }
 
-//make the canvas to put fiducial/acceptance region check on
-TCanvas* plotAcceptance_Fid_Check(const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_aa,vector<TLine*> Lines_Fid,TLine *LineFidPro,TH2D *hxy_globcut,TH2D *hxy_expect_cut,TH2D *hxy_expect_failedfid){
+//make the canvas to put acceptance region check on
+TCanvas* plotAcceptance_Check(const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_aa,vector<TLine*> Lines_Fid,TH2D *hxy_globcut,TH2D* hxy_acceptancecut){
 
 TCanvas* myCan = new TCanvas(name,name,1600,1200); 
-myCan->Divide(3,1);
+myCan->Divide(2,1);
 
 //first plot
 myCan->cd(1);
@@ -75,6 +75,76 @@ Lines_Fid[0]->Draw("same");
 Lines_Fid[1]->Draw("same");
 Lines_Fid[2]->Draw("same");
 Lines_Fid[3]->Draw("same");
+
+//make legend
+auto legend1 = new TLegend(0.17,0.8,0.52,0.9);
+legend1->SetTextSize(0.03);
+legend1->AddEntry(Lines_pos[0],"HCal Boundary","l");
+legend1->AddEntry(Lines_aa[0],"Acceptance Region","l");
+legend1->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+legend1->Draw();
+
+//second plot
+myCan->cd(2);
+hxy_acceptancecut->Draw("colz");
+Lines_pos[0]->Draw("same");
+Lines_pos[1]->Draw("same");
+Lines_pos[2]->Draw("same");
+Lines_pos[3]->Draw("same");
+
+Lines_aa[0]->Draw("same");
+Lines_aa[1]->Draw("same");
+Lines_aa[2]->Draw("same");
+Lines_aa[3]->Draw("same");
+
+Lines_Fid[0]->Draw("same");
+Lines_Fid[1]->Draw("same");
+Lines_Fid[2]->Draw("same");
+Lines_Fid[3]->Draw("same");
+
+//make legend
+auto legend2 = new TLegend(0.17,0.8,0.52,0.9);
+legend2->SetTextSize(0.03);
+legend2->AddEntry(Lines_pos[0],"HCal Boundary","l");
+legend2->AddEntry(Lines_aa[0],"Acceptance Region","l");
+legend2->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+legend2->Draw();
+
+return myCan;
+}
+
+//make the canvas to put fiducial region check on
+TCanvas* plotFid_Check(const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_aa,vector<TLine*> Lines_Fid,TLine *LineFidPro,TH2D *hxy_expect_glob_W2_cut,TH2D *hxy_expect_cut,TH2D *hxy_expect_failedfid){
+
+TCanvas* myCan = new TCanvas(name,name,1600,1200);
+myCan->Divide(3,1);
+
+//first plot
+myCan->cd(1);
+hxy_expect_glob_W2_cut->Draw("colz");
+Lines_pos[0]->Draw("same");
+Lines_pos[1]->Draw("same");
+Lines_pos[2]->Draw("same");
+Lines_pos[3]->Draw("same");
+
+Lines_aa[0]->Draw("same");
+Lines_aa[1]->Draw("same");
+Lines_aa[2]->Draw("same");
+Lines_aa[3]->Draw("same");
+
+Lines_Fid[0]->Draw("same");
+Lines_Fid[1]->Draw("same");
+Lines_Fid[2]->Draw("same");
+Lines_Fid[3]->Draw("same");
+
+//make legend
+auto legend1 = new TLegend(0.17,0.8,0.52,0.9);
+legend1->SetTextSize(0.03);
+legend1->AddEntry(Lines_pos[0],"HCal Boundary","l");
+legend1->AddEntry(Lines_aa[0],"Acceptance Region","l");
+legend1->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+legend1->Draw();
+
 
 //second plot
 myCan->cd(2);
@@ -95,6 +165,15 @@ Lines_Fid[2]->Draw("same");
 Lines_Fid[3]->Draw("same");
 
 LineFidPro->Draw("same");
+
+//make legend
+auto legend2 = new TLegend(0.17,0.8,0.52,0.9);
+legend2->SetTextSize(0.03);
+legend2->AddEntry(Lines_pos[0],"HCal Boundary","l");
+legend2->AddEntry(Lines_aa[0],"Acceptance Region","l");
+legend2->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+legend2->Draw();
+
 //third plot
 myCan->cd(3);
 hxy_expect_failedfid->Draw("colz");
@@ -115,6 +194,15 @@ Lines_Fid[2]->Draw("same");
 Lines_Fid[3]->Draw("same");
 
 LineFidPro->Draw("same");
+
+//make legend
+auto legend3 = new TLegend(0.17,0.8,0.52,0.9);
+legend3->SetTextSize(0.03);
+legend3->AddEntry(Lines_pos[0],"HCal Boundary","l");
+legend3->AddEntry(Lines_aa[0],"Acceptance Region","l");
+legend3->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+legend3->Draw();
+
 
 return myCan;
 }
@@ -146,6 +234,15 @@ Lines_Fid[3]->Draw("same");
 
 LineFidPro->Draw("same");
 
+//make legend
+auto legend1 = new TLegend(0.17,0.8,0.52,0.9);
+legend1->SetTextSize(0.03);
+legend1->AddEntry(Lines_pos[0],"HCal Boundary","l");
+legend1->AddEntry(Lines_aa[0],"Acceptance Region","l");
+legend1->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+legend1->Draw();
+
+
 //second plot
 myCan->cd(2);
 hxy_expect_fidcutp->Draw("colz");
@@ -163,6 +260,15 @@ Lines_Fid[0]->Draw("same");
 Lines_Fid[1]->Draw("same");
 Lines_Fid[2]->Draw("same");
 Lines_Fid[3]->Draw("same");
+
+//make legend
+auto legend2 = new TLegend(0.17,0.8,0.52,0.9);
+legend2->SetTextSize(0.03);
+legend2->AddEntry(Lines_pos[0],"HCal Boundary","l");
+legend2->AddEntry(Lines_aa[0],"Acceptance Region","l");
+legend2->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+legend2->Draw();
+
 
 return myCan;
 }

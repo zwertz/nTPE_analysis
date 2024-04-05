@@ -10,7 +10,7 @@
 //Implementation for useful task functions
 
 namespace utility{
-
+  //function to determine if what is found was a number or a string
   bool check_number(const char *myChar){
    bool mybool=false;
   	for(int i=0; i< strlen(myChar); i++){
@@ -29,6 +29,7 @@ namespace utility{
   double DegToRad(double myNum){
   return (myNum * (TMath::Pi()/180.0));
   }
+  //convert from radians to degrees
   double RadToDeg(double datRad){
   return ((datRad * 180.0)/(TMath::Pi()));
   }
@@ -226,5 +227,83 @@ namespace utility{
                 }),neutron_vec.end());
 
   }// end sync job function
+
+  //function to parse simc hist files replayed by jboyd. Need to verify that this is still valid.
+  double searchSimcHistFile(const TString &pattern, const TString &filename){
+	ifstream inputFile(filename.Data());//Try to open the file with the corresponding name of interest
+
+  	//make sure the file exists. If it does not return
+	if(inputFile.fail()){
+	cerr << "Error: There was a problem with the input hist file!" << endl;
+	cerr << "Filename: " << filename << endl;
+	return -99; //This value does not matter as long as it is nonsensical for the other parameters.
+	}
+
+  TString myLine;
+  double foundValue = -1; //Default to a value that would not make sense physically for any parameter
+  TString previousLine; //Keep track of the previous line for exceptions
+  	//search through each line of the file for the designated pattern
+	while(myLine.ReadLine(inputFile)){
+		//If we found the pattern in the line
+		if(myLine.Contains(pattern)){
+		//handle the case of luminosity or other patterns with scientific notation
+			if(myLine.EndsWith("ub^-1") || myLine.EndsWith("geV^2")){
+			//Extract the numerical value
+			TString delim("=");
+			TObjArray* tokens = myLine.Tokenize(delim);
+				//check that we found enough elements
+				if(tokens->GetEntries() >= 2){
+				TObjString* value = dynamic_cast<TObjString*>(tokens->At(1)); 
+					if(value){
+					TString valueString = value->String();
+					//convert to double
+					foundValue = valueString.Atof();
+					delete tokens; //cleanup
+					return foundValue;
+					}
+				}
+			delete tokens; //cleanup if for some reason we don't find a value this way
+			}else{
+			//For other nonspecific patterns
+			TString valueString;
+			TString delim("=");
+			TObjArray* tokens = myLine.Tokenize(delim);
+				if(tokens->GetEntries() >= 2){
+				TObjString* value = dynamic_cast<TObjString*>(tokens->At(1));
+					if(value){
+					valueString = value->String();
+					}
+				}
+				if(valueString.IsFloat()){
+				//convert to double
+				foundValue = valueString.Atof();
+                                delete tokens; //cleanup
+                                return foundValue;
+				}
+			delete tokens; //cleanup if for some reason we don't find a value this way
+			}
+		}//end conditional on pattern line check
+	previousLine = myLine;
+	}//end of while loop
+  //Handle luminosity and other execptions when an appropriate line is not found
+  	if((pattern == "luminosity" && previousLine.EndsWith("ub^-1")) || (pattern == "genvol")){
+	TString delim("=");
+	TObjArray* tokens = myLine.Tokenize(delim);
+		if(tokens->GetEntries() >= 2){
+                TObjString* value = dynamic_cast<TObjString*>(tokens->At(1));
+			if(value){
+                        TString valueString = value->String();
+                       	foundValue = valueString.Atof();
+			}
+
+		}
+	delete tokens; //cleanup
+	}
+  inputFile.close();
+
+  return foundValue;
+  }//end of hist search function
+  
+
 
 } //end namespace

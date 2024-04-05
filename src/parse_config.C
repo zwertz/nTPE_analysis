@@ -238,7 +238,13 @@
                         }else if(key == "sf"){
                         sf = val.Atof();
                         //cout << "Scale Field " << sf << endl;
-                        }else if(key == "sync_jobs"){
+                        }else if(key == "Ntried_override"){
+			Ntried_override = val.Atof();
+			}else if(key == "luminosity_override"){
+			luminosity_override = val.Atof();
+			}else if(key == "genvol_override"){
+			genvol_override = val.Atof();
+			}else if(key == "sync_jobs"){
                         	if(val == "true"){
 				sync_jobs = true;
 				}else if(val == "false"){
@@ -247,7 +253,15 @@
 				cout << "Error: sync_jobs cannot be assigned, not boolean value!" << endl;
 				}
 			//cout << "Sync jobs " << sync_jobs << endl;
-                	}else{
+                	}else if(key == "mc_override"){
+				if(val == "true"){
+				mc_override = true;
+				}else if(val == "false"){
+				mc_override = false;
+				}else{
+                                cout << "Error: mc_override cannot be assigned, not boolean value!" << endl;
+                                }
+			}else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
 			cout << "Error:Found a key that this script can't handle. Fix that! "<< key << endl;
                         return;
@@ -387,6 +401,14 @@
   double parse_config::getHBinFac(){ return hbinfac; } 
 
   double parse_config::get_sf(){ return sf; }
+
+  double parse_config::getNTriedOverride(){return Ntried_override;}
+
+  double parse_config::getLumiOverride(){return luminosity_override;}
+
+  double parse_config::getVolOverride(){return genvol_override;}
+
+  bool parse_config::get_MCOverride(){return mc_override;}
 
   bool parse_config::get_syncJobs(){ return sync_jobs; }
 

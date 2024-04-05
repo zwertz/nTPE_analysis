@@ -18,8 +18,8 @@ class parse_config{
 
   //common MC data analsyis
   TString proton_root_file, neutron_root_file, MC_file,rootfile_dir,histfile_dir,replay_type,partial_name_p,partial_name_n;
-  double sf;
-  bool sync_jobs;
+  double sf,Ntried_override,luminosity_override,genvol_override;
+  bool sync_jobs,mc_override;
 
   //For MC HCal efficiency
   double hcalemin,proton_thresh_fac, neutron_thresh_fac,num_bin, pmin, pmax, Emin, Emax;
@@ -148,9 +148,17 @@ public:
 
   double getHBinFac();
 
+  double getNTriedOverride();
+
+  double getLumiOverride();
+
+  double getVolOverride();
+
   double get_sf();
 
   bool get_syncJobs();
+
+  bool get_MCOverride();
 
   TCut getGlobalCut();
 

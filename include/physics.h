@@ -46,7 +46,7 @@ namespace physics{
  //four momentum for scattered electron based on reconstruction
  TLorentzVector getp_eprime(double tr_px, double tr_py, double tr_pz, double tr_p, double pcorr);
 
- //four vector for target, currently implement for LD2 and LH2. Not sure if I should somehow implement just neutron
+ //four vector for target, currently implement for LD2 and LH2. Implement for just protons and neutrons as well
  TLorentzVector getp_targ(TString target);
 
  //four vector, virtual photon momentum or momentum transferred to the scattered nucleon

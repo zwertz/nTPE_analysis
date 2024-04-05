@@ -87,7 +87,7 @@ namespace exp_constants{
   static const double Alshieldthick = 2.54/8.0; //= 1/8 inch * 2.54 cm/inch 
 
   //Make functions to get hcal v offset. since it is pass dependent
-  const double getHCalOffset(TString myKin, TString pass);
+  const double getHCalOffset( TString pass);
   
 
 }

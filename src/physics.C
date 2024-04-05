@@ -116,18 +116,22 @@ namespace physics{
  TLorentzVector getp_targ(TString target){
  TLorentzVector ptarg;
  
- 	//LH2
- 	if(target == "LH2"){
+ 	//LH2 or protons
+ 	if(target == "LH2" || target == "p"){
 	ptarg.SetPxPyPzE(0,0,0,physics_constants::M_p);
 	//LD2
-	}else if(target == "LD2"){
+	}else if(target == "LD2" || target == "np"){
 	ptarg.SetPxPyPzE(0,0,0,0.5*(physics_constants::M_p+physics_constants::M_n));
+	//just neutrons
+	}else if(target == "n"){
+	ptarg.SetPxPyPzE(0,0,0,physics_constants::M_n);
 	}else{
 	//give an error
 	cout << "Error: Target " << target << " is not handled by this function! No value given." << endl;
 	} 
   return ptarg;
  }
+
 
  //four vector, virtual photon momentum or momentum transferred to the scattered nucleon
  TLorentzVector getq(TLorentzVector pbeam, TLorentzVector p_eprime){
@@ -151,14 +155,17 @@ namespace physics{
  double get_pcentral(TLorentzVector pbeam,double etheta,TString target){
  double pcentral;
  double ebeam = pbeam.E();
-	//LH2
-	if(target == "LH2"){
+	//LH2 or proton
+	if(target == "LH2" || target == "p"){
 	pcentral = ebeam/(1.0 + (ebeam/physics_constants::M_p)*(1.0 - cos(etheta))); 
         //LD2 
-	}else if(target == "LD2"){
+	}else if(target == "LD2" || target == "np"){
 	double Nmass = 0.5*(physics_constants::M_p+physics_constants::M_n);
         pcentral = ebeam/(1.0 + (ebeam/Nmass)*(1.0 - cos(etheta)));
-        }else{
+        //neutron
+	}else if(target == "n"){
+	pcentral = ebeam/(1.0 + (ebeam/physics_constants::M_n)*(1.0 - cos(etheta)));
+	}else{
         //give an error
 	cout << "Error: Target " << target << " is not handled by this function! Defaulting to zero." << endl;
         pcentral = 0;

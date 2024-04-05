@@ -74,7 +74,7 @@ void data_elastic_parse(const char *setup_file_name){
   double W2fitmax = mainConfig.getW2FitMax();
   double binfac = mainConfig.getBinFac();
   double hbinfac = mainConfig.getHBinFac();
-  double hcal_offset = exp_constants::getHCalOffset(kin,pass);
+  double hcal_offset = exp_constants::getHCalOffset(pass);
   int e_method = mainConfig.get_emethod();
   double coin_mean = mainConfig.getCoinMean();
   double coin_sig_fac = mainConfig.getCoinSigFac();
@@ -567,7 +567,7 @@ void data_elastic_parse(const char *setup_file_name){
 	//Invariant Mass Squared
 	double W2;
 
-	//conditional to determine remaining e-arm related calculations. Finish implementing functions.
+	//conditional to determine remaining e-arm related calculations. 
 		if(e_method == 1){
 		//v1
 		Q2 = physics::getQ2(q);
@@ -623,7 +623,6 @@ void data_elastic_parse(const char *setup_file_name){
 	//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
         double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
 
-	//cout << xhcal_expect << endl;
 
 	//////////////////////
 	//INTIME CLUSTER ANALYSIS
@@ -739,7 +738,7 @@ void data_elastic_parse(const char *setup_file_name){
 	hdy_nocut->Fill(dy_bestclus);
 
 	//Fill some histograms here after basic global cuts
-	if(!failglobal && passHCalE){
+	if(!failglobal){
 	//global parameter checks
 	h_ntracks_globcut->Fill(ntrack);
         h_PS_E_globcut->Fill(e_ps);
@@ -764,7 +763,7 @@ void data_elastic_parse(const char *setup_file_name){
 	}
 
 	//Fill some histograms if pass global cut and W2 cut. Mostly just e-arm cuts
-	if(!failglobal && passHCalE && goodW2){
+	if(!failglobal && goodW2){
 	hxy_glob_W2_cut->Fill(yhcal_bestclus,xhcal_bestclus);
         h_W2_glob_W2_cut->Fill(W2);
         hxy_expect_glob_W2_cut->Fill(yhcal_expect,xhcal_expect);
@@ -779,7 +778,7 @@ void data_elastic_parse(const char *setup_file_name){
 	}
 
 	//Now let's add in our first major hadron arm cut along with all the cuts from before.
-	if(!failglobal && passHCalE && goodW2 && hcalaa_ON){
+	if(!failglobal && goodW2 && hcalaa_ON){
 	hxy_acceptancecut->Fill(yhcal_bestclus,xhcal_bestclus);
 	}
 	
@@ -817,14 +816,14 @@ void data_elastic_parse(const char *setup_file_name){
 	hcoin_cut->Fill(coin_bestclus);
         hcoin_pclus_cut->Fill(coin_pclus);
         hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect);
-	//cout << dx_pn << endl;
+	
 	hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn));
 	hdxvE->Fill(hcal_e_bestclus,dx_bestclus);
 	hdxvW2->Fill(W2,dx_bestclus);
 
 	}
 	
-	if(!hcalaa_ON_exp || !passFid){
+	if(!failglobal &&passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy && !passFid){
 	hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect);
 	}
 
@@ -848,8 +847,9 @@ void data_elastic_parse(const char *setup_file_name){
   //make lines for physical HCal position
   vector<TLine*> Lines_pos = plots::setupLines(hcalpos,2,kGreen);
 
-  TCanvas* c0 = plots::plotAcceptance_Fid_Check("c0",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_globcut,hxy_expect_cut,hxy_expect_failedfid);
-  TCanvas* c1 = plots::plotFid_Hypothesis_Check("c1",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_fidcutn,hxy_expect_fidcutp);
+  TCanvas* c0 = plots::plotAcceptance_Check("c0",Lines_pos,Lines_aa,Lines_Fid,hxy_globcut,hxy_acceptancecut);
+  TCanvas* c1 = plots::plotFid_Check("c1",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_glob_W2_cut,hxy_expect_cut,hxy_expect_failedfid);
+  TCanvas* c2 = plots::plotFid_Hypothesis_Check("c2",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_fidcutn,hxy_expect_fidcutp);
 
   //Write stuff to a pdf
   TString plotname = outfile;
@@ -859,7 +859,8 @@ void data_elastic_parse(const char *setup_file_name){
   TString end = Form("%s%s",plotname.Data(),")");
 
   c0->Print(start.Data(),"pdf");
-  c1->Print(end.Data(),"pdf"); 
+  c1->Print(plotname.Data(),"pdf"); 
+  c2->Print(end.Data(),"pdf");
 
   //Write everything to output file
   fout->Write();
