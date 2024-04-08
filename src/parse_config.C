@@ -106,7 +106,9 @@
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
-                        }else if(key == "e_method"){
+                        }else if(key == "hcalnclusmin"){
+			hcalnclusmin = val.Atoi();
+			}else if(key == "e_method"){
 			e_method = val.Atoi();
 			//cout << "e method " << e_method << endl;
 			}else if(key == "W2_mean"){
@@ -321,6 +323,8 @@
   int parse_config::getMAXNTRACKS(){ return MAXNTRACKS; }
 
   int parse_config::get_emethod(){ return e_method; }
+
+  int parse_config::get_HCalNclusMin(){return hcalnclusmin; }
 
   double parse_config::get_dxOn(){ return dxO_n; }
 

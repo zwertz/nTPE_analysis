@@ -40,7 +40,13 @@ bool passCoin(double coin_bestclus,double coin_mean, double coin_sig_fac, double
 //Function to define a good dy cut
 bool good_dy(double dy_bestclus,double dyO_p, double dysig_cut_fac, double dysig_p);
 
+//Function to check if above min HCal E value
 bool passHCalE(double hcal_e,double hcalemin);
+
+//Function to check if number of cluster in HCal is above a min
+bool passHCal_NClus(double nclus_hcal,int hcalnclusmin);
+
+
 
 }//end namespace
 #endif

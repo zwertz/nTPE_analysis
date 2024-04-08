@@ -124,6 +124,12 @@ namespace physics{
  //define dy
  double get_dy(double yhcal,double yhcal_expect);
 
+ //sort cluster to get highest energy cluster. This should just be a double check
+ int cluster_HighEnergy(int num_hcal_clusid,double hcal_clus_e[]);
+
+ //calculate the final MC weight best on generation iformation from simc
+ double getMCWeight(double mc_weight,double luminosity,double genvol,int Ntried);
+
 
 }//end namespace
 

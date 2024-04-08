@@ -185,10 +185,18 @@ bool good_dy = abs(dy_bestclus-dyO_p) <= dysig_cut_fac*dysig_p;
 return good_dy;
 }
 
+//Function to check if above min HCal E value
 bool passHCalE(double hcal_e,double hcalemin){
 bool passE = hcal_e > hcalemin;
 return passE;
 }
+
+//Function to check if number of cluster in HCal is above a min
+bool passHCal_NClus(double nclus_hcal,int hcalnclusmin){
+bool passNclus = nclus_hcal > hcalnclusmin;
+return passNclus;
+}
+
 
 }//end namespace
 

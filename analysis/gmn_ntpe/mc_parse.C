@@ -49,7 +49,6 @@ double dxO_p = mainConfig.get_dxOp();
 double dyO_p = mainConfig.get_dyOp();
 double dxsig_p = mainConfig.get_dxsigp();
 double dysig_p = mainConfig.get_dysigp();
-double dx_pn = mainConfig.get_dxpn();
 double dx_low = mainConfig.get_dxLow();
 double dx_high = mainConfig.get_dxHigh();
 double dy_low = mainConfig.get_dyLow();
@@ -63,7 +62,9 @@ double binfac = mainConfig.getBinFac();
 double hbinfac = mainConfig.getHBinFac();
 int e_method = mainConfig.get_emethod();
 int maxtracks = mainConfig.getMAXNTRACKS();
-
+double hcalemin = mainConfig.getHCaleMin();
+double dysig_cut_fac = mainConfig.get_dySigCutFac();
+int hcalnclusmin = mainConfig.get_HCalNclusMin();
 double hcal_offset = exp_constants::getHCalOffset(pass);
 
 double W2_low = W2_mean - W2_sigfac*W2_sigma;
@@ -147,6 +148,9 @@ cout << endl << "Number of proton files " << pFiles << " , Number of neutron fil
   TH1D *h_HCal_E = new TH1D( "HCal_E", "HCal Cluster Energy (GeV); GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_globcut = new TH1D( "HCal_E_globcut", "HCal Cluster Energy (GeV), global cut; GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_best = new TH1D( "HCal_E_best", "HCal Cluster Energy (GeV), best cluster; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_best_globcut = new TH1D( "HCal_E_best_globcut", "HCal Cluster Energy (GeV), best cluster, global cut; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_best_cut = new TH1D( "HCal_E_best_cut", "HCal Cluster Energy (GeV), best cluster, Cuts; GeV", 250, 0, 0.4 );
   TH1D *h_HCal_nclus = new TH1D("HCal_nclus","HCal number of clusters meeting threshold;", 250,0,10);
   TH1D *h_HCal_nclus_globcut = new TH1D("HCal_nclus_globcut","HCal number of clusters meeting threshold, global cut;", 250,0,10);
   TH1D *h_HCal_nclus_cut = new TH1D("HCal_nclus_cut","HCal number of clusters meeting threshold, Cuts;", 250,0,10);
@@ -214,6 +218,12 @@ cout << endl << "Number of proton files " << pFiles << " , Number of neutron fil
   TH1D *hdy_glob_W2_cut = new TH1D( "dy_glob_W2_cut", "HCal dy (m), global & W2 cuts; m", 250, dy_low, dy_high );
   TH1D *hdy_cut = new TH1D( "dy_cut","HCal dy, all cuts; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
 
+  TH1D *hcoin_nocut = new TH1D( "hcoin_nocut", "HCal ADCt - BBCal ADCt, no cuts; ns", 400, -100, 100 );
+  TH1D *hcoin_glob_W2_cut = new TH1D( "hcoin_glob_W2_cut", "HCal ADCt - BBCal ADCt, global & W2 cuts; ns", 400, -100, 100 );
+  TH1D *hcoin_cut = new TH1D( "hcoin_cut", "HCal ADCt - BBCal ADCt, cuts; ns", 400, -100, 100 );
+  TH1D *hcoin_pclus_glob_W2_cut = new TH1D( "hcoin_pclus_glob_W2_cut", "HCal ADCt - BBCal ADCt, pclus,global & W2 cuts; ns", 400, -100, 100 );
+  TH1D *hcoin_pclus_cut = new TH1D( "hcoin_pclus_cut", "HCal ADCt - BBCal ADCt,pclus, cuts; ns", 400, -100, 100 );
+
   TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0001 );
 
   //create output tree
@@ -257,6 +267,7 @@ cout << endl << "Number of proton files " << pFiles << " , Number of neutron fil
   double W2mean_out;
   double W2sig_out;
   double W2sig_fac_out;
+  double final_mc_weight_out;
 
   int num_hcal_clusid_out;
   int nclus_hcal_out;
@@ -316,6 +327,7 @@ cout << endl << "Number of proton files " << pFiles << " , Number of neutron fil
   Parse->Branch("W2mean", &W2mean_out, "W2mean/D");
   Parse->Branch("W2sig", &W2sig_out, "W2sig/D");
   Parse->Branch("W2sig_fac", &W2sig_fac_out, "W2sig_fac/D");
+  Parse->Branch("Final_MC_weight", &final_mc_weight_out, "final_MC_weight/D");
 
   Parse->Branch("num_hcal_clusid", &num_hcal_clusid_out, "num_hcal_clusid/I");
   Parse->Branch("hcal_clus_blk", &hcal_clus_blk_out, "hcal_clus_blk/I");
@@ -335,6 +347,8 @@ cout << endl << "Number of proton files " << pFiles << " , Number of neutron fil
   int num_files = 0;
 
   TChain *C = nullptr;
+
+  double dx_pn = mainConfig.get_dxpn();
 
   //Main loop over nucleons (r==0 proton, r==1 neutron)
   for(int r=0; r<num_nuc; r++){
@@ -664,36 +678,259 @@ cout << endl << "Number of proton files " << pFiles << " , Number of neutron fil
 				//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
 				double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
 
-				//supposedly the MC does timing poorly. So implementing an intime clustering algorithm for MC is not the best idea. Ignore it for now and look at timing distribution and come back to it.
+				//supposedly the MC does timing poorly. So implementing an intime clustering algorithm for MC is not the best idea. Just do a highest energy cluster search to be sure.
+				int energy_idx = physics::cluster_HighEnergy(num_hcal_clusid,hcal_clus_e);
+
+				//Assume the highest energy cluster sort is sufficient to find the best cluster
+				int clus_idx_best = energy_idx;
 				
+
 				//calculate important information
-				double dx = physics::get_dx(x_hcal,xhcal_expect);
-				double dy = physics::get_dy(y_hcal,yhcal_expect);
-				double coin_pclus = hcal_clus_atime[0] - atime_sh;
+				double xhcal_bestclus = hcal_clus_x[clus_idx_best];
+        			double yhcal_bestclus = hcal_clus_y[clus_idx_best];
+        			double dx_bestclus = physics::get_dx(xhcal_bestclus,xhcal_expect);
+        			double dy_bestclus = physics::get_dy(yhcal_bestclus,yhcal_expect);
+        			double hcal_atime_bestclus = hcal_clus_atime[clus_idx_best];
+        			double coin_bestclus = hcal_atime_bestclus - atime_sh;
+        			double coin_pclus = hcal_clus_atime[0] - atime_sh;
+        			double hcal_e_bestclus = hcal_clus_e[clus_idx_best];
+				int hcal_nblk_bestclus = (int) hcal_clus_nblk[clus_idx_best];
 
 				//setup booleans for cuts later. Save boolean values to tree
 
 				//HCal active area
-				bool hcalaa_ON = cuts::hcalaa_ON(x_hcal,y_hcal,hcalaa);
+				bool hcalaa_ON = cuts::hcalaa_ON(xhcal_bestclus,yhcal_bestclus,hcalaa);
 
 				//W2 elastic boolean
 				bool goodW2 = cuts::goodW2(W2,W2_low,W2_high);
 
 				//good dy boolean
-				bool good_dy = cuts::good_dy(dy,dyO_p,dysig_cut_fac,dysig_p);
+				bool good_dy = cuts::good_dy(dy_bestclus,dyO_p,dysig_cut_fac,dysig_p);
 
-				//good coincidence time cut
-				bool passCoin = cuts::passCoin(coin_pclus,coin_mean,coin_sig_fac,coin_profile_sig);
+				//good coincidence time cut. MC timing is poor do not implement this cut.
+				//bool passCoin = cuts::passCoin(coin_pclus,coin_mean,coin_sig_fac,coin_profile_sig);
 
 				//good fiducial cut
 				bool passFid = cuts::hcalfid_IN(xhcal_expect,yhcal_expect,dx_pn,hcalfid);
 
 				//pass HCal E
-				bool passHCalE = cuts::passHCalE(e_hcal,hcalemin);
+				bool passHCalE = cuts::passHCalE(hcal_e_bestclus,hcalemin);
+				
+				//pass HCal num clus
+				bool passHCal_Nclus = cuts::passHCal_NClus(nclus_hcal,hcalnclusmin);
 
+				//calculate the final corrected MC weight
+				//Need to handle the case of whether or not simulation was done with rejection sampling. Probably best to make flag
+				double final_mc_weight = physics::getMCWeight(mc_weight,luminosity,genvol,Ntried);
+
+				//Fill analysis tree variables before making cuts
+				dx_out = dx_bestclus;
+        			dy_out = dy_bestclus;
+        			xexp_out = xhcal_expect;
+        			yexp_out = yhcal_expect;
+        			xhcal_out = xhcal_bestclus;
+        			yhcal_out = yhcal_bestclus;
+        			W2_out = W2;
+        			Q2_out = Q2;
+        			mott_out = Mott_CS;
+        			ehcal_out = hcal_e_bestclus;
+        			BBtot_e_out = e_sh+e_ps;
+        			BBsh_e_out = e_sh;
+        			BBps_e_out = e_ps;
+        			hcal_atime_out = hcal_atime_bestclus;
+        			BBsh_atime_out = atime_sh;
+        			BBps_atime_out = atime_ps;
+        			BBgem_nhits_out = gem_hits[0];
+        			BBtr_x_out = tr_x[0];
+        			BBtr_y_out = tr_y[0];
+        			BBtr_p_out = tr_p[0];
+        			dyO_p_out = dyO_p;
+        			dyO_n_out = dyO_n;
+        			dysig_p_out = dysig_p;
+        			dysig_n_out = dysig_n;
+        			dysig_n_fac_out = dysig_n_fac;
+        			dysig_p_fac_out = dysig_p_fac;
+        			dxO_p_out = dxO_p;
+        			dxO_n_out = dxO_n;
+        			dxsig_p_out = dxsig_p;
+        			dxsig_n_out = dxsig_n;
+        			dxsig_n_fac_out = dxsig_n_fac; 
+				dxsig_p_fac_out = dxsig_p_fac;
+        			W2mean_out = W2_mean;
+        			W2sig_out = W2_sigma;
+        			W2sig_fac_out = W2_sigfac;
+        			num_hcal_clusid_out = num_hcal_clusid ;
+        			hcal_clus_blk_out = hcal_nblk_bestclus;
+        			nclus_hcal_out = nclus_hcal;
+        			BBsh_nclus_out = (int) nclus_sh;
+        			BBsh_nblk_out = (int) nblk_sh;
+        			BBps_nclus_out = (int) nclus_ps;
+        			BBps_nblk_out = (int) nblk_ps;
+        			BBtr_n_out = ntrack;
+        			passGlobal_out = (int) !failglobal;
+        			HCalON_out = (int) hcalaa_ON;
+        			passW2_out = (int) goodW2;
+        			passFid_out = (int) passFid;
+        			file_out = f;
+        			mag_out = sbs_field;
+				final_mc_weight_out = final_mc_weight;
+
+				//Fill histograms of global cut parameters here without any restrictions
+				h_ntracks->Fill(ntrack,final_mc_weight);
+        			h_PS_E->Fill(e_ps,final_mc_weight);
+        			h_vert_z->Fill(tr_vz[0],final_mc_weight);
+        			h_HCal_E->Fill(e_hcal,final_mc_weight);
+        			h_HCal_E_best->Fill(hcal_e_bestclus,final_mc_weight);
+        			h_HCal_nclus->Fill(nclus_hcal,final_mc_weight);
+        			h_nhits->Fill(gem_hits[0],final_mc_weight);
+        			h_bbtrp_nocut->Fill(tr_p[0],final_mc_weight);
+        			h_SH_nclus->Fill(nclus_sh,final_mc_weight);
+
+        			hdx_nocut->Fill(dx_bestclus,final_mc_weight);
+        			hcoin_nocut->Fill(coin_bestclus,final_mc_weight);
+        			hdy_nocut->Fill(dy_bestclus,final_mc_weight);
+
+				//Fill some histograms here after basic global cuts
+				if(!failglobal){
+				//global parameter checks
+				h_ntracks_globcut->Fill(ntrack,final_mc_weight);
+        			h_PS_E_globcut->Fill(e_ps,final_mc_weight);
+        			h_vert_z_globcut->Fill(tr_vz[0],final_mc_weight);
+        			h_HCal_E_globcut->Fill(e_hcal,final_mc_weight);
+        			h_HCal_E_best_globcut->Fill(hcal_e_bestclus,final_mc_weight);
+        			h_HCal_nclus_globcut->Fill(nclus_hcal,final_mc_weight);
+        			h_nhits_globcut->Fill(gem_hits[0],final_mc_weight);
+        			h_bbtrp_globcut->Fill(tr_p[0],final_mc_weight);
+        			h_SH_nclus_globcut->Fill(nclus_sh,final_mc_weight);
+        			h_TPS_SH_globcut->Fill(e_ps+e_sh,final_mc_weight);
+        			h_bbEoverp_globcut->Fill(BB_E_over_p,final_mc_weight);
+
+				//physics quantities
+				hxy_globcut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
+        			h_W2_globcut->Fill(W2,final_mc_weight);
+        			h_Q2_globcut->Fill(Q2,final_mc_weight);
+        			hxy_expect_globcut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+        			hdxdy_globcut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+        			hdx_globcut->Fill(dx_bestclus,final_mc_weight);
+        			hdy_globcut->Fill(dy_bestclus,final_mc_weight);
+        			
+					if(nuc == "p"){
+					hdxdy_globcut_p->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+					hdx_globcut_p->Fill(dx_bestclus,final_mc_weight);
+					}				
+					if(nuc == "n"){
+                                        hdxdy_globcut_n->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+                                        hdx_globcut_n->Fill(dx_bestclus,final_mc_weight);
+                                        }
+
+				}
+
+				//Fill some histograms if pass global cut and W2 cut. Mostly just e-arm cuts
+				if(!failglobal && goodW2){
+        			hxy_glob_W2_cut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
+        			h_W2_glob_W2_cut->Fill(W2,final_mc_weight);
+        			hxy_expect_glob_W2_cut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+        			hdxdy_glob_W2_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+        			hdx_glob_W2_cut->Fill(dx_bestclus,final_mc_weight);
+        			hdy_glob_W2_cut->Fill(dy_bestclus,final_mc_weight);
+        			hcoin_glob_W2_cut->Fill(coin_bestclus,final_mc_weight);
+        			hcoin_pclus_glob_W2_cut->Fill(coin_pclus,final_mc_weight);
+        			hxy_expect_n->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+        			hxy_expect_p->Fill(yhcal_expect,(xhcal_expect-dx_pn),final_mc_weight);
+        			hMott_cs->Fill(Mott_CS,final_mc_weight);
+       				}
+				
+				//Now let's add in our first major hadron arm cut along with all the cuts from before.
+				if(!failglobal && goodW2 && hcalaa_ON){
+        			hxy_acceptancecut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
+        			}
+
+				//e-arm and h-arm cuts, except fiducial
+				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && good_dy ){
+       				hdxdy_nofid->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+        			hdx_cut_nofid->Fill(dx_bestclus,final_mc_weight);
+                			if(!passFid){
+                			hdx_cut_failfid->Fill(dx_bestclus,final_mc_weight);
+                			}
+        			}
+				//all cuts
+				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON  && good_dy && passFid){
+        			h_ntracks_cut->Fill(ntrack,final_mc_weight);
+        			h_PS_E_cut->Fill(e_ps,final_mc_weight);
+        			h_vert_z_cut->Fill(tr_vz[0],final_mc_weight);
+        			h_HCal_E_cut->Fill(e_hcal,final_mc_weight);
+        			h_HCal_E_best_cut->Fill(hcal_e_bestclus,final_mc_weight);
+        			h_HCal_nclus_cut->Fill(nclus_hcal,final_mc_weight);
+        			h_nhits_cut->Fill(gem_hits[0],final_mc_weight);
+        			h_bbtrp_cut->Fill(tr_p[0],final_mc_weight);
+        			h_SH_nclus_cut->Fill(nclus_sh,final_mc_weight);
+        			h_TPS_SH_cut->Fill(e_ps+e_sh,final_mc_weight);
+        			h_bbEoverp_cut->Fill(BB_E_over_p,final_mc_weight);
+
+        			hxy_cut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
+        			h_W2_cut->Fill(W2,final_mc_weight);
+        			h_Q2_cut->Fill(Q2,final_mc_weight);
+        			hxy_expect_cut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+        			hdxdy_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+        			hdx_cut->Fill(dx_bestclus,final_mc_weight);
+        			hdy_cut->Fill(dy_bestclus,final_mc_weight);
+        			hcoin_cut->Fill(coin_bestclus,final_mc_weight);
+        			hcoin_pclus_cut->Fill(coin_pclus,final_mc_weight);
+        			hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+
+        			hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn),final_mc_weight);
+        			hdxvE->Fill(hcal_e_bestclus,dx_bestclus,final_mc_weight);
+        			hdxvW2->Fill(W2,dx_bestclus,final_mc_weight);
+        			
+					if(nuc == "p"){
+                                        hdxdy_cut_p->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+                                        hdx_cut_p->Fill(dx_bestclus,final_mc_weight);
+                                        }                               
+                                        if(nuc == "n"){
+                                        hdxdy_cut_n->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+                                        hdx_cut_n->Fill(dx_bestclus,final_mc_weight);
+                                        }
+				}
+		
+				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON  && good_dy && !passFid){
+        			hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+        			}
+
+				//Fill the analysis tree
+				Parse->Fill();
 		}//end event loop
+		C->Reset();
 	}//end loop simulation
   }//end nucleon for loop
+
+
+  //make lines for active area on HCal
+  vector<TLine*> Lines_aa = plots::setupLines(hcalaa,2,kRed);
+
+  //make lines for fiducial region
+  vector<TLine*> Lines_Fid = plots::setupLines(hcalfid,2,kMagenta);
+  TLine *LineFidPro = plots::setupLine_Horz(hcalfid[2],hcalfid[3],hcalfid[0]+dx_pn,2,kMagenta,2);
+
+  //make lines for physical HCal position
+  vector<TLine*> Lines_pos = plots::setupLines(hcalpos,2,kGreen);
+
+  TCanvas* c0 = plots::plotAcceptance_Check("c0",Lines_pos,Lines_aa,Lines_Fid,hxy_globcut,hxy_acceptancecut);
+  TCanvas* c1 = plots::plotFid_Check("c1",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_glob_W2_cut,hxy_expect_cut,hxy_expect_failedfid);
+  TCanvas* c2 = plots::plotFid_Hypothesis_Check("c2",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_fidcutn,hxy_expect_fidcutp);
+
+  //Write stuff to a pdf
+  TString plotname = outfile;
+  plotname.ReplaceAll(".root",".pdf");
+  TString start = Form("%s%s",plotname.Data(),"(");
+  //middle is the same as the name
+  TString end = Form("%s%s",plotname.Data(),")");
+
+  c0->Print(start.Data(),"pdf");
+  c1->Print(plotname.Data(),"pdf");
+  c2->Print(end.Data(),"pdf");
+
+  //Write everything to output file
+  fout->Write();
 
 // Send time efficiency report to console
 cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;

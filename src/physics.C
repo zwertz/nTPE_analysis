@@ -341,6 +341,25 @@ namespace physics{
  return intime_idx;
  }
 
+ //sort cluster to get highest energy cluster. This should just be a double check
+ int cluster_HighEnergy(int num_hcal_clusid,double hcal_clus_e[]){
+ double maxE = 0.0;
+ int energy_idx = -1;
+ 	//loop through all the cluster
+ 	for(int c = 0; c<num_hcal_clusid; c++){
+	double clus_energy = hcal_clus_e[c];
+
+	bool new_maxE = maxE < clus_energy;
+
+		//if the current cluster has the higher energy update the information
+		if(new_maxE){
+                maxE = clus_energy;
+                energy_idx = c;
+                }//end conditional	
+	}//end loop
+ return energy_idx;
+ }
+
  //sort clusters to get best intime indices from clone cluster, part 2 of intime algorithm
  int cluster_intime_findIdx(int num_hcal_clusid, vector<double> clone_cluster_intime){
  int intime_idx = -1;
@@ -367,6 +386,15 @@ namespace physics{
  double get_dy(double yhcal,double yhcal_expect){
  double dy = yhcal - yhcal_expect;
  return dy;
+ }
+
+ //calculate the final MC weight best on generation iformation from simc
+ double getMCWeight(double mc_weight,double luminosity,double genvol,int Ntried){
+
+ double final_mc_weight = (mc_weight*luminosity*genvol)/Ntried;
+
+ return final_mc_weight;
+
  }
 
 

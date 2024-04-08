@@ -81,6 +81,7 @@ void data_elastic_parse(const char *setup_file_name){
   double coin_profile_sig = mainConfig.getCoinProfSig();
   double hcalemin = mainConfig.getHCaleMin();
   double dysig_cut_fac = mainConfig.get_dySigCutFac();
+  int hcalnclusmin = mainConfig.get_HCalNclusMin();
 
   double W2_low = W2_mean - W2_sigfac*W2_sigma;
   double W2_high = W2_mean + W2_sigfac*W2_sigma;
@@ -203,7 +204,7 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *hcoin_pclus_cut = new TH1D( "hcoin_pclus_cut", "HCal ADCt - BBCal ADCt,pclus, cuts; ns", 400, -100, 100 );
 
   //general
-  TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0001 );
+  TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0002 );
   
   //allocate memory at each run
   TChain *C = nullptr;
@@ -667,6 +668,9 @@ void data_elastic_parse(const char *setup_file_name){
 	//pass HCal E
 	bool passHCalE = cuts::passHCalE(hcal_e_bestclus,hcalemin);
 
+	//pass HCal num clus
+	bool passHCal_Nclus = cuts::passHCal_NClus(nclus_hcal,hcalnclusmin);
+
 
 	//Fill analysis tree variables before making cuts
 	dx_out = dx_bestclus;
@@ -783,7 +787,7 @@ void data_elastic_parse(const char *setup_file_name){
 	}
 	
 	//e-arm and h-arm cuts, except fiducial
-	if(!failglobal && passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy ){
+	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy ){
 	hdxdy_nofid->Fill(dy_bestclus, dx_bestclus);
 	hdx_cut_nofid->Fill(dx_bestclus);
 		if(!passFid){
@@ -793,7 +797,7 @@ void data_elastic_parse(const char *setup_file_name){
 	}	
 
 	//all cuts
-	if(!failglobal &&passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
+	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
 	h_ntracks_cut->Fill(ntrack);
         h_PS_E_cut->Fill(e_ps);
         h_vert_z_cut->Fill(tr_vz[0]);
@@ -823,7 +827,7 @@ void data_elastic_parse(const char *setup_file_name){
 
 	}
 	
-	if(!failglobal &&passHCalE && goodW2 && hcalaa_ON && passCoin && good_dy && !passFid){
+	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && !passFid){
 	hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect);
 	}
 
