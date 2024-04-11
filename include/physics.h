@@ -130,6 +130,11 @@ namespace physics{
  //calculate the final MC weight best on generation iformation from simc
  double getMCWeight(double mc_weight,double luminosity,double genvol,int Ntried);
 
+ //calculate tau based on Q2 and particle type
+ double get_tau(double Q2,TString target);
+
+ //calculate polarization of the virtual photon, epsilon
+ double get_epsilon(double tau, double etheta);
 
 }//end namespace
 

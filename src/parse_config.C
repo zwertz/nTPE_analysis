@@ -49,6 +49,8 @@
 				}else if(key == "MC_file"){
                         	MC_file = val;
                         	//cout << "MC File: " << MC_file << endl;   
+				}else if(key == "Data_file"){
+				Data_file = val;
 				}else if(key == "rootfile_dir"){
 				rootfile_dir = val;
 				//cout << "Rootfile dir" << rootfile_dir << endl;				
@@ -278,7 +280,7 @@
     		}//end conditinal
     	}//end conditional
     }//end while
-    if(runnums.empty() && ((proton_root_file.Length() == 0) &&  (neutron_root_file.Length() ==0) && (rootfile_dir.Length() == 0) && (histfile_dir.Length() == 0) && (replay_type.Length() == 0))){
+    if(runnums.empty() && (proton_root_file.Length() == 0) &&  (neutron_root_file.Length() ==0) && (rootfile_dir.Length() == 0) && (histfile_dir.Length() == 0) && (replay_type.Length() == 0) && (MC_file.Length() == 0) && (Data_file.Length() == 0) ){
     // if there are data or MC files we should return true and therefore throw an error
     cout << "Error: No data files in the config file, I can't do anything if I don't know where the data lives!" << endl;
         return;
@@ -303,6 +305,8 @@
   TString parse_config::getNeutronFileName(){ return neutron_root_file; }
 
   TString parse_config::getMCFileName(){ return MC_file; }
+
+  TString parse_config::getDataFile(){ return Data_file; }
 
   TString parse_config::getPass(){ return pass; }
 

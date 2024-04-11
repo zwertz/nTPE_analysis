@@ -63,6 +63,11 @@ namespace utility{
   return outfile;
   }
 
+  //Helper function to make output file name for data and mc comparison
+  TString makeOutputFileName_DataMCComp(TString exp, TString pass, TString Kin, int SBS_field,TString target){
+  TString outfile = Form("%s/Zeke_DataMC_Compare_%s_%s_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
+  return outfile;
+  }
 
   //Helper function to make output file name for yield or ratio information
   TString makeYieldReportFileName(TString exp,TString pass,  TString Kin, int SBS_field,TString target){

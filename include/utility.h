@@ -34,6 +34,9 @@ namespace utility{
   //Helper function to make output file name for parse mc root file
   TString makeOutputFileName_MCParse(TString exp, TString Kin, int SBS_field);
 
+  //Helper function to make output file name for data and mc comparison 
+  TString makeOutputFileName_DataMCComp(TString exp, TString pass, TString Kin, int SBS_field,TString target);  
+
   //Helper function to make output file name for yield or ratio information
   TString makeYieldReportFileName(TString exp, TString pass, TString Kin, int SBS_field,TString target);
 

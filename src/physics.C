@@ -397,5 +397,30 @@ namespace physics{
 
  }
 
+ //calculate tau based on Q2 and particle type
+ double get_tau(double Q2,TString target){
+ double tau; 
+ 
+ 	//LH2 or protons
+	if(target == "LH2" || target == "p"){
+	tau = Q2/(4*pow(physics_constants::M_p,2));
+ 	//LD2
+ 	}else if(target == "LD2" || target == "np"){
+	tau = Q2/(4*pow(0.5*(physics_constants::M_p + physics_constants::M_n),2));
+ 	//just neutrons
+ 	}else if(target == "n"){
+	tau = Q2/(4*pow(physics_constants::M_n,2));
+	}else{
+        //give an error
+	cout << "Error: Target " << target << " is not handled by this function! No value given." << endl;
+        }
+ return tau;
+ }
+
+ //calculate polarization of the virtual photon, epsilon
+ double get_epsilon(double tau, double etheta){
+ double epsilon = 1 / (1 + 2 * (1 + tau) * pow(tan(etheta/2),2));
+ return epsilon;
+ }
 
 }//end namepspace

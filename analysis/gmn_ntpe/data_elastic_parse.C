@@ -221,6 +221,10 @@ void data_elastic_parse(const char *setup_file_name){
   double yhcal_out;
   double W2_out;
   double Q2_out;
+  double nu_out;
+  double tau_out;
+  double epsilon_out;
+  double pcorr_out;
   double mott_out;
   double ehcal_out;
   double BBtot_e_out;
@@ -230,6 +234,8 @@ void data_elastic_parse(const char *setup_file_name){
   double BBsh_atime_out;
   double BBps_atime_out;
   double BBgem_nhits_out;
+  double BBgem_ngoodhits_out;
+  double BBgem_chi2ndf_out;
   double BBtr_x_out;
   double BBtr_y_out;
   double BBtr_p_out;
@@ -276,6 +282,10 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("yhcal", &yhcal_out, "yhcal/D");
   Parse->Branch("W2", &W2_out, "W2/D");
   Parse->Branch("Q2", &Q2_out, "Q2/D");
+  Parse->Branch("nu", &nu_out, "nu/D");
+  Parse->Branch("tau", &tau_out, "tau/D");
+  Parse->Branch("epsilon", &epsilon_out, "epsilon/D");
+  Parse->Branch("pcorr", &pcorr_out, "pcorr/D");
   Parse->Branch("mott", &mott_out, "mott/D");
   Parse->Branch("ehcal", &ehcal_out, "ehcal/D");
   Parse->Branch("BBtot_e", &BBtot_e_out, "BBtot_e/D");
@@ -289,6 +299,8 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("BBsh_atime", &BBsh_atime_out, "BBsh_atime/D");
   Parse->Branch("BBps_atime", &BBps_atime_out, "BBps_atime/D");
   Parse->Branch("BBgem_nhits", &BBgem_nhits_out, "BBgem_nhits/D");
+  Parse->Branch("BBgem_ngoodhits", &BBgem_ngoodhits_out, "BBgem_ngoodhits/D");
+  Parse->Branch("BBgem_chi2ndf", &BBgem_chi2ndf_out, "BBgem_chi2ndf/D");
   Parse->Branch("BBtr_x", &BBtr_x_out, "BBtr_x/D");
   Parse->Branch("BBtr_y", &BBtr_y_out, "BBtr_y/D");
   Parse->Branch("BBtr_p", &BBtr_p_out, "BBtr_p/D");
@@ -411,12 +423,15 @@ void data_elastic_parse(const char *setup_file_name){
 
   //BBGEM hits
 
-  double gem_hits[maxtracks];  
+  double gem_hits[maxtracks],gem_goodhits[maxtracks],gem_ChiSqr[maxtracks];  
 
   C->SetBranchStatus("bb.gem.track.nhits", 1);
+  C->SetBranchStatus("bb.gem.track.ngoodhits",1);
+  C->SetBranchStatus("bb.gem.track.chi2ndf",1);
 
   C->SetBranchAddress("bb.gem.track.nhits",&gem_hits);
-
+  C->SetBranchAddress("bb.gem.track.ngoodhits",&gem_goodhits);
+  C->SetBranchAddress("bb.gem.track.chi2ndf",&gem_ChiSqr);
   // track branches
 
   double ntrack, tr_px[maxtracks], tr_py[maxtracks], tr_pz[maxtracks], tr_p[maxtracks], tr_x[maxtracks], tr_y[maxtracks], tr_vx[maxtracks], tr_vy[maxtracks], tr_vz[maxtracks];
@@ -568,6 +583,12 @@ void data_elastic_parse(const char *setup_file_name){
 	//Invariant Mass Squared
 	double W2;
 
+	//scaling variable tau
+	double tau;
+
+	//polarization of the virtual photon
+	double epsilon;
+
 	//conditional to determine remaining e-arm related calculations. 
 		if(e_method == 1){
 		//v1
@@ -576,6 +597,8 @@ void data_elastic_parse(const char *setup_file_name){
 		p_Nhat = p_N.Vect().Unit();
 		nu = physics::getnu(q);
 		W2 = physics::getW2(p_N);
+		tau = physics::get_tau(Q2,target);
+		epsilon = physics::get_epsilon(tau,etheta);
 		}else if(e_method == 2){
 		//v2
 		Q2 = physics::getQ2(ekine_Q2);
@@ -585,6 +608,8 @@ void data_elastic_parse(const char *setup_file_name){
 		theta_N_exp = physics::get_thetaNexp(pbeam,pcentral,etheta,p_N_exp);	
 		p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
 		p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
+		tau = physics::get_tau(Q2,target);
+		epsilon = physics::get_epsilon(tau,etheta);
 		}else if(e_method == 3){
 		//v3
 		Q2 = physics::getQ2(pbeam,p_eprime,etheta);
@@ -594,6 +619,8 @@ void data_elastic_parse(const char *setup_file_name){
 		p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
                 p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
 		W2 = physics::getW2(pbeam,p_eprime,Q2,target);
+		tau = physics::get_tau(Q2,target);
+		epsilon = physics::get_epsilon(tau,etheta);
 		}else if(e_method == 4){
 		//v4
 		Q2 = physics::getQ2(pbeam,p_eprime,etheta);
@@ -603,6 +630,8 @@ void data_elastic_parse(const char *setup_file_name){
                 p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
                 p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
                 W2 = physics::getW2(pbeam,p_eprime,Q2,target);
+		tau = physics::get_tau(Q2,target);
+		epsilon = physics::get_epsilon(tau,etheta);
 		}else{
 		//Error handling, default version 3
 		cout << "Warning: Method for calculating e-arm physics was not included. Defaulting to method 3." << endl;
@@ -613,6 +642,8 @@ void data_elastic_parse(const char *setup_file_name){
                 p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
                 p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
                 W2 = physics::getW2(pbeam,p_eprime,Q2,target);
+		tau = physics::get_tau(Q2,target);
+		epsilon = physics::get_epsilon(tau,etheta);
 		}
 
 	// ray from Hall origin onto the face of hcal where the nucleon hit
@@ -681,7 +712,11 @@ void data_elastic_parse(const char *setup_file_name){
  	yhcal_out = yhcal_bestclus;
   	W2_out = W2;
 	Q2_out = Q2;
-  	mott_out = Mott_CS;
+  	nu_out = nu;
+	tau_out = tau;
+	epsilon_out = epsilon;
+	pcorr_out = pcorr;
+	mott_out = Mott_CS;
   	ehcal_out = hcal_e_bestclus;
   	BBtot_e_out = e_sh+e_ps;
   	BBsh_e_out = e_sh;
@@ -690,7 +725,9 @@ void data_elastic_parse(const char *setup_file_name){
   	BBsh_atime_out = atime_sh;
   	BBps_atime_out = atime_ps;
   	BBgem_nhits_out = gem_hits[0];
-  	BBtr_x_out = tr_x[0];
+  	BBgem_ngoodhits_out = gem_goodhits[0];
+	BBgem_chi2ndf_out = gem_ChiSqr[0];
+	BBtr_x_out = tr_x[0];
   	BBtr_y_out = tr_y[0];
   	BBtr_p_out = tr_p[0];
   	coin_mean_out = coin_mean;

@@ -12,6 +12,7 @@ namespace exp_constants{
   //First segment by pass. Later we may need to segment by kinematic
   
   	if(pass == "pass0" || pass == "pass1"){
+	//If we ever want to look at this pass of data again. May need to add kinematic dependent offsets
 	hcal_offset = -0.2897;
 	}else if(pass == "pass2"){
 	//depending on how the data looks, may need to shift this so that way all neutron peaks aline with zero
