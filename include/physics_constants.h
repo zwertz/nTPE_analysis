@@ -1,6 +1,7 @@
 #ifndef PHYSICS_CONSTANTS_H
 #define PHYSICS_CONSTANTS_H
 
+//Author: Ezekiel Wertz
 //physics constants that we need for analysis
 //Via pdg and pdg.lbl.gov/2020/reviews/rpp2020-rev-monte-carlo-numbering.pdf
 namespace physics_constants{

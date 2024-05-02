@@ -6,6 +6,9 @@
 #include <iostream>
 #include "TTree.h"
 
+//Author: Ezekiel Wertz
+//namespace to define common cut definitions or functions associated with cuts
+
 namespace cuts{
 
 //function to define HCal physical position boundaries

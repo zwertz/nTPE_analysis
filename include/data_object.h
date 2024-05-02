@@ -1,6 +1,9 @@
 #ifndef DATA_OBJECT_H
 #define DATA_OBJECT_H
 
+//Author: Ezekiel Wertz
+//Class to mimic all the information we would want to know about a particular data run
+
 class data_object{
 private:
 TString pass,kinematic,target,input_file;

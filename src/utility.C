@@ -2,6 +2,8 @@
 #include <iostream>
 #include <filesystem>
 #include <string>
+#include <vector>
+#include <utility>
 #include "TMath.h"
 #include <regex>
 
@@ -119,6 +121,7 @@ namespace utility{
    return outfile;
   }
 
+  //Used for J. Boyd Simulation files
   //Helper function to find MC histogram files. Right now this only supports John Boyd simulation files. But in future might support others.
   vector<string> findHistFiles(TString replay_type,TString histDirectory,TString partialName){
   vector<string> myFiles;
@@ -139,6 +142,7 @@ namespace utility{
   return myFiles;
   }
  
+  //Used for J. Boyd Sim files
   //Helper function to match all the MC root files with the already found MC hist files. This function is not ideal, it modifies both of the vectors by the time the function is done. Though it does not have a return type
   void matchMCFiles(TString replay_type,vector<string>& histFiles,vector<string>& rootFiles, TString rootDirectory){
 	//vector to track file indices that don't match
@@ -191,6 +195,7 @@ namespace utility{
   //There is no return here so this is a little confusing but when the function terminates the root file vector should be populate and the non matching hist vector elements should be removed. So this function modifies both vectors to have matching information, since we are sending references to the original vector.
   }//end matching function
 
+  //Used for J. Boyd Sim files
   //Function that searches through two vectors of strings and removes entries without a matching pair
   //since we are sending references to vectors it should modifiy the original reference
   void syncJobNumbers(vector<string>& proton_vec,vector<string>& neutron_vec){
@@ -232,7 +237,35 @@ namespace utility{
                 }),neutron_vec.end());
 
   }// end sync job function
+  
+  //Used with regular sim files form JLab-HPC, not from J. Boyd.
+  //Function that searches through two vectors of pair of string and float vector and removes entries without a matching pair
+  //since we are sending references to vectors it should modifiy the original reference
+  //overloaded
+  void syncJobNumbers(vector<pair<string,vector<float>>>& vec1,vector<pair<string,vector<float>>>& vec2){
+  //Extract Job Ids from vec1
+  std::unordered_set<float> jobIds1;
+	for(const auto& item: vec1){
+		if(!item.second.empty()){
+		jobIds1.insert(item.second[0]);
+		}
+	}
+  //Extract JobIds from vec2
+  std::unordered_set<float> jobIds2;
+  	for(const auto& item: vec2){
+                if(!item.second.empty()){
+                jobIds2.insert(item.second[0]);
+                }
+        }
+  //Remove unpaired entries from vec1
+  vec1.erase(std::remove_if(vec1.begin(),vec1.end(), [&](const pair<string,vector<float>>& item){return item.second.empty() || jobIds2.find(item.second[0]) == jobIds2.end()}), vec1.end());
 
+  //Remove unpaired entries from vec2 
+  vec2.erase(std::remove_if(vec2.begin(),vec2.end(), [&](const pair<string,vector<float>>& item){return item.second.empty() || jobIds1.find(item.second[0]) == jobIds1.end()}), vec2.end());
+
+  }//end sync Jobs function
+
+  //Used for J.Boyd Sim files
   //function to parse simc hist files replayed by jboyd. Need to verify that this is still valid.
   double searchSimcHistFile(const TString &pattern, const TString &filename){
 	ifstream inputFile(filename.Data());//Try to open the file with the corresponding name of interest
@@ -309,6 +342,86 @@ namespace utility{
   return foundValue;
   }//end of hist search function
   
+  //Used with regular sim files form JLab-HPC, not from J. Boyd.
+  //dir1 is path to .csv , dir2 is path to .root , partialName is the search word, vec1 stores the root file absolute paths, csvData is a vector to store the CSV info and the root file path
+  void SyncFilesCSV(const string& dir1, const string& dir2,const string& partialName,vector<string&> vec1,vector<pair<string,vector<float>>> csvData){
+  
+  //populate vec1 with digitized and replayed root files
+  string replay_partialName = "replayed_" + partialName;
+  	//loop over every entry in dir2
+  	for(const auto& entry : filesystem::directory_iterator(dir2)){
+		//check that the entry is a regular file, that the file contains the partialName info, and is a root file
+		if(entry.is_regular_file() && entry.path().filename().string().find(replay_partialName) != string::npos && entry.path().extension() == ".root"){
+		//if it meets the conditional keep it
+		vec1.push_back(entry.path().string());
+		}
+	}//end loop
+  //Read CSV file
+  filesystem::path csvPath;
+  bool csvFound = false;
+
+  	//loop over every entry in dir1 to try and find the csv file
+  	for(const auto& entry : filesystem::directory_iterator(dir1)){
+		//check that the entry is a regular file, that the file contains the partialName info, and is a csv file
+		if(entry.is_regular_file() && entry.path().filename().string().find(partialName) != string::npos && entry.path().filename().string().find("_summary.csv") != std::string::npos){
+		//if we find it save the path and break the loop
+		csvPath = entry.path();
+		csvFound = true;
+		break;
+		}
+
+	}//end loop
+  	//Send an error if we did not find any CSV file
+  	if(!csvFound){
+	cerr << "CSV file matching " << paritalName << " not found in " << dir1 << endl;
+	}
+
+  //open an ifstream so we can read info from the CSV file
+  ifstream csvFile(csvPath);
+  string line;
+  	//loop over the lines in the file to find the information we care about
+  	while(getline(csvFile,line)){
+		//skip the header or any empty lines
+		if(line.empty() || line[0] == 'j'){
+		continue;
+		}
+	istringstream ss(line);
+	float jobid;
+	//First column is jobid, stored as float
+	ss >> jobid;
+	char comma;
+	//Initialize a vector with jobid as the first element
+	vector<float> rowData = {jobid};
+	float data;
+		//loop over the line and get all the information stored between the commas
+		while(ss >> comma >> data){
+		rowData.push_back(data);
+		}
+	//store data in csvData vector. Path is a placeholder for now
+	csvData.push_back({"",rowData});
+	}//end outer loop
+
+	//Attempt to match .root files in vec1 with CSV data based on job ID
+	for(auto& dataPair : csvData){
+	regex jobIdPattern("job_([0-9]+)\\.root$");
+		for(const auto& path : vec1 ){
+		smatch matches;
+			if(regex_search(path,matches,jobIdPattern) && matches.size()>1){
+			int jobId = stoi(matches[1].str());
+				if(jobId == static_cast<int>(dataPair.second[0])){
+				//match found update path in csvData
+				dataPair.first = path;
+				//stop searching after a match
+				break;
+				}		
+			}
+		}
+	}
+  //conditionally remove entries from csvData if no match is found
+  csvData.erase(std::remove_if(csvData.begin(),csvData.end(),[](const auto& pair){return pair.first.empty(); }),csvData.end());
+
+  //Everything is stored in references to the orignal structures so we do not have to return anything.
+  }//End CSV function
 
 
 } //end namespace

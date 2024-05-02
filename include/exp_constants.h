@@ -2,6 +2,7 @@
 #define EXP_CONSTANTS_H
 
 
+//Author: Ezekiel Wertz
 //constants specific to the GMn/nTPE experiment
 namespace exp_constants{
 

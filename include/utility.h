@@ -68,8 +68,18 @@ namespace utility{
   //since we are sending references to vectors it should modifiy the original reference
   void syncJobNumbers(vector<string>& proton_vec,vector<string>& neutron_vec);
 
+  //Used with regular sim files form JLab-HPC, not from J. Boyd.
+  //Function that searches through two vectors of pair of string and float vector and removes entries without a matching pair
+  //since we are sending references to vectors it should modifiy the original reference
+  //overloaded
+  void syncJobNumbers(vector<pair<string,vector<float>>>& vec1,vector<pair<string,vector<float>>>& vec2);
+
   //function to parse simc hist files replayed by jboyd. Need to verify that this is still valid.
   double searchSimcHistFile(const TString &pattern, const TString &filename);
+
+  //Used with regular sim files, not from J. Boyd.
+  //dir1 is path to .csv , dir2 is path to .root , partialName is the search word, vec1 stores the root file absolute paths, csvData is a vector to store the CSV info and the root file path
+  void SyncFilesCSV(const string& dir1, const string& dir2,const string& partialName,vector<string&> vec1,vector<pair<string,vector<float>>> csvData);
 
 
 }

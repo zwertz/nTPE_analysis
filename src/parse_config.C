@@ -105,6 +105,8 @@
 			}else if(key == "pass"){
                         pass = val;
 			//cout << "Pass " << pass << endl;
+			}else if(key == "fitopt"){
+			fitopt = val;
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
@@ -320,6 +322,8 @@
 
   TString parse_config::getPartialNameN(){ return partial_name_n;}
 
+  TString parse_config::getFitOpt(){ return fitopt;}
+  
   int parse_config::getSBSField(){ return SBS_field; }
 
   int parse_config::getAlshield(){ return useAlshield; }

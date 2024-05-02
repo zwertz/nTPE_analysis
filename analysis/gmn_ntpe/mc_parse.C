@@ -99,34 +99,62 @@ TFile *fout = new TFile(outfile,"RECREATE");
 //need to find the MC root and hist files 
 //proton
 vector<string> rootFileNames_p;
-//find hist file first for proton
-vector<string> histFileNames_p = utility::findHistFiles(replay_type,histfile_dir,partial_name_p);
-//This function is a bit tricky as it will modify both the root file and hist file vectors. Not my favorite way to do that
-//In the end we should have a set of matching hist files and root files
-utility::matchMCFiles(replay_type,histFileNames_p,rootFileNames_p,rootfile_dir);
 
 //neutron
 vector<string> rootFileNames_n;
-//find hist file first for neutron
-vector<string> histFileNames_n = utility::findHistFiles(replay_type,histfile_dir,partial_name_n);
-//Match hist and root files
-utility::matchMCFiles(replay_type,histFileNames_n,rootFileNames_n,rootfile_dir);
 
-	//check to make number the number of hist and root files matches for protons and neutrons
-	if(rootFileNames_p.size() != histFileNames_p.size() || rootFileNames_n.size() != histFileNames_n.size()){
-	cerr << "Error: File Matching failure, vector size mismatch!" << endl;
+//metadata proton
+vector<pair<string,vector<float>>> metadata_p;
+
+//metadata neutron
+vector<pair<string,vector<float>>> metadata_n;
+
+	if(replay_type == "jboyd"){
+	//find hist file first for proton
+	vector<string> histFileNames_p = utility::findHistFiles(replay_type,histfile_dir,partial_name_p);
+	//This function is a bit tricky as it will modify both the root file and hist file vectors. Not my favorite way to do that
+	//In the end we should have a set of matching hist files and root files
+	utility::matchMCFiles(replay_type,histFileNames_p,rootFileNames_p,rootfile_dir);
+	//find hist file first for neutron
+	vector<string> histFileNames_n = utility::findHistFiles(replay_type,histfile_dir,partial_name_n);
+	//Match hist and root files
+	utility::matchMCFiles(replay_type,histFileNames_n,rootFileNames_n,rootfile_dir);
+		//check to make number the number of hist and root files matches for protons and neutrons
+		if(rootFileNames_p.size() != histFileNames_p.size() || rootFileNames_n.size() != histFileNames_n.size()){
+        	cerr << "Error: File Matching failure, vector size mismatch!" << endl;
+        	}
+	else if(replay_type == "jlab-HPC"){
+	//find information from CSV file and root file paths from generic sim replay output supported by jlab-HPC
+	//for proton
+	utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_p,rootFileNames_p,metadata_p);
+	//for neutron
+	utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_n,rootFileNames_n,metadata_n);
+	}else{
+	cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
 	}
+//double check that we have the same number of files again
+int pFiles = 0;
+int nFiles = 0;
 
 	//Continuing to make sure there exist both protons and neutrons. Make sure the job has a both a proton and neutron file. If not get rid of it
 	if(sync_jobs){
-	//Function that searchs, finds, and then removes any files that are not in both proton and neutron vectors
-	utility::syncJobNumbers(rootFileNames_p,rootFileNames_n);
+		 //Function that searchs, finds, and then removes any files that are not in both proton and neutron vectors
+		if(replay_type == "jboyd"){
+		utility::syncJobNumbers(rootFileNames_p,rootFileNames_n);
+		pFiles = rootFileNames_p.size();
+		nFiles = rootFileNames_n.size();
+
+		}else if(replay_type == "jlab-HPC"){
+		utility::syncJobNumbers(metadata_p,metadata_n);
+		pFiles = metadata_p.size();
+		nFiles = metadata_n.size();
+		}else{
+		  cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
+		}
+
 	}	
    
-//double check that we have the same number of files again
-int pFiles = rootFileNames_p.size();
-int nFiles = rootFileNames_n.size();
-cout << endl << "Number of proton files " << pFiles << " , Number of neutron files " << nFiles << endl;
+	cout << endl << "Number of proton files " << pFiles << " , Number of neutron files " << nFiles << endl;
 	if(pFiles != nFiles){
 	cout << endl << "Warning: Number proton and neutron root files loaded does not match. Investigate!" << endl << endl;
 		if(sync_jobs){
@@ -224,7 +252,7 @@ cout << endl << "Number of proton files " << pFiles << " , Number of neutron fil
   TH1D *hcoin_pclus_glob_W2_cut = new TH1D( "hcoin_pclus_glob_W2_cut", "HCal ADCt - BBCal ADCt, pclus,global & W2 cuts; ns", 400, -100, 100 );
   TH1D *hcoin_pclus_cut = new TH1D( "hcoin_pclus_cut", "HCal ADCt - BBCal ADCt,pclus, cuts; ns", 400, -100, 100 );
 
-  TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0001 );
+  TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0002 );
 
   //create output tree
   TTree *Parse = new TTree("Parse","Analysis Tree");
