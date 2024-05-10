@@ -99,9 +99,11 @@ TFile *fout = new TFile(outfile,"RECREATE");
 //need to find the MC root and hist files 
 //proton
 vector<string> rootFileNames_p;
+vector<string> histFileNames_p;
 
 //neutron
 vector<string> rootFileNames_n;
+vector<string> histFileNames_n;
 
 //metadata proton
 vector<pair<string,vector<float>>> metadata_p;
@@ -111,19 +113,19 @@ vector<pair<string,vector<float>>> metadata_n;
 
 	if(replay_type == "jboyd"){
 	//find hist file first for proton
-	vector<string> histFileNames_p = utility::findHistFiles(replay_type,histfile_dir,partial_name_p);
+	histFileNames_p = utility::findHistFiles(replay_type,histfile_dir,partial_name_p);
 	//This function is a bit tricky as it will modify both the root file and hist file vectors. Not my favorite way to do that
 	//In the end we should have a set of matching hist files and root files
 	utility::matchMCFiles(replay_type,histFileNames_p,rootFileNames_p,rootfile_dir);
 	//find hist file first for neutron
-	vector<string> histFileNames_n = utility::findHistFiles(replay_type,histfile_dir,partial_name_n);
+	histFileNames_n = utility::findHistFiles(replay_type,histfile_dir,partial_name_n);
 	//Match hist and root files
 	utility::matchMCFiles(replay_type,histFileNames_n,rootFileNames_n,rootfile_dir);
 		//check to make number the number of hist and root files matches for protons and neutrons
 		if(rootFileNames_p.size() != histFileNames_p.size() || rootFileNames_n.size() != histFileNames_n.size()){
         	cerr << "Error: File Matching failure, vector size mismatch!" << endl;
         	}
-	else if(replay_type == "jlab-HPC"){
+	}else if(replay_type == "jlab-HPC"){
 	//find information from CSV file and root file paths from generic sim replay output supported by jlab-HPC
 	//for proton
 	utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_p,rootFileNames_p,metadata_p);
@@ -145,6 +147,7 @@ int nFiles = 0;
 		nFiles = rootFileNames_n.size();
 
 		}else if(replay_type == "jlab-HPC"){
+		//cout << metadata_p.size() << " " << metadata_n.size() << endl;
 		utility::syncJobNumbers(metadata_p,metadata_n);
 		pFiles = metadata_p.size();
 		nFiles = metadata_n.size();
@@ -244,6 +247,7 @@ int nFiles = 0;
   TH1D *hdy_nocut = new TH1D( "dy_nocut", "HCal dy (m), no cuts; m", 250, dy_low, dy_high );
   TH1D *hdy_globcut = new TH1D( "dy_globcut", "HCal dy (m), global cut; m", 250, dy_low, dy_high );
   TH1D *hdy_glob_W2_cut = new TH1D( "dy_glob_W2_cut", "HCal dy (m), global & W2 cuts; m", 250, dy_low, dy_high );
+  TH1D *hdy_cut_nofid = new TH1D( "dy_cut_nofid","HCal dy, all cuts but fiducial; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
   TH1D *hdy_cut = new TH1D( "dy_cut","HCal dy, all cuts; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
 
   TH1D *hcoin_nocut = new TH1D( "hcoin_nocut", "HCal ADCt - BBCal ADCt, no cuts; ns", 400, -100, 100 );
@@ -406,33 +410,86 @@ int nFiles = 0;
 	for(int f=0; f<num_files; ++f){
 		string root_file;
 		string hist_file;
-
-		if(r==0){
-		root_file = rootFileNames_p[f];
-		hist_file = histFileNames_p[f];
-		}else if(r==1){
-		root_file = rootFileNames_n[f];
-                hist_file = histFileNames_n[f];
-		}
-
-		int Ntried;
-		double luminosity,genvol;
-
+		int Ntried,job_number,Nthrown;
+                double luminosity,genvol,ebeam,charge,seed,weight_gt_max,obs_max_weight;
+		bool using_rej_samp = 0;
+		double max_weight = 0;
+		
 		//get information for MC weights
-		if(mc_override){
-		Ntried = mainConfig.getNTriedOverride();
-		luminosity = mainConfig.getLumiOverride();
-		genvol = mainConfig.getVolOverride();
-		}else if(replay_type == "jboyd"){
-		//need functions to search through the hist files and get the information we need
-		Ntried = (int) utility::searchSimcHistFile("Ntried",hist_file);
-		luminosity = utility::searchSimcHistFile("luminosity",hist_file);
-		genvol = utility::searchSimcHistFile("genvol",hist_file);
-		}else{
-		cerr << "No MC weight information provided. Invesitgate this problem! No values assigned." << endl;
+		if(r==0){
+			
+			if(mc_override){
+			Ntried = mainConfig.getNTriedOverride();
+                	luminosity = mainConfig.getLumiOverride();
+                	genvol = mainConfig.getVolOverride();
+			}else if(replay_type == "jboyd"){
+			root_file = rootFileNames_p[f];
+			hist_file = histFileNames_p[f];
+			//need functions to search through the hist files and get the information we need
+			Ntried = (int) utility::searchSimcHistFile("Ntried",hist_file);
+                	luminosity = utility::searchSimcHistFile("luminosity",hist_file);
+                	genvol = utility::searchSimcHistFile("genvol",hist_file);
+			
+			}else if(replay_type == "jlab-HPC"){
+			root_file = metadata_p[f].first;
+
+			//Verify with CSV file structure
+			job_number = metadata_p[f].second[0];
+			Nthrown = metadata_p[f].second[1];
+			Ntried = metadata_p[f].second[2];		
+			genvol = metadata_p[f].second[3];
+			luminosity = metadata_p[f].second[4];
+			ebeam = metadata_p[f].second[5];
+			charge = metadata_p[f].second[6];
+			seed = metadata_p[f].second[7];
+				//Make sure we have conditional for old vs new files
+				if(metadata_p[f].second.size() > 8){
+				using_rej_samp = metadata_p[f].second[8];
+				max_weight = metadata_p[f].second[9];
+				weight_gt_max = metadata_p[f].second[10];
+				obs_max_weight = metadata_p[f].second[11];
+				}
+			}else{
+			cerr << "No MC weight information provided. Invesitgate this problem! No values assigned." << endl;
+			}
+		}else if(r==1){
+			if(mc_override){
+                        Ntried = mainConfig.getNTriedOverride();
+                        luminosity = mainConfig.getLumiOverride();
+                        genvol = mainConfig.getVolOverride();
+                        }else if(replay_type == "jboyd"){
+                        root_file = rootFileNames_n[f];
+                        hist_file = histFileNames_n[f];
+                        //need functions to search through the hist files and get the information we need
+			Ntried = (int) utility::searchSimcHistFile("Ntried",hist_file);
+                        luminosity = utility::searchSimcHistFile("luminosity",hist_file);
+                        genvol = utility::searchSimcHistFile("genvol",hist_file);
+
+                        }else if(replay_type == "jlab-HPC"){
+                        root_file = metadata_n[f].first;
+
+                        //Verify with CSV file structure
+			job_number = metadata_n[f].second[0];
+                        Nthrown = metadata_n[f].second[1];
+                        Ntried = metadata_n[f].second[2];
+                        genvol = metadata_n[f].second[3];
+                        luminosity = metadata_n[f].second[4];
+                        ebeam = metadata_n[f].second[5];
+                        charge = metadata_n[f].second[6];
+                        seed = metadata_n[f].second[7];
+			//Make sure we have conditional for old vs new files
+				if(metadata_n[f].second.size() > 8){
+                        	using_rej_samp = metadata_n[f].second[8];
+                        	max_weight = metadata_n[f].second[9];
+                       		weight_gt_max = metadata_n[f].second[10];
+                                obs_max_weight = metadata_n[f].second[11];
+                                }
+                        }else{
+                        cerr << "No MC weight information provided. Invesitgate this problem! No values assigned." << endl;
+                        }
 		}
 
-		cout << "For this " << nuc << " file: Ntried = " << Ntried << " luminosity = " << luminosity << " genvol = " << genvol << endl;
+		cout << "For this " << nuc << " file: Ntried = " << Ntried << " luminosity = " << luminosity << " genvol = " << genvol << " max weight " << max_weight << endl;
 
 		//add the file to the TChain
 		C = new TChain("T");
@@ -602,7 +659,13 @@ int nFiles = 0;
 
 			///////////
 			//Electron-arm physics calculations
-			
+			//use the ebeam from the MC file if possible, if not will default to value from kinematic info
+			if((ebeam/1000) != -1 ){
+			Ebeam = ebeam/1000;
+			}
+						
+
+
 			//correct beam energy from vertex information
 			double Eloss = physics::getEloss(tr_vz[0],target);
         		double Ecorr = physics::getEcorr(Ebeam,Eloss);
@@ -779,8 +842,13 @@ int nFiles = 0;
 				bool passHCal_Nclus = cuts::passHCal_NClus(nclus_hcal,hcalnclusmin);
 
 				//calculate the final corrected MC weight
-				//Need to handle the case of whether or not simulation was done with rejection sampling. Probably best to make flag
-				double final_mc_weight = physics::getMCWeight(mc_weight,luminosity,genvol,Ntried);
+				//handles both cases of using rejection sampling and not 
+				double final_mc_weight;
+				if(using_rej_samp){
+				final_mc_weight = physics::getMCWeight(max_weight,luminosity,genvol,Ntried);
+				}else{
+				final_mc_weight = physics::getMCWeight(mc_weight,luminosity,genvol,Ntried);
+				}
 
 				//Fill analysis tree variables before making cuts
 				dx_out = dx_bestclus;
@@ -914,7 +982,8 @@ int nFiles = 0;
 				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && good_dy ){
        				hdxdy_nofid->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
         			hdx_cut_nofid->Fill(dx_bestclus,final_mc_weight);
-                			if(!passFid){
+                		hdy_cut_nofid->Fill(dy_bestclus);
+					if(!passFid){
                 			hdx_cut_failfid->Fill(dx_bestclus,final_mc_weight);
                 			}
         			}

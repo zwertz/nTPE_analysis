@@ -258,10 +258,10 @@ namespace utility{
                 }
         }
   //Remove unpaired entries from vec1
-  vec1.erase(std::remove_if(vec1.begin(),vec1.end(), [&](const pair<string,vector<float>>& item){return item.second.empty() || jobIds2.find(item.second[0]) == jobIds2.end()}), vec1.end());
+  vec1.erase(std::remove_if(vec1.begin(),vec1.end(), [&](const pair<string,vector<float>>& item){return item.second.empty() || jobIds2.find(item.second[0]) == jobIds2.end();}), vec1.end());
 
   //Remove unpaired entries from vec2 
-  vec2.erase(std::remove_if(vec2.begin(),vec2.end(), [&](const pair<string,vector<float>>& item){return item.second.empty() || jobIds1.find(item.second[0]) == jobIds1.end()}), vec2.end());
+  vec2.erase(std::remove_if(vec2.begin(),vec2.end(), [&](const pair<string,vector<float>>& item){return item.second.empty() || jobIds1.find(item.second[0]) == jobIds1.end();}), vec2.end());
 
   }//end sync Jobs function
 
@@ -344,14 +344,21 @@ namespace utility{
   
   //Used with regular sim files form JLab-HPC, not from J. Boyd.
   //dir1 is path to .csv , dir2 is path to .root , partialName is the search word, vec1 stores the root file absolute paths, csvData is a vector to store the CSV info and the root file path
-  void SyncFilesCSV(const string& dir1, const string& dir2,const string& partialName,vector<string&> vec1,vector<pair<string,vector<float>>> csvData){
-  
+  void SyncFilesCSV(TString dir1, TString dir2,TString partialName,vector<string>& vec1,vector<pair<string,vector<float>>>& csvData){
+  const string& dir1_str = dir1.Data();
+  const string& dir2_str = dir2.Data();
+  const string& partialName_str = partialName.Data();
+
+  //cout << dir1_str << " " << dir2_str << " " << partialName_str << endl;
+
   //populate vec1 with digitized and replayed root files
-  string replay_partialName = "replayed_" + partialName;
+  string replay_partialName = "replayed_" + partialName_str;
+  //cout << replay_partialName << endl;
   	//loop over every entry in dir2
-  	for(const auto& entry : filesystem::directory_iterator(dir2)){
+  	for(const auto& entry : filesystem::directory_iterator(dir2_str)){
 		//check that the entry is a regular file, that the file contains the partialName info, and is a root file
-		if(entry.is_regular_file() && entry.path().filename().string().find(replay_partialName) != string::npos && entry.path().extension() == ".root"){
+		if(entry.is_regular_file() && entry.path().filename().string().find(replay_partialName) != std::string::npos && entry.path().extension() == ".root"){
+		//cout << entry.path().string() << endl;
 		//if it meets the conditional keep it
 		vec1.push_back(entry.path().string());
 		}
@@ -361,10 +368,11 @@ namespace utility{
   bool csvFound = false;
 
   	//loop over every entry in dir1 to try and find the csv file
-  	for(const auto& entry : filesystem::directory_iterator(dir1)){
+  	for(const auto& entry : filesystem::directory_iterator(dir1_str)){
 		//check that the entry is a regular file, that the file contains the partialName info, and is a csv file
-		if(entry.is_regular_file() && entry.path().filename().string().find(partialName) != string::npos && entry.path().filename().string().find("_summary.csv") != std::string::npos){
+		if(entry.is_regular_file() && entry.path().filename().string().find(partialName_str) != std::string::npos && entry.path().filename().string().find("_summary.csv") != std::string::npos){
 		//if we find it save the path and break the loop
+		//cout << entry.path().string() << endl;
 		csvPath = entry.path();
 		csvFound = true;
 		break;
@@ -373,9 +381,8 @@ namespace utility{
 	}//end loop
   	//Send an error if we did not find any CSV file
   	if(!csvFound){
-	cerr << "CSV file matching " << paritalName << " not found in " << dir1 << endl;
+	cerr << "CSV file matching " << partialName_str << " not found in " << dir1_str << endl;
 	}
-
   //open an ifstream so we can read info from the CSV file
   ifstream csvFile(csvPath);
   string line;
@@ -385,7 +392,7 @@ namespace utility{
 		if(line.empty() || line[0] == 'j'){
 		continue;
 		}
-	istringstream ss(line);
+	std::istringstream ss(line);
 	float jobid;
 	//First column is jobid, stored as float
 	ss >> jobid;
@@ -405,12 +412,13 @@ namespace utility{
 	for(auto& dataPair : csvData){
 	regex jobIdPattern("job_([0-9]+)\\.root$");
 		for(const auto& path : vec1 ){
-		smatch matches;
-			if(regex_search(path,matches,jobIdPattern) && matches.size()>1){
+		std::smatch matches;
+			if(std::regex_search(path,matches,jobIdPattern) && matches.size()>1){
 			int jobId = stoi(matches[1].str());
 				if(jobId == static_cast<int>(dataPair.second[0])){
 				//match found update path in csvData
 				dataPair.first = path;
+				//cout << path << endl;
 				//stop searching after a match
 				break;
 				}		

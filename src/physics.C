@@ -54,6 +54,9 @@ namespace physics{
 	//LD2
 	}else if(target == "LD2"){
 	Eloss_outgoing = (exp_constants::celldiameter/2)/sin(bbtheta)*(exp_constants::ld2_rho_tgt)*(exp_constants::ld2_dEdx);
+	}else if(target == "Dummy"){
+	//Not sure if this is correct kind of just using the others as an example and assuming its similar but with Aluminum for the windows.
+	Eloss_outgoing = (exp_constants::celldiameter/2)/sin(bbtheta)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
 	}else{
 	//give an error statement for and don't calculate the Eloss_outgoing.
 	cout << "Warning: Target " << target << " is not handle by energy loss function! Defaulting to zero." << endl;
@@ -73,6 +76,9 @@ namespace physics{
 	//LD2
 	}else if(target == "LD2"){
 	Eloss = (vz+(exp_constants::l_tgt/2))*(exp_constants::ld2_rho_tgt)*(exp_constants::ld2_dEdx) + (exp_constants::ld2_uwallthick)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
+	//Not sure if this is correct kind of just using the others as an example and assuming its similar but with Aluminum for the windows.I
+	}else if(target == "Dummy"){
+	Eloss = (exp_constants::ld2_uwallthick)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
 	}else{
         //give an error statement for and don't calculate the Eloss.
          cout << "Warning: Target " << target << " is not handle by energy loss function! Defaulting to zero." << endl;
@@ -117,7 +123,8 @@ namespace physics{
  TLorentzVector ptarg;
  
  	//LH2 or protons
- 	if(target == "LH2" || target == "p"){
+ 	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
+ 	if(target == "LH2" || target == "p" || target == "Dummy"){
 	ptarg.SetPxPyPzE(0,0,0,physics_constants::M_p);
 	//LD2
 	}else if(target == "LD2" || target == "np"){
@@ -156,7 +163,8 @@ namespace physics{
  double pcentral;
  double ebeam = pbeam.E();
 	//LH2 or proton
-	if(target == "LH2" || target == "p"){
+	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
+	if(target == "LH2" || target == "p" || target == "Dummy"){
 	pcentral = ebeam/(1.0 + (ebeam/physics_constants::M_p)*(1.0 - cos(etheta))); 
         //LD2 
 	}else if(target == "LD2" || target == "np"){
@@ -242,7 +250,8 @@ namespace physics{
  double get_pNexp(double nu,TString target){
  double p_N_exp;
  	 //LH2
-	 if(target == "LH2"){
+ 	 //For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
+	 if(target == "LH2" || target == "Dummy"){
          p_N_exp = sqrt(pow(nu,2) + 2.0 * physics_constants::M_p * nu);
          //LD2
 	 }else if(target == "LD2"){
@@ -276,7 +285,8 @@ namespace physics{
  double getW2(TLorentzVector pbeam,TLorentzVector p_eprime, double Q2, TString target){
  double W2;
 	//LH2
-	if(target == "LH2"){
+	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
+	if(target == "LH2" || target == "Dummy"){
 	W2 = pow(physics_constants::M_p,2)+2.0*physics_constants::M_p*(pbeam.E() - p_eprime.E())-Q2;
 	//LD2
 	}else if(target == "LD2"){
@@ -402,7 +412,8 @@ namespace physics{
  double tau; 
  
  	//LH2 or protons
-	if(target == "LH2" || target == "p"){
+ 	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
+	if(target == "LH2" || target == "p" || target == "Dummy"){
 	tau = Q2/(4*pow(physics_constants::M_p,2));
  	//LD2
  	}else if(target == "LD2" || target == "np"){

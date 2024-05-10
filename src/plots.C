@@ -520,14 +520,10 @@ TH1D* sumHist = new TH1D("sumHist1","dx for both MC protons and neutrons",hdx_mc
 
 sumHist->Add(hdx_mc_p,hdx_mc_n);
 
-//background subtraction to directly compare
-	for(int bin=1; bin<= hdx_data->GetNbinsX(); ++bin){
-	double bg_value = bg->Eval(hdx_data->GetXaxis()->GetBinCenter(bin));
-	hdx_data->SetBinContent(bin,hdx_data->GetBinContent(bin) - bg_value); 
-	hdx_data->SetBinError(bin,hdx_data->GetBinError(bin));
-	}
+TH1D* hdx_data_bgsub = plots::subtractBG(hdx_data,bg);
+
 //Make the residual plot
-TH1D* residual = plots::makeResidualWithError("dx",hdx_data,sumHist,true, false);
+TH1D* residual = plots::makeResidualWithError("dx",hdx_data_bgsub,sumHist,true, false);
 TH1D* residual_fit = plots::makeResidualWithError("dx_fit",hdx_data,fit);
 
 residual->SetTitle("");

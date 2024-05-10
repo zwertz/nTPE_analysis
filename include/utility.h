@@ -79,7 +79,7 @@ namespace utility{
 
   //Used with regular sim files, not from J. Boyd.
   //dir1 is path to .csv , dir2 is path to .root , partialName is the search word, vec1 stores the root file absolute paths, csvData is a vector to store the CSV info and the root file path
-  void SyncFilesCSV(const string& dir1, const string& dir2,const string& partialName,vector<string&> vec1,vector<pair<string,vector<float>>> csvData);
+  void SyncFilesCSV(TString dir1, TString dir2,TString partialName,vector<string>& vec1,vector<pair<string,vector<float>>>& csvData);
 
 
 }

@@ -195,6 +195,7 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *hdy_nocut = new TH1D( "dy_nocut", "HCal dy (m), no cuts; m", 250, dy_low, dy_high );
   TH1D *hdy_globcut = new TH1D( "dy_globcut", "HCal dy (m), global cut; m", 250, dy_low, dy_high );
   TH1D *hdy_glob_W2_cut = new TH1D( "dy_glob_W2_cut", "HCal dy (m), global & W2 cuts; m", 250, dy_low, dy_high );
+  TH1D *hdy_cut_nofid = new TH1D( "dy_cut_nofid","HCal dy, all cuts but fiducial; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
   TH1D *hdy_cut = new TH1D( "dy_cut","HCal dy, all cuts; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
 
   TH1D *hcoin_nocut = new TH1D( "hcoin_nocut", "HCal ADCt - BBCal ADCt, no cuts; ns", 400, -100, 100 );
@@ -827,6 +828,7 @@ void data_elastic_parse(const char *setup_file_name){
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy ){
 	hdxdy_nofid->Fill(dy_bestclus, dx_bestclus);
 	hdx_cut_nofid->Fill(dx_bestclus);
+	hdy_cut_nofid->Fill(dy_bestclus);
 		if(!passFid){
 		hdx_cut_failfid->Fill(dx_bestclus);
 		}
