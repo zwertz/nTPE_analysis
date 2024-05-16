@@ -395,8 +395,10 @@ double totentries = hist->GetEntries();
 int hist_Nbins = hist->GetNbinsX();
 double hist_minX = hist->GetXaxis()->GetXmin();
 double hist_maxX = hist->GetXaxis()->GetXmax();
+TString hist_name = hist->GetName();
+TString fit_name = bgFit->GetName();
 
-TH1D* hist_sub = new TH1D("hist_sub","",hist_Nbins,hist_minX,hist_maxX);
+TH1D* hist_sub = new TH1D(Form("hist_sub: %s and %s",hist_name.Data(),fit_name.Data()),"",hist_Nbins,hist_minX,hist_maxX);
 
 	//go by each bin and subtract off the backgroun value from the hist and populate the new hist
 	for(int bin =1; bin <= hist_Nbins; ++bin){
