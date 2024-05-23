@@ -51,9 +51,8 @@ void data_elastic_parse(const char *setup_file_name){
   int sbs_field = mainConfig.getSBSField();
   int maxtracks = mainConfig.getMAXNTRACKS();
   TString target = mainConfig.getTarg();
-  double W2_mean = mainConfig.getW2Mean();
-  double W2_sigma = mainConfig.getW2Sigma();
-  double W2_sigfac = mainConfig.getW2SigFac();
+  double W2_low = mainConfig.getW2Low();
+  double W2_high = mainConfig.getW2High();
   double dxO_n = mainConfig.get_dxOn();
   double dyO_n = mainConfig.get_dyOn();
   double dxsig_n = mainConfig.get_dxsign();
@@ -83,8 +82,6 @@ void data_elastic_parse(const char *setup_file_name){
   double dysig_cut_fac = mainConfig.get_dySigCutFac();
   int hcalnclusmin = mainConfig.get_HCalNclusMin();
 
-  double W2_low = W2_mean - W2_sigfac*W2_sigma;
-  double W2_high = W2_mean + W2_sigfac*W2_sigma;
 
   //store all important kinematic info in local variables
   kinematic_obj myKin(kinematic_file,kin);
@@ -167,6 +164,7 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *h_W2_globcut = new TH1D( "W2_globcut", "W2 (GeV) global cut; GeV", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *h_W2_glob_W2_cut = new TH1D( "W2_glob_W2_cut", "W2 (GeV) global & W2 cuts; GeV", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV) all cuts; GeV", binfac*W2fitmax, 0.0, W2fitmax );  
+  TH1D *h_W2_notW2_cut = new TH1D( "W2_notW2_cut", "W2 (GeV) all cuts, but W2; GeV", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *h_Q2_globcut = new TH1D( "Q2_globcut", "Q2 (GeV) global cut; GeV", 300, 0.0, 6.0 );
   TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV) all cuts; GeV", 300, 0.0, 6.0 );
   TH2D *hxy_expect_globcut = new TH2D("hxy_expect_globcut","HCal X Expect vs Y Expect, global cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
@@ -254,9 +252,8 @@ void data_elastic_parse(const char *setup_file_name){
   double dxsig_n_out;
   double dxsig_n_fac_out;
   double dxsig_p_fac_out;
-  double W2mean_out;
-  double W2sig_out;
-  double W2sig_fac_out;
+  double W2low_out;
+  double W2high_out;
 
   int num_hcal_clusid_out;
   int nclus_hcal_out;
@@ -319,9 +316,8 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("dxsig_n", &dxsig_n_out, "dxsig_n/D");
   Parse->Branch("dxsig_n_fac", &dxsig_n_fac_out, "dxsig_n_fac/D");
   Parse->Branch("dxsig_p_fac", &dxsig_p_fac_out, "dxsig_p_fac/D");
-  Parse->Branch("W2mean", &W2mean_out, "W2mean/D");
-  Parse->Branch("W2sig", &W2sig_out, "W2sig/D");
-  Parse->Branch("W2sig_fac", &W2sig_fac_out, "W2sig_fac/D");
+  Parse->Branch("W2low", &W2low_out, "W2low/D");
+  Parse->Branch("W2high", &W2high_out, "W2high/D");
 
   Parse->Branch("num_hcal_clusid", &num_hcal_clusid_out, "num_hcal_clusid/I");
   Parse->Branch("hcal_clus_blk", &hcal_clus_blk_out, "hcal_clus_blk/I");
@@ -745,9 +741,8 @@ void data_elastic_parse(const char *setup_file_name){
   	dxsig_n_out = dxsig_n;
   	dxsig_n_fac_out = dxsig_n_fac;
  	dxsig_p_fac_out = dxsig_p_fac;
-  	W2mean_out = W2_mean;	
-	W2sig_out = W2_sigma;
-  	W2sig_fac_out = W2_sigfac;
+  	W2low_out = W2_low;	
+	W2high_out = W2_high;
 	num_hcal_clusid_out = num_hcal_clusid ;
  	hcal_clus_blk_out = hcal_nblk_bestclus;
   	nclus_hcal_out = nclus_hcal;
@@ -835,6 +830,11 @@ void data_elastic_parse(const char *setup_file_name){
 
 	}	
 
+	//all cuts but W2
+	if(!failglobal && passHCalE && passHCal_Nclus && hcalaa_ON && passCoin && good_dy && passFid){
+	h_W2_notW2_cut->Fill(W2);
+
+	}
 	//all cuts
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
 	h_ntracks_cut->Fill(ntrack);

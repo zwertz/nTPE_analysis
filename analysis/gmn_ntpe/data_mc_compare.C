@@ -132,6 +132,8 @@ TH1D *hdx_p_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_clone"));
 
 TH1D *hdx_n_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_clone"));
 
+TH1D *hdx_data_fit_error = (TH1D*)(hdx_data->Clone("dx_data_fit_error"));
+
 //do some fitting and get the fit parameters, Error, ChiSquare, and NDF from the fit. This function is not perfect as it returns the parameter and Error pair vector and updates the pair to hold the ChiSquare and NDF. Better way to code this would be a structure that holds all of that information. 
 pair<double,double> shiftQual;
 const char* fitType = "fitFullShift";
@@ -145,17 +147,32 @@ TF1 *bg_shiftFit = new TF1("bg_shiftFit",fits::poly4_fit,hcalfit_low,hcalfit_hig
 	bg_shiftFit->SetParError(j,shiftpar_vec[j+4].second);
 	}
 
+TF1 *total_fit_bg_error = new TF1("total_fit_bg_error",fitType,hcalfit_low,hcalfit_high,9);
+TFitResultPtr totfit_ptr = hdx_data_fit_error->Fit(total_fit_bg_error,"QS");
+//set the background parameters
+	for(int k=0; k<9; ++k){
+	total_fit_bg_error->SetParameter(k,shiftpar_vec[k].first);
+	total_fit_bg_error->SetParError(k,shiftpar_vec[k].second);
+	}
+
 //make canvas to show data and MC compare plot
 TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
 
+
+double bg_error1 = fits::getFitError(bg_shiftFit);
+
+double bg_error2 = fits::getFitError(totfit_ptr);
+
+cout << bg_error1 << " " << bg_error2 << endl;
+
 //Do some fitting and get fit parameters. Do this for the background subtracted histogram
-TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit);
+TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit,bg_error1);
 pair<double,double> shiftQual_nobg;
 const char* fitType_nobg = "fitFullShiftNoBG";
 auto shiftpar_nobg_vec = fits::fitAndFineFit(hdx_data_nobg,"shiftFitNoBG",fitType_nobg,4,hcalfit_low,hcalfit_high,shiftQual_nobg,fitopt.Data());
 
 //make canvas to show data and MC compare plot. For background subtracted version
-TCanvas* c1 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_n_clone,"c1","shiftfit BG subtracted",fitType_nobg,shiftpar_nobg_vec,shiftQual_nobg,hcalfit_low,hcalfit_high,true);
+TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_n_clone,"c2","shiftfit BG subtracted",fitType_nobg,shiftpar_nobg_vec,shiftQual_nobg,hcalfit_low,hcalfit_high,true);
 
 //Write stuff to a pdf
 TString plotname = outfile;
@@ -165,7 +182,7 @@ TString start = Form("%s%s",plotname.Data(),"(");
 TString end = Form("%s%s",plotname.Data(),")");  
 
 c0->Print(start.Data(),"pdf");
-c1->Print(end.Data(),"pdf");
+c2->Print(end.Data(),"pdf");
 
 fout->Write();
 

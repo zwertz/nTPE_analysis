@@ -115,15 +115,12 @@
 			}else if(key == "e_method"){
 			e_method = val.Atoi();
 			//cout << "e method " << e_method << endl;
-			}else if(key == "W2_mean"){
-                        W2_mean = val.Atof();
-                        //cout << "W2 mean " << W2_mean << endl;
-                        }else if(key == "W2_sigma"){
-                        W2_sigma = val.Atof();
-                        //cout << "W2 sig " << W2_sig << endl;
-                        }else if(key == "W2_sigfac"){
-                        W2_sigfac = val.Atof();
-                        //cout << "W2 sig fac " << W2_sigfac << endl;
+			}else if(key == "W2_low"){
+                        W2_low = val.Atof();
+                        //cout << "W2 low " << W2_low << endl;
+                        }else if(key == "W2_high"){
+                        W2_high = val.Atof();
+                        //cout << "W2 high " << W2_high << endl;
                         }else if(key == "targ"){
                         targ = val;
                         //cout << "Target " << targ << endl;
@@ -352,11 +349,9 @@
 
   double parse_config::get_dxpn(){ return dx_pn; }
 
-  double parse_config::getW2Mean(){ return W2_mean; }
+  double parse_config::getW2Low(){ return W2_low; }
 
-  double parse_config::getW2Sigma(){ return W2_sigma; }
-
-  double parse_config::getW2SigFac(){ return W2_sigfac; }
+  double parse_config::getW2High(){ return W2_high; }
 
   double parse_config::get_dxLow(){ return dx_low; }
 
@@ -449,9 +444,8 @@
        << Form("Data File Map: %s", getDataFileName().Data())										  << endl
        << Form("Kinematic File Name: %s",getKinFileName().Data())									  << endl
        << Form("SBS Field: %i",getSBSField())									                          << endl
-       << Form("W2 Mean: %f",getW2Mean())												  << endl
-       << Form("W2 Sigma: %f",getW2Sigma())												  << endl
-       << Form("W2 Sigma Fac: %f",getW2SigFac())											  << endl
+       << Form("W2 Low: %f",getW2Low())													  << endl
+       << Form("W2 High: %f",getW2High())												  << endl
        << Form("Target: %s",getTarg().Data())												  << endl
        << Form("E Method: %i",get_emethod())                                                                                              << endl
        << Form("Maxntracks: %i",getMAXNTRACKS())											  << endl
@@ -496,9 +490,8 @@
        << Form("Data File Map: %s", getDataFileName().Data())                                                                             << endl
        << Form("Kinematic File Name: %s",getKinFileName().Data())                                                                         << endl
        << Form("SBS Field: %i",getSBSField())                                                                                             << endl
-       << Form("W2 Mean: %f",getW2Mean())                                                                                                 << endl
-       << Form("W2 Sigma: %f",getW2Sigma())                                                                                               << endl
-       << Form("W2 Sigma Fac: %f",getW2SigFac())                                                                                          << endl
+       << Form("W2 Low: %f",getW2Low())                                                                                                   << endl
+       << Form("W2 High: %f",getW2High())                                                                                                 << endl
        << Form("Target: %s",getTarg().Data())                                                                                             << endl
        << Form("Coin Mean: %f",getCoinMean())												  << endl
        << Form("Coin Sigma: %f",getCoinSig())												  << endl
@@ -539,6 +532,38 @@
        << Form("Root File Dir: %s",(getRootFileDir()).Data())										  << endl
        << Form("Hist File Dir: %s",(getHistFileDir()).Data())										  << endl
        << Form("Replay Type: %s",(getReplayType()).Data())										  << endl
+       << Form("SBS Field: %i",getSBSField())                                                                                             << endl
+       << Form("W2 Low: %f",getW2Low())                                                                                                   << endl
+       << Form("W2 High: %f",getW2High())                                                                                                 << endl
+       << Form("Target: %s",getTarg().Data())                                                                                             << endl
+       << Form("E Method: %i",get_emethod())                                                                                              << endl
+       << Form("Maxntracks: %i",getMAXNTRACKS())                                                                                          << endl
+       << Form("dxO_n: %f",get_dxOn())                                                                                                    << endl
+       << Form("dyO_n: %f",get_dyOn())                                                                                                    << endl
+       << Form("dxsign_n: %f",get_dxsign())                                                                                               << endl
+       << Form("dysign_n: %f",get_dysign())                                                                                               << endl
+       << Form("dxO_p: %f",get_dxOp())                                                                                                    << endl
+       << Form("dyO_p: %f",get_dyOp())                                                                                                    << endl
+       << Form("dxsign_p: %f",get_dxsigp())                                                                                               << endl
+       << Form("dysign_p: %f",get_dysigp())                                                                                               << endl
+       << Form("dx_pn: %f",get_dxpn())                                                                                                    << endl
+       << Form("dx low: %f",get_dxLow())                                                                                                  << endl
+       << Form("dx high: %f",get_dxHigh())                                                                                                << endl
+       << Form("dy low: %f",get_dyLow())                                                                                                  << endl
+       << Form("dy high: %f",get_dyHigh())                                                                                                << endl
+       << Form("use Al shield: %i",getAlshield())                                                                                         << endl
+       << Form("dx sig n fac: %f", get_dxSignFac())                                                                                       << endl
+       << Form("dx sig p fac: %f", get_dxSigpFac())                                                                                       << endl
+       << Form("dy sig n fac: %f", get_dySignFac())                                                                                       << endl
+       << Form("dy sig p fac: %f", get_dySigpFac())                                                                                       << endl
+       << Form("dy sig cut fac: %f",get_dySigCutFac())                                                                                    << endl
+       << Form("W2 fit max: %f", getW2FitMax())                                                                                           << endl
+       << Form("binfac: %f",getBinFac())                                                                                                  << endl
+       << Form("hbinfac: %f",getHBinFac())                                                                                                << endl
+       << Form("Coin Mean: %f",getCoinMean())                                                                                             << endl
+       << Form("Coin Sig Fac: %f",getCoinSigFac())                                                                                        << endl
+       << Form("Coin Sigma: %f",getCoinSig())                                                                                             << endl
+       << Form("HCal E min: %f",getHCaleMin())                                                                                            << endl
        << "-------------------------------------------------------------------------------------------------------------------------------------------------"        << endl;
   }
 

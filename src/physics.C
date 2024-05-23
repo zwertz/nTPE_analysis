@@ -123,11 +123,11 @@ namespace physics{
  TLorentzVector ptarg;
  
  	//LH2 or protons
- 	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
- 	if(target == "LH2" || target == "p" || target == "Dummy"){
+ 	if(target == "LH2" || target == "p"){
 	ptarg.SetPxPyPzE(0,0,0,physics_constants::M_p);
 	//LD2
-	}else if(target == "LD2" || target == "np"){
+	//For Quasi-elastic scattering dummy should be like deuterium
+	}else if(target == "LD2" || target == "np"|| target == "Dummy"){
 	ptarg.SetPxPyPzE(0,0,0,0.5*(physics_constants::M_p+physics_constants::M_n));
 	//just neutrons
 	}else if(target == "n"){
@@ -163,11 +163,11 @@ namespace physics{
  double pcentral;
  double ebeam = pbeam.E();
 	//LH2 or proton
-	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
-	if(target == "LH2" || target == "p" || target == "Dummy"){
+	if(target == "LH2" || target == "p"){
 	pcentral = ebeam/(1.0 + (ebeam/physics_constants::M_p)*(1.0 - cos(etheta))); 
         //LD2 
-	}else if(target == "LD2" || target == "np"){
+        //For Quasi-elastic scattering dummy would be like deuterium
+	}else if(target == "LD2" || target == "np"|| target == "Dummy"){
 	double Nmass = 0.5*(physics_constants::M_p+physics_constants::M_n);
         pcentral = ebeam/(1.0 + (ebeam/Nmass)*(1.0 - cos(etheta)));
         //neutron
@@ -250,11 +250,11 @@ namespace physics{
  double get_pNexp(double nu,TString target){
  double p_N_exp;
  	 //LH2
- 	 //For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
-	 if(target == "LH2" || target == "Dummy"){
+	 if(target == "LH2"){
          p_N_exp = sqrt(pow(nu,2) + 2.0 * physics_constants::M_p * nu);
          //LD2
-	 }else if(target == "LD2"){
+         //For Quasi-elastic scattering Dummy should be like deutreium
+	 }else if(target == "LD2"||target == "Dummy"){
          double Nmass = 0.5*(physics_constants::M_p+physics_constants::M_n);
          p_N_exp = sqrt(pow(nu,2) + 2.0 * Nmass * nu);
          }else{
@@ -285,11 +285,11 @@ namespace physics{
  double getW2(TLorentzVector pbeam,TLorentzVector p_eprime, double Q2, TString target){
  double W2;
 	//LH2
-	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
-	if(target == "LH2" || target == "Dummy"){
+	if(target == "LH2" ){
 	W2 = pow(physics_constants::M_p,2)+2.0*physics_constants::M_p*(pbeam.E() - p_eprime.E())-Q2;
 	//LD2
-	}else if(target == "LD2"){
+	//For Quasi-elastic scattering dummy should be like deuterium
+	}else if(target == "LD2"|| target == "Dummy"){
         double Nmass = 0.5*(physics_constants::M_p+physics_constants::M_n);
         W2 = pow(Nmass,2)+2.0*Nmass*(pbeam.E() - p_eprime.E())-Q2;
         }else{
@@ -412,11 +412,11 @@ namespace physics{
  double tau; 
  
  	//LH2 or protons
- 	//For now pretend like in the Dummy data we are just knocking out a proton. Not sure if this is correct. Need to check
-	if(target == "LH2" || target == "p" || target == "Dummy"){
+	if(target == "LH2" || target == "p" ){
 	tau = Q2/(4*pow(physics_constants::M_p,2));
  	//LD2
- 	}else if(target == "LD2" || target == "np"){
+ 	//For Quasi-elastic scattering dummy should be like deuterium
+ 	}else if(target == "LD2" || target == "np"|| target == "Dummy"){
 	tau = Q2/(4*pow(0.5*(physics_constants::M_p + physics_constants::M_n),2));
  	//just neutrons
  	}else if(target == "n"){

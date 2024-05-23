@@ -389,7 +389,7 @@ return resid_hist;
 }
 
 //Make a histogram with a subtracted backgroud based on a fit.
-TH1D* subtractBG(TH1D* hist, TF1* bgFit){
+TH1D* subtractBG(TH1D* hist, TF1* bgFit, double fit_error){
 double totentries = hist->GetEntries();
 
 int hist_Nbins = hist->GetNbinsX();
@@ -406,14 +406,55 @@ TH1D* hist_sub = new TH1D(Form("hist_sub: %s and %s",hist_name.Data(),fit_name.D
 	double newValue = hist->GetBinContent(bin) - bgValue;
 	//Might need to actually add this in quadrature, currently just keeping old hist bin error
 	double histError = hist->GetBinError(bin);
-	
+	double bgError = fit_error;
+
+	double newError = sqrt(pow(histError,2) + pow(bgError,2));
 
 	hist_sub->SetBinContent(bin, newValue);
-	hist_sub->SetBinError(bin,histError);
+	hist_sub->SetBinError(bin,newError);
 	}
 
 hist_sub->SetEntries(totentries);
 return hist_sub;
+}
+
+//Make a histogram, subtract hist2 from hist2
+TH1D* subtractHist(TH1D* hist1,TH1D* hist2){
+
+//Get some info about histo1
+TString hist1_name = hist1->GetName();
+int hist1_Nbins = hist1->GetNbinsX();
+double hist1_minX = hist1->GetXaxis()->GetXmin();
+double hist1_maxX = hist1->GetXaxis()->GetXmax();
+
+//Get some info about histo2
+TString hist2_name = hist2->GetName();
+int hist2_Nbins = hist2->GetNbinsX();
+double hist2_minX = hist2->GetXaxis()->GetXmin();
+double hist2_maxX = hist2->GetXaxis()->GetXmax();
+
+TH1D* sub_hist = new TH1D(Form("Histogram with Errors, %s - %s",hist1_name.Data(),hist2_name.Data()),Form("Histogram with Errors, %s - %s",hist1_name.Data(),hist2_name.Data()),hist1_Nbins,hist1_minX,hist1_maxX);
+
+        //go bin by bin starting from 1 and populate the residual histogram
+	for(int bin = 1;bin<=hist1_Nbins; bin++ ){
+        //hist1 info
+	double value1 = hist1->GetBinContent(bin);
+        double error1 = hist1->GetBinError(bin);
+
+        //hist2 info
+	double value2 = hist2->GetBinContent(bin);
+        double error2 = hist2->GetBinError(bin);
+
+        //calculate subtraction
+	double residual = value1-value2;
+        double res_error = sqrt(pow(error1,2) + pow(error2,2));
+
+        sub_hist->SetBinContent(bin,residual);
+        sub_hist->SetBinError(bin,res_error);
+
+        }
+
+return sub_hist;
 }
 
 //Make a canvas that displays the Data and MC dx plot being compared along with background from a 4th order polynomial. Display relevant yield and ratio information
@@ -522,37 +563,44 @@ TH1D* sumHist = new TH1D("sumHist1","dx for both MC protons and neutrons",hdx_mc
 
 sumHist->Add(hdx_mc_p,hdx_mc_n);
 
-TH1D* hdx_data_bgsub = plots::subtractBG(hdx_data,bg);
+//TH1D* hdx_data_bgsub = plots::subtractBG(hdx_data,bg);
+TH1D* hdx_bg = plots::subtractHist(hdx_data,sumHist);
+
 
 //Make the residual plot
-TH1D* residual = plots::makeResidualWithError("dx",hdx_data_bgsub,sumHist,true, false);
+//TH1D* residual = plots::makeResidualWithError("dx",hdx_data_bgsub,sumHist,true, false);
 TH1D* residual_fit = plots::makeResidualWithError("dx_fit",hdx_data,fit);
-
-residual->SetTitle("");
-residual->GetXaxis()->SetRangeUser(hcalfit_low,hcalfit_high);
-residual->SetLineColor(kBlue+2);
-residual->SetLineWidth(2);
-residual->SetStats(0);
-residual->GetYaxis()->SetTitle("Residuals");
-residual->GetYaxis()->SetTitleSize(0.07);
-residual->GetYaxis()->SetTitleOffset(0.5);
-residual->GetYaxis()->SetLabelSize(0.07);
+TH1D* residual_bg = plots::makeResidualWithError("bg_res",hdx_bg,bg);
+residual_fit->SetTitle("");
+residual_fit->GetXaxis()->SetRangeUser(hcalfit_low,hcalfit_high);
+//residual->SetLineColor(kBlue+2);
+//residual->SetLineWidth(2);
+residual_fit->SetStats(0);
+residual_fit->GetYaxis()->SetTitle("Residuals");
+residual_fit->GetYaxis()->SetTitleSize(0.07);
+residual_fit->GetYaxis()->SetTitleOffset(0.5);
+residual_fit->GetYaxis()->SetLabelSize(0.07);
 residual_fit->SetLineColor(kOrange-3);
 residual_fit->SetLineWidth(2);
 residual_fit->SetStats(0);
+residual_bg->SetLineColor(kCyan+1);
+residual_bg->SetLineWidth(2);
+residual_bg->SetStats(0);
 
 //Make a legend to hold all the information we care about
 TLegend* legend_res = new TLegend(0.8, 0.75, 0.9, 1.0);
-legend_res->AddEntry(residual,"Data-MC combine","l");
+//legend_res->AddEntry(residual,"Data-MC combine","l");
 legend_res->AddEntry(residual_fit,"Data-Total Fit","l");
+legend_res->AddEntry(residual_bg,"(Data-MC combine) - BG","l");
 
 //Draw the residual on the second pad
 pad2->cd();
-residual->Draw("hist");
-residual_fit->Draw("hist same");
+//residual->Draw("hist");
+residual_fit->Draw("E hist");
+residual_bg->Draw("E hist same");
 legend_res->Draw("same");
 //Draw a line at y=0 just for better reading of the residual
-TF1* zeroLine = new TF1("zeroLine","0",residual->GetXaxis()->GetXmin(),residual->GetXaxis()->GetXmax());
+TF1* zeroLine = new TF1("zeroLine","0",residual_fit->GetXaxis()->GetXmin(),residual_fit->GetXaxis()->GetXmax());
 zeroLine->SetLineColor(kBlack);
 zeroLine->SetLineStyle(2);
 zeroLine->Draw("same");
@@ -681,8 +729,8 @@ legend_res->AddEntry(residual_fit,"Data-Total Fit","l");
 
 //Draw the residual on the second pad
 pad2->cd();
-residual->Draw("hist");
-residual_fit->Draw("hist same");
+residual->Draw("E hist");
+residual_fit->Draw("E hist same");
 legend_res->Draw("same");
 
 //Draw a line at y=0 just for better reading of the residual

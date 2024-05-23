@@ -56,6 +56,8 @@ histogram->Fit(datFineFit,fitOptions.c_str());
 	for(int k=0; k<paramCount; ++k){
 	paramsAndErrs[k].first = datFineFit->GetParameter(k);
         paramsAndErrs[k].second = datFineFit->GetParError(k);
+	//Diagnostic
+	cout << datFineFit->GetParameter(k) << endl;
 	}
 
 //don't like these lines because it kind of circumvents the idea of a return
@@ -63,13 +65,47 @@ histogram->Fit(datFineFit,fitOptions.c_str());
 fitqual.first = datFineFit->GetChisquare();
 fitqual.second = datFineFit->GetNDF();
 
+
+
 //cleanup
 delete datFit;
 delete datFineFit;
 return paramsAndErrs;	
 }
 
+//Get the variance on a fit from the quadrature sum of the parameter errors
+double getFitError(TF1* fit){
+double SumSquare = 0.0;
 
+	//loop over the array of parameter errors. Square them and then add that to the sum of squares
+	for(int i=0; i < fit->GetNpar();i++ ){
+	double ParError = fit->GetParError(i);
+	cout << "Par Error: "<< i << " " << ParError << endl;
+	SumSquare += ParError*ParError;
+	}
+	//As of here SumSquare should be the Param Errors Squared then Summed
+	//Just take the Square root of SumSquare to get Quad Sum
+	double QuadSum = sqrt(SumSquare);
+return QuadSum;
+}
 
+//Assume the input fit ptr is for the total fit
+//Get the variance on a fit from the quadrature sum of the diagonal entries. Which the diagonal entries should be the variance on each parameter.
+double getFitError(TFitResultPtr fit_ptr){
+TMatrixD fit_covariance = fit_ptr->GetCovarianceMatrix();
+TMatrixD bg_mat = fit_covariance.GetSub(4,8,4,8);
+TVectorD diagonal = TMatrixDDiag(bg_mat);
+double SumSquare = 0.0;
+	
+	//loop over the elements of the vector. Sum the variances
+	for(int j=0; j < diagonal.GetNrows();j++){
+	double value = diagonal[j];
+	cout << "Error from Covariance Matrix: " << j << " " << value << endl;
+	SumSquare += value;
+	}
+
+	double QuadSum =sqrt(SumSquare);
+return QuadSum;
+}
 
 }//end namepspace
