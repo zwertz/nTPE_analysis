@@ -43,5 +43,8 @@ TCanvas* plotDataMCFitsResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,
 //Make a canvas that displays the Data and MC dx plot being compared. With background already subtracked. Display relevant yield and ratio information
 TCanvas* plotDataMCFitsResiduals_NoBG(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit);
 
+//Function to plot the background histogram with corresponding fit function. Then a residual between the fit and histogram.
+TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit);
+
 }//end namespace
 #endif

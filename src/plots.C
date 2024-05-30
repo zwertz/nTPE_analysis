@@ -420,7 +420,7 @@ return hist_sub;
 
 //Make a histogram, subtract hist2 from hist2
 TH1D* subtractHist(TH1D* hist1,TH1D* hist2){
-
+double totentries= hist1->GetEntries() - hist2->GetEntries();
 //Get some info about histo1
 TString hist1_name = hist1->GetName();
 int hist1_Nbins = hist1->GetNbinsX();
@@ -453,7 +453,7 @@ TH1D* sub_hist = new TH1D(Form("Histogram with Errors, %s - %s",hist1_name.Data(
         sub_hist->SetBinError(bin,res_error);
 
         }
-
+sub_hist->SetEntries(totentries);
 return sub_hist;
 }
 
@@ -475,13 +475,13 @@ TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitN
 //create two pads on the canvas
 TPad *pad1 = new TPad("pad1", "Pad with the fit", 0.0, 0.3, 1.0, 1.0);
 TPad *pad2 = new TPad("pad2", "Pad with the residuals", 0.0, 0.0, 1.0, 0.3);
+pad1->Draw();
+pad2->Draw();
 
 //Draw the pads and set the margins
 pad1->SetBottomMargin(0.1); // Upper and lower plot are not joined
 pad2->SetTopMargin(0);
 pad2->SetBottomMargin(0.2);
-pad1->Draw();
-pad2->Draw();
 
 //Draw the histogram with fits on the first pad
 pad1->cd();
@@ -544,7 +544,7 @@ double np_sum_ratio_error = np_sum_ratio * sqrt(pow(n_sum_error/n_sum,2) + pow(p
 double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
 
 //Make a legend to hold all the information we care about
-TLegend* legend = new TLegend(0.68, 0.5, 0.9, 0.9);
+TLegend* legend = new TLegend(0.6, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
 legend->AddEntry(bg,"Background","l");
@@ -555,24 +555,19 @@ legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.3f #pm %0.3f",np_
 legend->AddEntry((TObject*)0,Form("n/p yield ratio R'' : %0.3f #pm %0.3f",np_sum_ratio,np_sum_ratio_error),"");
 legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",params[3].first,params[2].first),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
+legend->SetTextSize(0.03);
 legend->Draw("same");
-
-//Residual plot
-//Add the two MC histograms together for direct comparison
-TH1D* sumHist = new TH1D("sumHist1","dx for both MC protons and neutrons",hdx_mc_p->GetNbinsX(),hdx_mc_p->GetXaxis()->GetXmin(),hdx_mc_p->GetXaxis()->GetXmax());
-
-sumHist->Add(hdx_mc_p,hdx_mc_n);
-
-//TH1D* hdx_data_bgsub = plots::subtractBG(hdx_data,bg);
-TH1D* hdx_bg = plots::subtractHist(hdx_data,sumHist);
-
 
 //Make the residual plot
 //TH1D* residual = plots::makeResidualWithError("dx",hdx_data_bgsub,sumHist,true, false);
 TH1D* residual_fit = plots::makeResidualWithError("dx_fit",hdx_data,fit);
-TH1D* residual_bg = plots::makeResidualWithError("bg_res",hdx_bg,bg);
+TString residual_fit_name = residual_fit->GetName();
 residual_fit->SetTitle("");
 residual_fit->GetXaxis()->SetRangeUser(hcalfit_low,hcalfit_high);
+double maxRange1 = residual_fit->GetMaximum();
+
+double maxRange = 1.5*maxRange1;
+residual_fit->GetYaxis()->SetRangeUser(-maxRange,maxRange);
 //residual->SetLineColor(kBlue+2);
 //residual->SetLineWidth(2);
 residual_fit->SetStats(0);
@@ -581,23 +576,18 @@ residual_fit->GetYaxis()->SetTitleSize(0.07);
 residual_fit->GetYaxis()->SetTitleOffset(0.5);
 residual_fit->GetYaxis()->SetLabelSize(0.07);
 residual_fit->SetLineColor(kOrange-3);
-residual_fit->SetLineWidth(2);
-residual_fit->SetStats(0);
-residual_bg->SetLineColor(kCyan+1);
-residual_bg->SetLineWidth(2);
-residual_bg->SetStats(0);
+residual_fit->SetLineWidth(1);
 
 //Make a legend to hold all the information we care about
-TLegend* legend_res = new TLegend(0.8, 0.75, 0.9, 1.0);
+TLegend* legend_res = new TLegend(0.75, 0.8, 0.9, 1.0);
 //legend_res->AddEntry(residual,"Data-MC combine","l");
 legend_res->AddEntry(residual_fit,"Data-Total Fit","l");
-legend_res->AddEntry(residual_bg,"(Data-MC combine) - BG","l");
-
 //Draw the residual on the second pad
 pad2->cd();
 //residual->Draw("hist");
-residual_fit->Draw("E hist");
-residual_bg->Draw("E hist same");
+gStyle->SetErrorX(0);
+residual_fit->Draw("hist E1");
+legend_res->SetTextSize(0.075);
 legend_res->Draw("same");
 //Draw a line at y=0 just for better reading of the residual
 TF1* zeroLine = new TF1("zeroLine","0",residual_fit->GetXaxis()->GetXmin(),residual_fit->GetXaxis()->GetXmax());
@@ -611,7 +601,7 @@ return myTotCan;
 
 //Make a canvas that displays the Data and MC dx plot being compared. With background already subtracked. Display relevant yield and ratio information
 TCanvas* plotDataMCFitsResiduals_NoBG(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit){
-//Recreate the fit
+	
 TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
         //file the fit with the parameters
 	for(int i=0; i < params.size();++i){
@@ -689,7 +679,7 @@ double np_sum_ratio_error = np_sum_ratio * sqrt(pow(n_sum_error/n_sum,2) + pow(p
 double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
 
 //Make a legend to hold all the information we care about
-TLegend* legend = new TLegend(0.68, 0.5, 0.9, 0.9);
+TLegend* legend = new TLegend(0.6, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
 legend->AddEntry(hdx_mc_p,"Proton SIMC MC","l");
@@ -699,42 +689,42 @@ legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.3f #pm %0.3f",np_
 legend->AddEntry((TObject*)0,Form("n/p yield ratio R'' : %0.3f #pm %0.3f",np_sum_ratio,np_sum_ratio_error),"");
 legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",params[3].first,params[2].first),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
+legend->SetTextSize(0.03);
 legend->Draw("same");
 
 //Residual plot
 //Add the two MC histograms together for direct comparison
-TH1D* sumHist = new TH1D("sumHist2","dx for both MC protons and neutrons",hdx_mc_p->GetNbinsX(),hdx_mc_p->GetXaxis()->GetXmin(),hdx_mc_p->GetXaxis()->GetXmax());
+//TH1D* sumHist = new TH1D("sumHist2","dx for both MC protons and neutrons",hdx_mc_p->GetNbinsX(),hdx_mc_p->GetXaxis()->GetXmin(),hdx_mc_p->GetXaxis()->GetXmax());
 
-sumHist->Add(hdx_mc_p,hdx_mc_n);
-TH1D* residual = plots::makeResidualWithError("dx",hdx_data,sumHist,true, false);
+//sumHist->Add(hdx_mc_p,hdx_mc_n);
 TH1D* residual_fit = plots::makeResidualWithError("dx_fit",hdx_data,fit);
 
-residual->SetTitle("");
-residual->GetXaxis()->SetRangeUser(hcalfit_low,hcalfit_high);
-residual->SetLineColor(kBlue+2);
-residual->SetLineWidth(2);
-residual->SetStats(0);
-residual->GetYaxis()->SetTitle("Residuals");
-residual->GetYaxis()->SetTitleSize(0.07);
-residual->GetYaxis()->SetTitleOffset(0.5);
-residual->GetYaxis()->SetLabelSize(0.07);
+residual_fit->SetTitle("");
+residual_fit->GetXaxis()->SetRangeUser(hcalfit_low,hcalfit_high);
+double maxRange1 = residual_fit->GetMaximum();
+double maxRange = 1.5*maxRange1;
+residual_fit->GetYaxis()->SetRangeUser(-maxRange,maxRange);
+
+residual_fit->GetYaxis()->SetTitle("Residuals");
+residual_fit->GetYaxis()->SetTitleSize(0.07);
+residual_fit->GetYaxis()->SetTitleOffset(0.5);
+residual_fit->GetYaxis()->SetLabelSize(0.07);
 residual_fit->SetLineColor(kOrange-3);
-residual_fit->SetLineWidth(2);
+residual_fit->SetLineWidth(1);
 residual_fit->SetStats(0);
 
 //Make a legend to hold all the information we care about
-TLegend* legend_res = new TLegend(0.8, 0.75, 0.9, 1.0);
-legend_res->AddEntry(residual,"Data-MC combine","l");
+TLegend* legend_res = new TLegend(0.75, 0.8, 0.9, 1.0);
 legend_res->AddEntry(residual_fit,"Data-Total Fit","l");
 
 //Draw the residual on the second pad
 pad2->cd();
-residual->Draw("E hist");
-residual_fit->Draw("E hist same");
+residual_fit->Draw("E1 hist");
+legend_res->SetTextSize(0.075);
 legend_res->Draw("same");
 
 //Draw a line at y=0 just for better reading of the residual
-TF1* zeroLine = new TF1("zeroLine","0",residual->GetXaxis()->GetXmin(),residual->GetXaxis()->GetXmax());
+TF1* zeroLine = new TF1("zeroLine","0",residual_fit->GetXaxis()->GetXmin(),residual_fit->GetXaxis()->GetXmax());
 zeroLine->SetLineColor(kBlack);
 zeroLine->SetLineStyle(2);
 zeroLine->Draw("same");
@@ -742,7 +732,91 @@ zeroLine->Draw("same");
 return myTotCan;
 
 }
+//Function to plot the background histogram with corresponding fit function. Then a residual between the fit and histogram.
+TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit){
+
+//Create a canvas we will use to store information
+TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName),1600,1200);
+//create two pads on the canvas
+TPad *pad1 = new TPad("pad1", "Pad with the fit", 0.0, 0.3, 1.0, 1.0);
+TPad *pad2 = new TPad("pad2", "Pad with the residuals", 0.0, 0.0, 1.0, 0.3);
+
+//Draw the pads and set the margins
+pad1->SetBottomMargin(0.1); // Upper and lower plot are not joined
+pad2->SetTopMargin(0);
+pad2->SetBottomMargin(0.2);
+pad1->Draw();
+pad2->Draw();
+
+//proton MC dx
+	if(shiftfit){
+        hdx_mc_p = plots::shiftHistogramX(hdx_mc_p,params[2].first);
+        }
+hdx_mc_p->Scale(params[0].first);
+//neutron MC dx
+	if(shiftfit){
+        hdx_mc_n = plots::shiftHistogramX(hdx_mc_n,params[3].first);
+        }
+hdx_mc_n->Scale(params[1].first);
+
+//Add the two MC histograms together for direct comparison
+TH1D* sumHist = new TH1D("sumHist1","dx for both MC protons and neutrons",hdx_mc_p->GetNbinsX(),hdx_mc_p->GetXaxis()->GetXmin(),hdx_mc_p->GetXaxis()->GetXmax());
+sumHist->Add(hdx_mc_p,hdx_mc_n);
+//Subtract the MC info from data to get hist that looks like background
+TH1D* hdx_bg = plots::subtractHist(hdx_data,sumHist);
+
+//Draw the histogram with fits on the first pad
+pad1->cd();
+hdx_bg->SetLineColor(kBlack);
+hdx_bg->SetLineWidth(1);
+hdx_bg->SetTitle(Form("dx BG, %s;m",fitName));
+hdx_bg->SetStats(0);
+hdx_bg->Draw("hist");
+
+bg->SetLineColor(kGreen);
+bg->SetLineWidth(2);
+bg->Draw("same");
+
+//Make a legend to hold all the information we care about
+TLegend* legend = new TLegend(0.8, 0.8, 0.9, 0.9);
+legend->AddEntry(hdx_bg,"BG Hist","l");
+legend->AddEntry(bg, "BG Fit","l");
+legend->SetTextSize(0.04);
+legend->Draw("same");
+
+//Draw the residual on the second pad
+pad2->cd();
+
+TH1D* residual_fit = plots::makeResidualWithError("dx_bg_resid",hdx_bg,bg);
+residual_fit->SetTitle("");
+residual_fit->GetXaxis()->SetRangeUser(hcalfit_low,hcalfit_high);
+double maxRange1 = residual_fit->GetMaximum();
+double maxRange = 1.75*maxRange1;
+residual_fit->GetYaxis()->SetRangeUser(-maxRange,maxRange);
+
+residual_fit->GetYaxis()->SetTitle("Residuals");
+residual_fit->GetYaxis()->SetTitleSize(0.07);
+residual_fit->GetYaxis()->SetTitleOffset(0.5);
+residual_fit->GetYaxis()->SetLabelSize(0.07);
+residual_fit->SetLineColor(kBlue+2);
+residual_fit->SetLineWidth(1);
+residual_fit->SetStats(0);
+
+TLegend* legend_res = new TLegend(0.75, 0.8, 0.9, 1.0);
+legend_res->AddEntry(residual_fit,"BGHist-BG Fit","l");
+
+residual_fit->Draw("E1 hist");
+legend_res->SetTextSize(0.075);
+legend_res->Draw("same");
+
+//Draw a line at y=0 just for better reading of the residual
+TF1* zeroLine = new TF1("zeroLine","0",residual_fit->GetXaxis()->GetXmin(),residual_fit->GetXaxis()->GetXmax());
+zeroLine->SetLineColor(kBlack);
+zeroLine->SetLineStyle(2);
+zeroLine->Draw("same");
 
 
+return myTotCan;
+}
 
 }//end namespace

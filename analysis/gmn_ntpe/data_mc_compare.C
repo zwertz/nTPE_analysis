@@ -128,6 +128,8 @@ TH1D *hdx_data_clone = (TH1D*)(hdx_data->Clone("dx_data_clone"));
 
 TH1D *hdx_data_clone_bg = (TH1D*)(hdx_data->Clone("dx_data_clone_bg"));
 
+TH1D *hdx_data_bg = (TH1D*)(hdx_data->Clone("dx_data_bg"));
+
 TH1D *hdx_p_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_clone"));
 
 TH1D *hdx_n_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_clone"));
@@ -146,6 +148,13 @@ TF1 *bg_shiftFit = new TF1("bg_shiftFit",fits::poly4_fit,hcalfit_low,hcalfit_hig
 	bg_shiftFit->SetParameter(j,shiftpar_vec[j+4].first);
 	bg_shiftFit->SetParError(j,shiftpar_vec[j+4].second);
 	}
+//Make background function clone
+TF1 *bg_shiftFit_clone = new TF1("bg_shiftFit_clone",fits::poly4_fit,hcalfit_low,hcalfit_high,5);
+//set the background parameters
+ 	for(int j=0; j<5; ++j ){
+        bg_shiftFit_clone->SetParameter(j,shiftpar_vec[j+4].first);
+        bg_shiftFit_clone->SetParError(j,shiftpar_vec[j+4].second);
+        }
 
 TF1 *total_fit_bg_error = new TF1("total_fit_bg_error",fitType,hcalfit_low,hcalfit_high,9);
 TFitResultPtr totfit_ptr = hdx_data_fit_error->Fit(total_fit_bg_error,"QS");
@@ -174,6 +183,8 @@ auto shiftpar_nobg_vec = fits::fitAndFineFit(hdx_data_nobg,"shiftFitNoBG",fitTyp
 //make canvas to show data and MC compare plot. For background subtracted version
 TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_n_clone,"c2","shiftfit BG subtracted",fitType_nobg,shiftpar_nobg_vec,shiftQual_nobg,hcalfit_low,hcalfit_high,true);
 
+TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg,hdx_p_clone,hdx_n_clone,bg_shiftFit_clone,"c3","poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
+
 //Write stuff to a pdf
 TString plotname = outfile;
 plotname.ReplaceAll(".root",".pdf");
@@ -182,7 +193,8 @@ TString start = Form("%s%s",plotname.Data(),"(");
 TString end = Form("%s%s",plotname.Data(),")");  
 
 c0->Print(start.Data(),"pdf");
-c2->Print(end.Data(),"pdf");
+c2->Print(plotname.Data(),"pdf");
+c3->Print(end.Data(),"pdf");
 
 fout->Write();
 
