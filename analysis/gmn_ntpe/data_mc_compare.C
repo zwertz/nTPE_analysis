@@ -15,6 +15,8 @@
 //Histograms needed for interpolation of elastic signal
 TH1D* hdx_p;
 TH1D* hdx_n;
+TH1D* hdx_p_nofid;
+TH1D* hdx_n_nofid;
 
 
 //This fit function  must sit outside of main and has to be in this file so that way it has some knowledge of the histogram
@@ -57,6 +59,24 @@ double dx_shift_n = param[3];
 //Apply the shifts before any interpolation
 double proton = proton_scale * hdx_p->Interpolate(x[0] - dx_shift_p);
 double neutron = neutron_scale * hdx_n->Interpolate(x[0] - dx_shift_n);
+
+//The total function is the proton and neutron peaks + a 4th order polynomial for background
+double fitFullshift = proton + neutron + fits::poly4_fit(x, &param[4]);
+return fitFullshift;
+}
+
+//Total function for MC + background. Independently shifts the neutron and proton peaks
+double fitFullShiftNoFid(double *x, double *param){
+//MC float parameters
+double proton_scale = param[0];
+double neutron_scale = param[1];
+
+double dx_shift_p = param[2];
+double dx_shift_n = param[3];
+
+//Apply the shifts before any interpolation
+double proton = proton_scale * hdx_p_nofid->Interpolate(x[0] - dx_shift_p);
+double neutron = neutron_scale * hdx_n_nofid->Interpolate(x[0] - dx_shift_n);
 
 //The total function is the proton and neutron peaks + a 4th order polynomial for background
 double fitFullshift = proton + neutron + fits::poly4_fit(x, &param[4]);
@@ -123,6 +143,13 @@ hdx_p = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_p")); //the MC dx histrogram fo
 
 hdx_n = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_n")); //the MC dx histrogram for neutrons with all cuts
 
+TH1D *hdx_data_nofid = dynamic_cast<TH1D*>(data_file->Get("dx_cut_nofid")); //The data dx histogram with all cuts but fid
+
+hdx_p_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_p")); //the MC dx histrogram for protons with all cuts but fid
+
+hdx_n_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_n")); //the MC dx histrogram for neutrons with all cuts but fid
+
+
 //Histogram clones for this analysis
 TH1D *hdx_data_clone = (TH1D*)(hdx_data->Clone("dx_data_clone"));
 
@@ -134,12 +161,23 @@ TH1D *hdx_p_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_clone"));
 
 TH1D *hdx_n_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_clone"));
 
+TH1D *hdx_p_nofid_clone = (TH1D*)(hdx_p_nofid->Clone("dx_mc_p_nofid_clone"));
+
+TH1D *hdx_n_nofid_clone = (TH1D*)(hdx_n_nofid->Clone("dx_mc_n_nofid_clone"));
+
 TH1D *hdx_data_fit_error = (TH1D*)(hdx_data->Clone("dx_data_fit_error"));
+
+TH1D *hdx_data_nofid_clone = (TH1D*)(hdx_data_nofid->Clone("dx_data_nofid_clone"));
 
 //do some fitting and get the fit parameters, Error, ChiSquare, and NDF from the fit. This function is not perfect as it returns the parameter and Error pair vector and updates the pair to hold the ChiSquare and NDF. Better way to code this would be a structure that holds all of that information. 
 pair<double,double> shiftQual;
 const char* fitType = "fitFullShift";
 auto shiftpar_vec = fits::fitAndFineFit(hdx_data_clone,"shiftFit",fitType,9,hcalfit_low,hcalfit_high,shiftQual,fitopt.Data());
+
+//fit parameters for dx plot without fid cut. A check essentially
+pair<double,double> shiftQual_nofid;
+const char* fitType_nofid = "fitFullShiftNoFid";
+auto shiftpar_vec_nofid = fits::fitAndFineFit(hdx_data_nofid_clone,"shiftFit_nofid",fitType_nofid,9,hcalfit_low,hcalfit_high,shiftQual_nofid,fitopt.Data());
 
 //Make background functions
 TF1 *bg_shiftFit = new TF1("bg_shiftFit",fits::poly4_fit,hcalfit_low,hcalfit_high,5);
@@ -164,6 +202,13 @@ TFitResultPtr totfit_ptr = hdx_data_fit_error->Fit(total_fit_bg_error,"QS");
 	total_fit_bg_error->SetParError(k,shiftpar_vec[k].second);
 	}
 
+//background for the nofid plot
+TF1 *bg_shiftFit_nofid = new TF1("bg_shiftFit_nofid",fits::poly4_fit,hcalfit_low,hcalfit_high,5);
+	for(int j=0; j<5; ++j ){
+        bg_shiftFit_nofid->SetParameter(j,shiftpar_vec_nofid[j+4].first);
+        bg_shiftFit_nofid->SetParError(j,shiftpar_vec_nofid[j+4].second);
+        }
+
 //make canvas to show data and MC compare plot
 TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
 
@@ -185,6 +230,11 @@ TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_
 
 TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg,hdx_p_clone,hdx_n_clone,bg_shiftFit_clone,"c3","poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
 
+//Canvas for no fid
+TCanvas* c4 = plots::plotDataMCFitsResiduals(hdx_data_nofid_clone,hdx_p_nofid_clone,hdx_n_nofid_clone,bg_shiftFit_nofid,"c4","shiftfit poly4 BG nofid",fitType_nofid,shiftpar_vec_nofid,shiftQual_nofid,hcalfit_low,hcalfit_high,true);
+
+
+
 //Write stuff to a pdf
 TString plotname = outfile;
 plotname.ReplaceAll(".root",".pdf");
@@ -194,7 +244,8 @@ TString end = Form("%s%s",plotname.Data(),")");
 
 c0->Print(start.Data(),"pdf");
 c2->Print(plotname.Data(),"pdf");
-c3->Print(end.Data(),"pdf");
+c3->Print(plotname.Data(),"pdf");
+c4->Print(end.Data(),"pdf");
 
 fout->Write();
 

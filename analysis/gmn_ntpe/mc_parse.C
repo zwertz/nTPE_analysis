@@ -238,9 +238,11 @@ int nFiles = 0;
 
   TH1D *hdx_globcut_p = new TH1D( "dx_globcut_p","HCal dx proton, global cut; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_cut_p = new TH1D( "dx_cut_p","HCal dx proton, all cuts; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
-  
+  TH1D *hdx_cut_nofid_p = new TH1D( "dx_cut_nofid_p","HCal dx proton, all cuts but fiducial; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+
   TH1D *hdx_globcut_n = new TH1D( "dx_globcut_n","HCal dx neutron, global cut; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_cut_n = new TH1D( "dx_cut_n","HCal dx neutron, all cuts; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hdx_cut_nofid_n = new TH1D( "dx_cut_nofid_n","HCal dx neutron, all cuts but fiducial; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
 
   TH1D *hdy_nocut = new TH1D( "dy_nocut", "HCal dy (m), no cuts; m", 250, dy_low, dy_high );
   TH1D *hdy_globcut = new TH1D( "dy_globcut", "HCal dy (m), global cut; m", 250, dy_low, dy_high );
@@ -977,11 +979,19 @@ int nFiles = 0;
 				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && good_dy ){
        				hdxdy_nofid->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
         			hdx_cut_nofid->Fill(dx_bestclus,final_mc_weight);
-                		hdy_cut_nofid->Fill(dy_bestclus);
+                		hdy_cut_nofid->Fill(dy_bestclus,final_mc_weight);
+				
+					if(nuc == "p"){
+                                        hdx_cut_nofid_p->Fill(dx_bestclus,final_mc_weight);
+                                        }
+                                        if(nuc == "n"){
+                                        hdx_cut_nofid_n->Fill(dx_bestclus,final_mc_weight);
+                                        }
+
 					if(!passFid){
                 			hdx_cut_failfid->Fill(dx_bestclus,final_mc_weight);
-                			}
-        			}
+        				}
+				}
 
 				//all cuts but W2
 				if(!failglobal && passHCalE && passHCal_Nclus && hcalaa_ON  && good_dy && passFid){
