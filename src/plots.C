@@ -389,7 +389,7 @@ return resid_hist;
 }
 
 //Make a histogram with a subtracted backgroud based on a fit.
-TH1D* subtractBG(TH1D* hist, TF1* bgFit, double fit_error){
+TH1D* subtractBG(TH1D* hist, TF1* bgFit, TFitResultPtr fit_ptr){
 double totentries = hist->GetEntries();
 
 int hist_Nbins = hist->GetNbinsX();
@@ -404,9 +404,11 @@ TH1D* hist_sub = new TH1D(Form("hist_sub: %s and %s",hist_name.Data(),fit_name.D
 	for(int bin =1; bin <= hist_Nbins; ++bin){
 	double bgValue = bgFit->Eval(hist->GetXaxis()->GetBinCenter(bin));
 	double newValue = hist->GetBinContent(bin) - bgValue;
-	//Might need to actually add this in quadrature, currently just keeping old hist bin error
+	//Add the errors from the histogram and the fit error in quadrature. See fit error function for details
 	double histError = hist->GetBinError(bin);
-	double bgError = fit_error;
+	double bgError = fits::FitErrorFunc(hist->GetXaxis()->GetBinCenter(bin),fit_ptr);
+
+	//cout << "Error when subtracting BG Hist:" << histError << " Fit: " << bgError << endl;
 
 	double newError = sqrt(pow(histError,2) + pow(bgError,2));
 

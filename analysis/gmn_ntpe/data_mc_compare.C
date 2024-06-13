@@ -212,15 +212,8 @@ TF1 *bg_shiftFit_nofid = new TF1("bg_shiftFit_nofid",fits::poly4_fit,hcalfit_low
 //make canvas to show data and MC compare plot
 TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
 
-
-double bg_error1 = fits::getFitError(bg_shiftFit);
-
-double bg_error2 = fits::getFitError(totfit_ptr);
-
-cout << bg_error1 << " " << bg_error2 << endl;
-
 //Do some fitting and get fit parameters. Do this for the background subtracted histogram
-TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit,bg_error1);
+TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit,totfit_ptr);
 pair<double,double> shiftQual_nobg;
 const char* fitType_nobg = "fitFullShiftNoBG";
 auto shiftpar_nobg_vec = fits::fitAndFineFit(hdx_data_nobg,"shiftFitNoBG",fitType_nobg,4,hcalfit_low,hcalfit_high,shiftQual_nobg,fitopt.Data());

@@ -10,6 +10,7 @@
 #include "../../src/data_object.C"
 #include "../../src/cuts.C"
 #include "../../src/physics.C"
+#include "../../src/fits.C"
 #include "../../src/plots.C"
 
 //Main
