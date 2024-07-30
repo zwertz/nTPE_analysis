@@ -17,7 +17,7 @@ cd /w/halla-scshelf2102/sbs/ewertz/nTPE_analysis/analysis/gmn_ntpe
 
 echo -e "\n Submitting " $script $file "\n"
 
-swif2 add-job -workflow $work_flow -partition production -name elastic_data_parse -cores 1 -disk 15GB -ram 2000MB $script $file
+swif2 add-job -workflow $work_flow -partition production -name elastic_data_parse -cores 1 -disk 12GB -ram 3500MB $script $file
 
 # run the workflow and then print status
 swif2 run $work_flow

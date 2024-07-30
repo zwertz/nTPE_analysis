@@ -32,6 +32,8 @@ TF1* datFit = new TF1(fitName.c_str(),fitFormula.c_str(),hcalfit_low,hcalfit_hig
 	}
 
 //Fit the provided histogram with the fit we have
+datFit->SetParLimits(2,hcalfit_low,hcalfit_high);
+datFit->SetParLimits(3,hcalfit_low,hcalfit_high);
 histogram->Fit(datFit,fitOptions.c_str());
 
 //vector to hold fine fit initial parameters
@@ -41,6 +43,7 @@ vector<double> fineFitParams(paramCount);
 	paramsAndErrs[j].first = datFit->GetParameter(j);
 	paramsAndErrs[j].second = datFit->GetParError(j);
 	fineFitParams[j] = paramsAndErrs[j].first;
+	//cout << datFit->GetParameter(j) << endl;
 	}
 
 //Fine fit to get a better set of parameters

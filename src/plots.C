@@ -460,7 +460,7 @@ return sub_hist;
 }
 
 //Make a canvas that displays the Data and MC dx plot being compared along with background from a 4th order polynomial. Display relevant yield and ratio information
-TCanvas* plotDataMCFitsResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit){
+TCanvas* plotDataMCFitsResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,std::ofstream& report){
 
 //Recreate the fit
 TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
@@ -471,6 +471,13 @@ TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
 	}
 fit->SetChisquare(qual.first);
 fit->SetNDF(qual.second);
+
+//Make clones of the mc histograms
+TH1D *hdx_mc_p_before = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_before"));
+TH1D *hdx_mc_p_after = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_after"));
+
+TH1D *hdx_mc_n_before = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_before"));
+TH1D *hdx_mc_n_after = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_after"));
 
 //Create a canvas we will use to store information
 TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName),1600,1200);
@@ -499,24 +506,37 @@ fit->SetLineWidth(2);
 fit->Draw("same");
 //proton MC dx
 	if(shiftfit){
-	hdx_mc_p = plots::shiftHistogramX(hdx_mc_p,params[2].first);
+	hdx_mc_p_before = plots::shiftHistogramX(hdx_mc_p_before,params[2].first);
+        hdx_mc_p_after = plots::shiftHistogramX(hdx_mc_p_after,params[2].first);
 	}
-hdx_mc_p->Scale(params[0].first);
-hdx_mc_p->SetLineColor(kRed);
-hdx_mc_p->SetFillColorAlpha(kRed-9,0.5);
-hdx_mc_p->SetFillStyle(3001);
-hdx_mc_p->SetLineWidth(2);
-hdx_mc_p->Draw("hist same");
+
+//Yield info and integrals come before scaling to get sigma_n/sigma_p from MC. Need to further scale.
+
+//yield info for protons
+double p_sum_mc_error;
+double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
+
+hdx_mc_p_after->Scale(params[0].first);
+hdx_mc_p_after->SetLineColor(kRed);
+hdx_mc_p_after->SetFillColorAlpha(kRed-9,0.5);
+hdx_mc_p_after->SetFillStyle(3001);
+hdx_mc_p_after->SetLineWidth(2);
+hdx_mc_p_after->Draw("hist same");
 //neutron MC dx
 	if(shiftfit){
-	hdx_mc_n = plots::shiftHistogramX(hdx_mc_n,params[3].first);
+	hdx_mc_n_before = plots::shiftHistogramX(hdx_mc_n_before,params[3].first);
+        hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,params[3].first);
 	}
-hdx_mc_n->Scale(params[1].first);
-hdx_mc_n->SetLineColor(kBlue);
-hdx_mc_n->SetFillColorAlpha(kBlue-9,0.5);
-hdx_mc_n->SetFillStyle(3001);
-hdx_mc_n->SetLineWidth(2);
-hdx_mc_n->Draw("hist same");
+//yield info for neutrons
+double n_sum_mc_error;
+double n_sum_mc = hdx_mc_n_before->IntegralAndError(0,hdx_mc_n_before->GetNbinsX()+1,n_sum_mc_error,"");
+	
+hdx_mc_n_after->Scale(params[1].first);
+hdx_mc_n_after->SetLineColor(kBlue);
+hdx_mc_n_after->SetFillColorAlpha(kBlue-9,0.5);
+hdx_mc_n_after->SetFillStyle(3001);
+hdx_mc_n_after->SetLineWidth(2);
+hdx_mc_n_after->Draw("hist same");
 
 //background function
 bg->SetLineColor(kGreen);
@@ -524,25 +544,32 @@ bg->SetFillColorAlpha(kGreen-9,0.5);
 bg->SetFillStyle(1001);
 bg->Draw("same");
 
-//yield info for protons
-double p_sum_error;
-double p_sum = hdx_mc_p->IntegralAndError(0,hdx_mc_p->GetNbinsX()+1,p_sum_error,"");
 
+//scale info for protons
 double p_scale = params[0].first;
 double p_scale_error = params[0].second;
 
-//yield info for neutrons
-double n_sum_error;
-double n_sum = hdx_mc_n->IntegralAndError(0,hdx_mc_n->GetNbinsX()+1,n_sum_error,"");
-
+//scale info for neutrons
 double n_scale = params[1].first;
 double n_scale_error = params[1].second;
 
+//Yield info and integrals come after scaling to get sigma_n/sigma_p for experiment. Don't need further scale.
+
+//yield info for protons
+double p_sum_exp_error;
+double p_sum_exp = hdx_mc_p_after->IntegralAndError(0,hdx_mc_p_after->GetNbinsX()+1,p_sum_exp_error,"");
+
+//yield info for neutrons
+double n_sum_exp_error;
+double n_sum_exp = hdx_mc_n_after->IntegralAndError(0,hdx_mc_n_after->GetNbinsX()+1,n_sum_exp_error,"");
+
 //get the ratios and the errors
-double np_sum_ratio = n_sum/p_sum;
+double np_sum_mc_ratio = n_sum_mc/p_sum_mc;
+double np_sum_exp_ratio = n_sum_exp/p_sum_exp;
 double np_scale_ratio = n_scale/p_scale;
 
-double np_sum_ratio_error = np_sum_ratio * sqrt(pow(n_sum_error/n_sum,2) + pow(p_sum_error/p_sum,2));
+double np_sum_mc_ratio_error = np_sum_mc_ratio * sqrt(pow(n_sum_mc_error/n_sum_mc,2) + pow(p_sum_mc_error/p_sum_mc,2));
+double np_sum_exp_ratio_error = np_sum_exp_ratio * sqrt(pow(n_sum_exp_error/n_sum_exp,2) + pow(p_sum_exp_error/p_sum_exp,2));
 double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
 
 //Make a legend to hold all the information we care about
@@ -550,11 +577,16 @@ TLegend* legend = new TLegend(0.6, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
 legend->AddEntry(bg,"Background","l");
-legend->AddEntry(hdx_mc_p,"Proton SIMC MC","l");
-legend->AddEntry(hdx_mc_n,"Neutron SIMC MC","l");
+legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","l");
+legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","l");
 legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
 legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.3f #pm %0.3f",np_scale_ratio,np_scale_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("n/p yield ratio R'' : %0.3f #pm %0.3f",np_sum_ratio,np_sum_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
+legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
+legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
+legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
+legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
 legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",params[3].first,params[2].first),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
 legend->SetTextSize(0.03);
@@ -597,13 +629,31 @@ zeroLine->SetLineColor(kBlack);
 zeroLine->SetLineStyle(2);
 zeroLine->Draw("same");
 
+report << "===================================================================" << endl;
+report << "Report Information for " << fitName <<"." << endl;
+report << "Neutron scale factor: " << n_scale << " +/- " << n_scale_error << endl;
+report << "Proton scale factor: " << p_scale << " +/- " << p_scale_error << endl;
+report << "n/p scale ratio: " << np_scale_ratio << " +/- " << np_scale_ratio_error << endl;
+report << "MC neutron yield (before scale): " << n_sum_mc << " +/- " << n_sum_mc_error << endl;
+report << "MC proton  yield (before scale): " << p_sum_mc << " +/- " << p_sum_mc_error << endl;
+report << "MC n/p yield ratio (before scale): " << np_sum_mc_ratio << " +/- " << np_sum_mc_ratio_error << endl;
+report << "Experiment neutron yield (after scale): " << n_sum_exp << " +/- " << n_sum_exp_error << endl;
+report << "Experiment proton yield (after scale): " << p_sum_exp << " +/- " << p_sum_exp_error << endl;
+report << "Experiment n/p yield ratio (after scale): " << np_sum_exp_ratio << " +/- " << np_sum_exp_ratio_error << endl;
+report << "neutron dx shift parameter: " << params[3].first << endl;
+report << "proton dx shift parameter: " << params[2].first << endl;
+report << "Chi^2/ndf: " << fit->GetChisquare() << "/" << fit->GetNDF() << endl;
+report << "===================================================================" << endl << endl;
+
+
 return myTotCan;
 }
 
 
 //Make a canvas that displays the Data and MC dx plot being compared. With background already subtracked. Display relevant yield and ratio information
 TCanvas* plotDataMCFitsResiduals_NoBG(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit){
-	
+
+//Recreate the fit from the parameters	
 TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
         //file the fit with the parameters
 	for(int i=0; i < params.size();++i){
@@ -612,6 +662,13 @@ TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
         }
 fit->SetChisquare(qual.first);
 fit->SetNDF(qual.second);
+
+//Make clones of the mc histograms
+TH1D *hdx_mc_p_before = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_before"));
+TH1D *hdx_mc_p_after = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_after"));
+
+TH1D *hdx_mc_n_before = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_before"));
+TH1D *hdx_mc_n_after = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_after"));
 
 //Create a canvas we will use to store information
 TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName),1600,1200);
@@ -640,55 +697,79 @@ fit->SetLineWidth(2);
 fit->Draw("same");
 //proton MC dx
         if(shiftfit){
-        hdx_mc_p = plots::shiftHistogramX(hdx_mc_p,params[2].first);
-        }
-hdx_mc_p->Scale(params[0].first);
-hdx_mc_p->SetLineColor(kRed);
-hdx_mc_p->SetFillColorAlpha(kRed-9,0.5);
-hdx_mc_p->SetFillStyle(3001);
-hdx_mc_p->SetLineWidth(2);
-hdx_mc_p->Draw("hist same");
-//neutron MC dx
-        if(shiftfit){
-        hdx_mc_n = plots::shiftHistogramX(hdx_mc_n,params[3].first);
-        }
-hdx_mc_n->Scale(params[1].first);
-hdx_mc_n->SetLineColor(kBlue);
-hdx_mc_n->SetFillColorAlpha(kBlue-9,0.5);
-hdx_mc_n->SetFillStyle(3001);
-hdx_mc_n->SetLineWidth(2);
-hdx_mc_n->Draw("hist same");
+	hdx_mc_p_before = plots::shiftHistogramX(hdx_mc_p_before,params[2].first);
+        hdx_mc_p_after = plots::shiftHistogramX(hdx_mc_p_after,params[2].first);
+	}
+
+//Yield info and integrals come before scaling to get sigma_n/sigma_p from MC. Need to further scale.
 
 //yield info for protons
-double p_sum_error;
-double p_sum = hdx_mc_p->IntegralAndError(0,hdx_mc_p->GetNbinsX()+1,p_sum_error,"");
+double p_sum_mc_error;
+double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
 
+hdx_mc_p_after->Scale(params[0].first);
+hdx_mc_p_after->SetLineColor(kRed);
+hdx_mc_p_after->SetFillColorAlpha(kRed-9,0.5);
+hdx_mc_p_after->SetFillStyle(3001);
+hdx_mc_p_after->SetLineWidth(2);
+hdx_mc_p_after->Draw("hist same");
+//neutron MC dx
+        if(shiftfit){
+        hdx_mc_n_before = plots::shiftHistogramX(hdx_mc_n_before,params[3].first);
+	hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,params[3].first);
+        }
+//yield info for neutrons
+double n_sum_mc_error;
+double n_sum_mc = hdx_mc_n_before->IntegralAndError(0,hdx_mc_n_before->GetNbinsX()+1,n_sum_mc_error,"");
+	
+hdx_mc_n_after->Scale(params[1].first);
+hdx_mc_n_after->SetLineColor(kBlue);
+hdx_mc_n_after->SetFillColorAlpha(kBlue-9,0.5);
+hdx_mc_n_after->SetFillStyle(3001);
+hdx_mc_n_after->SetLineWidth(2);
+hdx_mc_n_after->Draw("hist same");
+
+//Yield info and integrals come after scaling to get sigma_n/sigma_p for experiment. Don't need further scale.
+
+//yield info for protons
+double p_sum_exp_error;
+double p_sum_exp = hdx_mc_p_after->IntegralAndError(0,hdx_mc_p_after->GetNbinsX()+1,p_sum_exp_error,"");
+
+//yield info for neutrons
+double n_sum_exp_error;
+double n_sum_exp = hdx_mc_n_after->IntegralAndError(0,hdx_mc_n_after->GetNbinsX()+1,n_sum_exp_error,"");
+
+//proton scale info
 double p_scale = params[0].first;
 double p_scale_error = params[0].second;
 
-//yield info for neutrons
-double n_sum_error;
-double n_sum = hdx_mc_n->IntegralAndError(0,hdx_mc_n->GetNbinsX()+1,n_sum_error,"");
-
+//neutron scale info
 double n_scale = params[1].first;
 double n_scale_error = params[1].second;
 
 //get the ratios and the errors
-double np_sum_ratio = n_sum/p_sum;
+double np_sum_mc_ratio = n_sum_mc/p_sum_mc;
+double np_sum_exp_ratio = n_sum_exp/p_sum_exp;
 double np_scale_ratio = n_scale/p_scale;
 
-double np_sum_ratio_error = np_sum_ratio * sqrt(pow(n_sum_error/n_sum,2) + pow(p_sum_error/p_sum,2));
+double np_sum_mc_ratio_error = np_sum_mc_ratio * sqrt(pow(n_sum_mc_error/n_sum_mc,2) + pow(p_sum_mc_error/p_sum_mc,2));
+double np_sum_exp_ratio_error = np_sum_exp_ratio * sqrt(pow(n_sum_exp_error/n_sum_exp,2) + pow(p_sum_exp_error/p_sum_exp,2));
 double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
 
 //Make a legend to hold all the information we care about
 TLegend* legend = new TLegend(0.6, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
-legend->AddEntry(hdx_mc_p,"Proton SIMC MC","l");
-legend->AddEntry(hdx_mc_n,"Neutron SIMC MC","l");
+legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","l");
+legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","l");
 legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
 legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.3f #pm %0.3f",np_scale_ratio,np_scale_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("n/p yield ratio R'' : %0.3f #pm %0.3f",np_sum_ratio,np_sum_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
+legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
+legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
+legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
+legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
 legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",params[3].first,params[2].first),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
 legend->SetTextSize(0.03);

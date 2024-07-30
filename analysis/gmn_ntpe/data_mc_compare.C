@@ -134,6 +134,7 @@ TFile *mc_file = new TFile(MC_input_file_name.Data());
 
 //Setup output file
 TString outfile = utility::makeOutputFileName_DataMCComp(exp,pass,kin,sbs_field,target);
+TString reportfile = utility::makeReportFileName_DataMCComp(exp,pass,kin,sbs_field,target);
 TFile *fout = new TFile(outfile,"RECREATE");
 
 //Get Histograms we will need from the respective data or MC files
@@ -209,8 +210,13 @@ TF1 *bg_shiftFit_nofid = new TF1("bg_shiftFit_nofid",fits::poly4_fit,hcalfit_low
         bg_shiftFit_nofid->SetParError(j,shiftpar_vec_nofid[j+4].second);
         }
 
+//handle the information sent to the report file
+//Declare output file and open it
+ofstream report;
+report.open(reportfile);
+
 //make canvas to show data and MC compare plot
-TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
+TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true,report);
 
 //Do some fitting and get fit parameters. Do this for the background subtracted histogram
 TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit,totfit_ptr);
@@ -224,9 +230,9 @@ TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_
 TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg,hdx_p_clone,hdx_n_clone,bg_shiftFit_clone,"c3","poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
 
 //Canvas for no fid
-TCanvas* c4 = plots::plotDataMCFitsResiduals(hdx_data_nofid_clone,hdx_p_nofid_clone,hdx_n_nofid_clone,bg_shiftFit_nofid,"c4","shiftfit poly4 BG nofid",fitType_nofid,shiftpar_vec_nofid,shiftQual_nofid,hcalfit_low,hcalfit_high,true);
+TCanvas* c4 = plots::plotDataMCFitsResiduals(hdx_data_nofid_clone,hdx_p_nofid_clone,hdx_n_nofid_clone,bg_shiftFit_nofid,"c4","shiftfit poly4 BG nofid",fitType_nofid,shiftpar_vec_nofid,shiftQual_nofid,hcalfit_low,hcalfit_high,true,report);
 
-
+report.close();
 
 //Write stuff to a pdf
 TString plotname = outfile;
