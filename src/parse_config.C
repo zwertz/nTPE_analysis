@@ -107,6 +107,9 @@
 			//cout << "Pass " << pass << endl;
 			}else if(key == "fitopt"){
 			fitopt = val;
+			}else if(key == "cutvar"){
+                        cutvar = val;
+			//cout << "Cut Variable " << cutvar << endl;
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
@@ -320,6 +323,8 @@
   TString parse_config::getPartialNameN(){ return partial_name_n;}
 
   TString parse_config::getFitOpt(){ return fitopt;}
+  
+  TString parse_config::getCutVar(){return cutvar;}
   
   int parse_config::getSBSField(){ return SBS_field; }
 
@@ -590,3 +595,5 @@
        << "-------------------------------------------------------------------------------------------------------------------------------------------------"        << endl;
   }
   
+  //Might want to add print function for stability/systematic studies
+

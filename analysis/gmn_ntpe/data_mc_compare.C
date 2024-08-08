@@ -12,6 +12,7 @@
 #include "../../src/parse_config.C"
 #include "../../src/plots.C"
 
+
 //Histograms needed for interpolation of elastic signal
 TH1D* hdx_p;
 TH1D* hdx_n;
@@ -103,6 +104,9 @@ return fitFullshift;
 
 //Main
 void data_mc_compare(const char *setup_file_name){
+
+//Set this default to true so that way fits to histogram should be more correct. This effects statistical error
+TH1::SetDefaultSumw2(kTRUE);
 
 //Define a clock to check macro processing time
 TStopwatch *watch = new TStopwatch();

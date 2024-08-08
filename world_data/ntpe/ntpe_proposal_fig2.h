@@ -20,7 +20,7 @@ vector<vector<double>> nTPE_proposal_fig2_blue = {
 };
 auto *mg_nTPE_proposal_fig2_LT = new TMultiGraph();
 
-void plot_nTPE_proposal_fig2(bool plot_jboyd = false, bool overlay_LT_PT = false ){
+void plot_nTPE_proposal_fig2(bool plot_jboyd = true, bool overlay_LT_PT = true ){
 
 	TCanvas *c_GMN_proposal_data = new TCanvas("c_GMN_proposal_data", "GMN_proposal_data", 700, 500);
 	const int n_red = nTPE_proposal_fig2_red.size();

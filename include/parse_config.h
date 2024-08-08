@@ -27,6 +27,10 @@ class parse_config{
   //For data HCal Efficiency analysis
   double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac;
 
+  //For stability and systematic analysis
+  TString cutvar;
+
+
 public:
   //Constructor
   parse_config(const char *setup_file_name);
@@ -65,6 +69,8 @@ public:
   TString getDataFile();
 
   TString getFitOpt();
+
+  TString getCutVar();
 
   int getSBSField();
 

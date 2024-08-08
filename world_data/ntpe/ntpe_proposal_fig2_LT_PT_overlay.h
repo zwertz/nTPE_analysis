@@ -1,10 +1,7 @@
 #ifndef NTPE_PROPOSAL_FIG2_LT_PT_OVERLAY_H
 #define NTPE_PROPOSAL_FIG2_LT_PT_OVERLAY_H
 
-#include "/work/halla/sbs/jboyd/analysis/gmn/world_data/jboyd_data_points.h"
-#include "/work/halla/sbs/jboyd/include/experimental_constants.h"
-// #include "/w/halla-scshelf2102/sbs/jboyd/analysis/gmn/world_data/parameterizations/kelly_param_only.h"
-
+#include "/w/halla-scshelf2102/sbs/ewertz/nTPE_analysis/world_data/jboyd_data_points.h"
 
 
 auto mg_nTPE_LT_PT_overlay = new TMultiGraph();
@@ -45,8 +42,8 @@ vector<vector<double>> nTPE_proposal_fig2_blue_LT_PT = {
 
 void plot_nTPE_proposal_fig2_LT_PT_overlay(bool plot_jboyd = false, bool plot_exp_info = false ){
 
-	SBS8_tau_n = jboyd_Q2_SBS8/(4.0*Mn*Mn);
-	SBS9_tau_n = jboyd_Q2_SBS9/(4.0*Mn*Mn);
+	SBS8_tau_n = jboyd_Q2_SBS8/(4.0*physics_constants::M_n*physics_constants::M_n);
+	SBS9_tau_n = jboyd_Q2_SBS9/(4.0*physics_constants::M_n*physics_constants::M_n);
 
 	SBS8_nTPE_GEn = 0.4137855; //ye: 0.515279, kelly: 0.4137855;
 	SBS9_nTPE_GEn = 0.4142309; //ye: 0.516186, kelly: 0.4142309;

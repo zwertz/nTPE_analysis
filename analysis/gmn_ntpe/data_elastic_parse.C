@@ -122,6 +122,9 @@ void data_elastic_parse(const char *setup_file_name){
 
   //Histograms///////
 
+  //Set this default to true so that way fits to histogram should be more correct. This effects statistical error
+  TH1::SetDefaultSumw2(kTRUE);
+
   //global cuts
   TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
   TH1D *h_ntracks_globcut = new TH1D("ntracks_globcut","Number of Tracks,global cut;", 150, 0, 5);

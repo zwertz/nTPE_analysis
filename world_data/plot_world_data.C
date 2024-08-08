@@ -10,11 +10,8 @@
 #include "TStopwatch.h"
 
 using namespace std::chrono;
-#include "/w/halla-scshelf2102/sbs/jboyd/include/include_files.h"
-#include "/w/halla-scshelf2102/sbs/jboyd/include/GEM_lookups.h"
-#include "/w/halla-scshelf2102/sbs/jboyd/include/beam_variables.h"
-#include "/w/halla-scshelf2102/sbs/jboyd/include/calc_errors.h"
-#include "/work/halla/sbs/jboyd/include/MC_lookups.h"
+#include "/w/halla-scshelf2102/sbs/ewertz/nTPE_analysis/include/physics_constants.h"
+#include "/w/halla-scshelf2102/sbs/ewertz/nTPE_analysis/include/calc_errors.h"
 
 //World data files:
 	#include "./jboyd_data_points.h"

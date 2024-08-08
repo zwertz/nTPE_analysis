@@ -77,6 +77,18 @@ namespace utility{
   return outfile;
   }
 
+  //Helper function to make output file name for for stability studies
+  TString makeOutputFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target,TString cutvar){
+  TString outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%s_%i.root",(getOutputDir()).Data(),cutvar.Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
+  return outfile;
+  }
+
+  //Helper function to make report file name for for stability studies
+  TString makeReportFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target, TString cutvar){
+  TString outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%s_%i.txt",(getOutputDir()).Data(),cutvar.Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
+  return outfile;
+  }
+
   //Helper function to make output file name for yield or ratio information
   TString makeYieldReportFileName(TString exp,TString pass,  TString Kin, int SBS_field,TString target){
   TString outfile = Form("%s/yieldRep_Zeke_%s_%s_%s_%s_%i.txt",(getOutputDir()).Data(),exp.Data(), pass.Data(),Kin.Data(),target.Data(),SBS_field);

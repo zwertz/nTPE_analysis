@@ -1,7 +1,6 @@
 #ifndef GMN_PROPOSAL_DATA_H
 #define GMN_PROPOSAL_DATA_H
-#include "/w/halla-scshelf2102/sbs/jboyd/analysis/gmn/world_data/jboyd_data_points.h"
-#include "/work/halla/sbs/jboyd/include/utility_functions.h"
+#include "/w/halla-scshelf2102/sbs/ewertz/nTPE_analysis/world_data/jboyd_data_points.h"
 TLegend *tleg_gmn_proposal_data;
 
 //E_e, theta_e, Q^2, epsilon, sigma_r, sigma_r_erro
@@ -89,7 +88,7 @@ vector<vector<double>> GMn_proposal_blue = {
 	{4.770053475935828, 1.0904831625183014, 0.0, 0.258385093/2},
 };
 
-void plot_GMn_proposal_data(bool plot_jboyd = false, double custom_xmin = -999.9, double custom_xmax = -999.9, double custom_ymin = -999.9, double custom_ymax = -999.9 ){
+void plot_GMn_proposal_data(bool plot_jboyd = true, double custom_xmin = -999.9, double custom_xmax = -999.9, double custom_ymin = -999.9, double custom_ymax = -999.9 ){
 
 	TCanvas *c_GMn_proposal_data = new TCanvas("c_GMn_proposal_data", "c_GMn_proposal_data", 600, 500);
 	c_GMn_proposal_data->SetGrid();
