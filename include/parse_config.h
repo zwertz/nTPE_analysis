@@ -27,8 +27,8 @@ class parse_config{
   //For data HCal Efficiency analysis
   double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac;
 
-  //For stability and systematic analysis
-  TString cutvar;
+  //For stability studies
+  TString EnergyCut, TrackQualityCut, TargetVertexCut, W2Cut, FidXCut, FidYCut, dyCut, eOverpCut, HCal_Shower_atime_Cut, HCal_Energy_Cut, OpticsCut, ProtonSpotCut, NeutronSpotCut, isProtonCut, isNeutronCut;
 
 
 public:
@@ -70,7 +70,35 @@ public:
 
   TString getFitOpt();
 
-  TString getCutVar();
+  TString getEnergyCut();
+
+  TString getTrackQualityCut();
+
+  TString getTargetVertexCut();
+
+  TString getW2Cut();
+
+  TString getFidXCut();
+
+  TString getFidYCut();
+
+  TString getdyCut();
+
+  TString geteOverpCut();
+
+  TString getHCal_Shower_atime_Cut();
+
+  TString getHCal_Energy_Cut();
+
+  TString getOpticsCut();
+
+  TString getProtonSpotCut();
+
+  TString getNeutronSpotCut();
+
+  TString getisProtonCut();
+
+  TString getisNeutronCut();
 
   int getSBSField();
 

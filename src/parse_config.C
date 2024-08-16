@@ -107,9 +107,51 @@
 			//cout << "Pass " << pass << endl;
 			}else if(key == "fitopt"){
 			fitopt = val;
-			}else if(key == "cutvar"){
-                        cutvar = val;
-			//cout << "Cut Variable " << cutvar << endl;
+			}else if (key == "EnergyCut"){
+			EnergyCut = val;
+			//cout << "Energy Cut: " << EnergyCut << endl;
+			}else if (key == "TrackQualityCut"){
+			TrackQualityCut = val;
+                        //cout << "Track Quality Cut: " << TrackQualityCut << endl;
+			}else if (key == "TargetVertexCut"){
+			TargetVertexCut = val;
+                        //cout << "Target Vertex Cut: " << TargetVertexCut << endl;
+			}else if (key == "W2Cut"){
+			W2Cut = val;
+                        //cout << "W2 Cut: " << W2Cut << endl;
+			}else if (key == "FidXCut"){
+			FidXCut = val;
+                        //cout << "FidX Cut: " << FidXCut << endl;
+			}else if (key == "FidYCut"){
+			FidYCut = val;
+                        //cout << "FidY Cut: " << FidYCut << endl;
+			}else if (key == "dyCut"){
+			dyCut = val;
+                        //cout << "dy Cut: " << dyCut << endl;
+			}else if (key == "eOverpCut"){
+			eOverpCut = val;
+                        //cout << "eOverp Cut: " << eOverpCut << endl;
+			}else if (key == "HCal_Energy_Cut"){
+			HCal_Energy_Cut = val;
+                        //cout << "HCal_Energy_Cut: " << HCal_Energy_Cut << endl;
+			}else if (key == "HCal_Shower_atime_Cut"){
+			HCal_Shower_atime_Cut = val;
+                        //cout << "HCal_Shower_atime_Cut: " << HCal_Shower_atime_Cut << endl;
+			}else if (key == "OpticsCut"){
+			OpticsCut = val;
+                        //cout << "Optics Cut: " << OpticsCut << endl;
+			}else if (key == "ProtonSpotCut"){
+			ProtonSpotCut = val;
+                        //cout << "ProtonSpot Cut: " << ProtonSpotCut << endl;
+			}else if (key == "NeutronSpotCut"){
+			NeutronSpotCut = val;
+                        //cout << "NeutronSpot Cut: " << NeutronSpotCut << endl;
+			}else if (key == "isProtonCut"){
+			isProtonCut = val;
+			//cout << "isProtonCut: " << isProtonCut << endl;
+			}else if (key == "isNeutronCut"){
+                        isNeutronCut = val;
+                        //cout << "isNeutronCut: " << isNeutronCut << endl;
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
@@ -324,8 +366,36 @@
 
   TString parse_config::getFitOpt(){ return fitopt;}
   
-  TString parse_config::getCutVar(){return cutvar;}
-  
+  TString parse_config::getEnergyCut(){return EnergyCut;}
+
+  TString parse_config::getTrackQualityCut(){return TrackQualityCut;}
+
+  TString parse_config::getTargetVertexCut(){return TargetVertexCut;}
+
+  TString parse_config::getW2Cut(){return W2Cut;}
+
+  TString parse_config::getFidXCut(){return FidXCut;}
+
+  TString parse_config::getFidYCut(){return FidYCut;}
+
+  TString parse_config::getdyCut(){return dyCut;}
+
+  TString parse_config::geteOverpCut(){return eOverpCut;}
+
+  TString parse_config::getHCal_Shower_atime_Cut(){return HCal_Shower_atime_Cut;}
+
+  TString parse_config::getHCal_Energy_Cut(){return HCal_Energy_Cut;}
+
+  TString parse_config::getOpticsCut(){return OpticsCut;}
+
+  TString parse_config::getProtonSpotCut(){return ProtonSpotCut;}
+
+  TString parse_config::getNeutronSpotCut(){return NeutronSpotCut;}
+
+  TString parse_config::getisProtonCut(){return isProtonCut;}
+
+  TString parse_config::getisNeutronCut(){return isNeutronCut;}
+ 
   int parse_config::getSBSField(){ return SBS_field; }
 
   int parse_config::getAlshield(){ return useAlshield; }

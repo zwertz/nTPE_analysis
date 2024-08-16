@@ -193,6 +193,7 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *hdx_cut_failfid = new TH1D( "dx_cut_failfid","HCal dx, all cuts fail fiducial; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_globcut = new TH1D( "dx_globcut","HCal dx, global cut; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_glob_W2_cut = new TH1D( "dx_glob_W2_cut","HCal dx, global & W2 cuts; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hdx_nsigfid = new TH1D( "dx_nsigfid","HCal dx, nsigfid check; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
 
   TH1D *hdy_nocut = new TH1D( "dy_nocut", "HCal dy (m), no cuts; m", 250, dy_low, dy_high );
   TH1D *hdy_globcut = new TH1D( "dy_globcut", "HCal dy (m), global cut; m", 250, dy_low, dy_high );
@@ -209,6 +210,10 @@ void data_elastic_parse(const char *setup_file_name){
   //general
   TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0002 );
   
+  //Added for cut stability studies
+  TH1D* h_nsigx_fid = new TH1D("h_nsigx_fid", "nsigx_fid",200,-20,20);
+  TH1D* h_nsigy_fid = new TH1D("h_nsigy_fid", "nsigy_fid",200,-20,20);
+
   //allocate memory at each run
   TChain *C = nullptr;
 
@@ -242,6 +247,14 @@ void data_elastic_parse(const char *setup_file_name){
   double BBtr_x_out;
   double BBtr_y_out;
   double BBtr_p_out;
+  double BBtr_vz_out;
+  double BB_E_over_p_out;
+  double BBtr_th_out;
+  double BBtr_ph_out;
+  double BBtr_r_x_out;
+  double BBtr_r_y_out;
+  double BBtr_r_th_out;
+  double BBtr_r_ph_out;
   double coin_mean_out;
   double coin_sigma_out;
   double dyO_p_out;
@@ -256,9 +269,10 @@ void data_elastic_parse(const char *setup_file_name){
   double dxsig_n_out;
   double dxsig_n_fac_out;
   double dxsig_p_fac_out;
+  double nsigx_fid_out;
+  double nsigy_fid_out;
   double W2low_out;
   double W2high_out;
-
   int num_hcal_clusid_out;
   int nclus_hcal_out;
   int hcal_clus_blk_out;
@@ -274,6 +288,8 @@ void data_elastic_parse(const char *setup_file_name){
   int BBsh_nblk_out;
   int BBps_nclus_out;
   int BBps_nblk_out;
+
+  double hcal_sh_atime_diff_out;
 
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
@@ -306,6 +322,14 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("BBtr_x", &BBtr_x_out, "BBtr_x/D");
   Parse->Branch("BBtr_y", &BBtr_y_out, "BBtr_y/D");
   Parse->Branch("BBtr_p", &BBtr_p_out, "BBtr_p/D");
+  Parse->Branch("BBtr_vz", &BBtr_vz_out, "BBtr_vz/D");
+  Parse->Branch("BB_E_over_p", &BB_E_over_p_out, "BB_E_over_p/D");
+  Parse->Branch("BBtr_th", &BBtr_th_out, "BBtr_th/D");
+  Parse->Branch("BBtr_ph", &BBtr_ph_out, "BBtr_ph/D");
+  Parse->Branch("BBtr_r_x", &BBtr_r_x_out, "BBtr_r_x/D");
+  Parse->Branch("BBtr_r_y", &BBtr_r_y_out, "BBtr_r_y/D");
+  Parse->Branch("BBtr_r_th", &BBtr_r_th_out, "BBtr_r_th/D");
+  Parse->Branch("BBtr_r_ph", &BBtr_r_ph_out, "BBtr_r_ph/D");
   Parse->Branch("coin_mean", &coin_mean_out, "coin_mean/D");
   Parse->Branch("coin_sigma", &coin_sigma_out, "coin_sigma/D");
   Parse->Branch("dyO_p", &dyO_p_out, "dyO_p/D");
@@ -320,8 +344,11 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("dxsig_n", &dxsig_n_out, "dxsig_n/D");
   Parse->Branch("dxsig_n_fac", &dxsig_n_fac_out, "dxsig_n_fac/D");
   Parse->Branch("dxsig_p_fac", &dxsig_p_fac_out, "dxsig_p_fac/D");
+  Parse->Branch("nsigx_fid", &nsigx_fid_out , "nsigx_fid/D");
+  Parse->Branch("nsigy_fid", &nsigy_fid_out , "nsigy_fid/D");
   Parse->Branch("W2low", &W2low_out, "W2low/D");
   Parse->Branch("W2high", &W2high_out, "W2high/D");
+  Parse->Branch("hcal_sh_atime_dff", &hcal_sh_atime_diff_out, "hcal_sh_atime_diff/D");
 
   Parse->Branch("num_hcal_clusid", &num_hcal_clusid_out, "num_hcal_clusid/I");
   Parse->Branch("hcal_clus_blk", &hcal_clus_blk_out, "hcal_clus_blk/I");
@@ -435,8 +462,9 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchAddress("bb.gem.track.chi2ndf",&gem_ChiSqr);
   // track branches
 
-  double ntrack, tr_px[maxtracks], tr_py[maxtracks], tr_pz[maxtracks], tr_p[maxtracks], tr_x[maxtracks], tr_y[maxtracks], tr_vx[maxtracks], tr_vy[maxtracks], tr_vz[maxtracks];
-  
+  double ntrack, tr_px[maxtracks], tr_py[maxtracks], tr_pz[maxtracks], tr_p[maxtracks], tr_x[maxtracks], tr_y[maxtracks], tr_vx[maxtracks], tr_vy[maxtracks], tr_vz[maxtracks], tr_r_x[maxtracks], tr_r_y[maxtracks],tr_r_th[maxtracks], tr_r_ph[maxtracks], tr_th[maxtracks], tr_ph[maxtracks];
+
+
   C->SetBranchStatus("bb.tr.n",1);
   C->SetBranchStatus("bb.tr.px",1);
   C->SetBranchStatus("bb.tr.py",1);  
@@ -447,6 +475,12 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchStatus("bb.tr.vx",1);
   C->SetBranchStatus("bb.tr.vy",1);
   C->SetBranchStatus("bb.tr.vz",1);
+  C->SetBranchStatus("bb.tr.th",1);
+  C->SetBranchStatus("bb.tr.ph",1);
+  C->SetBranchStatus("bb.tr.r_th",1);
+  C->SetBranchStatus("bb.tr.r_ph",1);
+  C->SetBranchStatus("bb.tr.r_x",1);
+  C->SetBranchStatus("bb.tr.r_y",1);
 
   C->SetBranchAddress("bb.tr.n",&ntrack);
   C->SetBranchAddress("bb.tr.px",&tr_px);
@@ -458,6 +492,12 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchAddress("bb.tr.vx",&tr_vx);
   C->SetBranchAddress("bb.tr.vy",&tr_vy);
   C->SetBranchAddress("bb.tr.vz",&tr_vz);
+  C->SetBranchAddress("bb.tr.th",&tr_th);
+  C->SetBranchAddress("bb.tr.ph",&tr_ph);
+  C->SetBranchAddress("bb.tr.r_th",&tr_r_th);
+  C->SetBranchAddress("bb.tr.r_ph",&tr_r_ph);
+  C->SetBranchAddress("bb.tr.r_x",&tr_r_x);
+  C->SetBranchAddress("bb.tr.r_y",&tr_r_y);
 
   //ekine branches
 
@@ -656,7 +696,6 @@ void data_elastic_parse(const char *setup_file_name){
 	//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
         double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
 
-
 	//////////////////////
 	//INTIME CLUSTER ANALYSIS
 	//Requires that it has the greatest hcal cluster energy and that hcal cluster analog time is in coincidence with bbcal analog time
@@ -677,6 +716,11 @@ void data_elastic_parse(const char *setup_file_name){
 	double coin_pclus = hcal_clus_atime[0] - atime_sh;
 	double hcal_e_bestclus = hcal_clus_e[clus_idx_best];
 	int hcal_nblk_bestclus = (int) hcal_clus_nblk[clus_idx_best];	
+
+	//calculate the number of sigma away from fiducial boundaries. Store info for later
+        double nsigx_fid = cuts::calculate_nsigma_fid_x(xhcal_expect,dxsig_p,dxsig_n,dx_pn,hcalaa);
+        double nsigy_fid = cuts::calculate_nsigma_fid_y(yhcal_expect,dysig_p,hcalaa);
+
 
 	//setup booleans for cuts later. Save boolean values to tree
 	//global is above
@@ -703,6 +747,8 @@ void data_elastic_parse(const char *setup_file_name){
 	//pass HCal num clus
 	bool passHCal_Nclus = cuts::passHCal_NClus(nclus_hcal,hcalnclusmin);
 
+	//pass NSig Fid check
+	bool passNSigFid = cuts::passNsigFid(nsigx_fid,nsigy_fid);
 
 	//Fill analysis tree variables before making cuts
 	dx_out = dx_bestclus;
@@ -731,7 +777,15 @@ void data_elastic_parse(const char *setup_file_name){
 	BBtr_x_out = tr_x[0];
   	BBtr_y_out = tr_y[0];
   	BBtr_p_out = tr_p[0];
-  	coin_mean_out = coin_mean;
+  	BBtr_vz_out = tr_vz[0];
+	BB_E_over_p_out = BB_E_over_p;
+	BBtr_th_out = tr_th[0];
+	BBtr_ph_out = tr_ph[0];
+	BBtr_r_x_out = tr_r_x[0];
+	BBtr_r_y_out = tr_r_y[0];
+	BBtr_r_th_out = tr_r_th[0];
+	BBtr_r_ph_out = tr_r_ph[0];
+	coin_mean_out = coin_mean;
   	coin_sigma_out = coin_profile_sig;
   	dyO_p_out = dyO_p;
   	dyO_n_out = dyO_n;
@@ -745,7 +799,9 @@ void data_elastic_parse(const char *setup_file_name){
   	dxsig_n_out = dxsig_n;
   	dxsig_n_fac_out = dxsig_n_fac;
  	dxsig_p_fac_out = dxsig_p_fac;
-  	W2low_out = W2_low;	
+  	nsigx_fid_out = nsigx_fid;
+	nsigy_fid_out = nsigy_fid;
+	W2low_out = W2_low;	
 	W2high_out = W2_high;
 	num_hcal_clusid_out = num_hcal_clusid ;
  	hcal_clus_blk_out = hcal_nblk_bestclus;
@@ -762,6 +818,7 @@ void data_elastic_parse(const char *setup_file_name){
 	passFid_out = (int) passFid;
   	run_out = run ;
   	mag_out = field;
+	hcal_sh_atime_diff_out = coin_bestclus;
 
 	//Fill histograms of global cut parameters here without any restrictions
 	h_ntracks->Fill(ntrack);	
@@ -873,6 +930,14 @@ void data_elastic_parse(const char *setup_file_name){
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && !passFid){
 	hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect);
 	}
+
+	//For cut stability
+	h_nsigx_fid ->Fill(nsigx_fid);
+	h_nsigy_fid ->Fill(nsigy_fid);
+	if(passNSigFid){
+	hdx_nsigfid->Fill(dx_bestclus);
+	}
+
 
 	//Fill the analysis tree
 	Parse->Fill();

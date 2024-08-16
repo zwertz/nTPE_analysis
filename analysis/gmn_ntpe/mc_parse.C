@@ -164,9 +164,6 @@ int nFiles = 0;
 	}	
 //Histograms///////	
 
-//Set this default to true so that way fits to histogram should be more correct. This effects statistical error
-TH1::SetDefaultSumw2(kTRUE);
-
 //global cuts
   TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
   TH1D *h_ntracks_globcut = new TH1D("ntracks_globcut","Number of Tracks,global cut;", 150, 0, 5);
@@ -239,6 +236,7 @@ TH1::SetDefaultSumw2(kTRUE);
   TH1D *hdx_cut_failfid = new TH1D( "dx_cut_failfid","HCal dx, all cuts fail fiducial; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_globcut = new TH1D( "dx_globcut","HCal dx, global cut; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_glob_W2_cut = new TH1D( "dx_glob_W2_cut","HCal dx, global & W2 cuts; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hdx_nsigfid = new TH1D( "dx_nsigfid","HCal dx, nsigfid check; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
 
   TH1D *hdx_globcut_p = new TH1D( "dx_globcut_p","HCal dx proton, global cut; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_cut_p = new TH1D( "dx_cut_p","HCal dx proton, all cuts; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
@@ -261,6 +259,10 @@ TH1::SetDefaultSumw2(kTRUE);
   TH1D *hcoin_pclus_cut = new TH1D( "hcoin_pclus_cut", "HCal ADCt - BBCal ADCt,pclus, cuts; ns", 400, -100, 100 );
 
   TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0002 );
+
+  //Added for cut stability studies
+  TH1D* h_nsigx_fid = new TH1D("h_nsigx_fid", "nsigx_fid",200,-20,20);
+  TH1D* h_nsigy_fid = new TH1D("h_nsigy_fid", "nsigy_fid",200,-20,20);
 
   //create output tree
   TTree *Parse = new TTree("Parse","Analysis Tree");
@@ -292,6 +294,14 @@ TH1::SetDefaultSumw2(kTRUE);
   double BBtr_x_out;
   double BBtr_y_out;
   double BBtr_p_out;
+  double BBtr_vz_out;
+  double BB_E_over_p_out;
+  double BBtr_th_out;
+  double BBtr_ph_out;
+  double BBtr_r_x_out;
+  double BBtr_r_y_out;
+  double BBtr_r_th_out;
+  double BBtr_r_ph_out;
   double coin_mean_out;
   double coin_sigma_out;
   double dyO_p_out;
@@ -306,6 +316,8 @@ TH1::SetDefaultSumw2(kTRUE);
   double dxsig_n_out;
   double dxsig_n_fac_out;
   double dxsig_p_fac_out;
+  double nsigx_fid_out;
+  double nsigy_fid_out;
   double W2low_out;
   double W2high_out;
   double final_mc_weight_out;
@@ -325,6 +337,8 @@ TH1::SetDefaultSumw2(kTRUE);
   int BBsh_nblk_out;
   int BBps_nclus_out;
   int BBps_nblk_out;
+  int is_proton_out;
+  int is_neutron_out;
 
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
@@ -357,6 +371,14 @@ TH1::SetDefaultSumw2(kTRUE);
   Parse->Branch("BBtr_x", &BBtr_x_out, "BBtr_x/D");
   Parse->Branch("BBtr_y", &BBtr_y_out, "BBtr_y/D");
   Parse->Branch("BBtr_p", &BBtr_p_out, "BBtr_p/D");
+  Parse->Branch("BBtr_vz", &BBtr_vz_out, "BBtr_vz/D");
+  Parse->Branch("BB_E_over_p", &BB_E_over_p_out, "BB_E_over_p/D");
+  Parse->Branch("BBtr_th", &BBtr_th_out, "BBtr_th/D");
+  Parse->Branch("BBtr_ph", &BBtr_ph_out, "BBtr_ph/D");
+  Parse->Branch("BBtr_r_x", &BBtr_r_x_out, "BBtr_r_x/D");
+  Parse->Branch("BBtr_r_y", &BBtr_r_y_out, "BBtr_r_y/D");
+  Parse->Branch("BBtr_r_th", &BBtr_r_th_out, "BBtr_r_th/D");
+  Parse->Branch("BBtr_r_ph", &BBtr_r_ph_out, "BBtr_r_ph/D");
   Parse->Branch("coin_mean", &coin_mean_out, "coin_mean/D");
   Parse->Branch("coin_sigma", &coin_sigma_out, "coin_sigma/D");
   Parse->Branch("dyO_p", &dyO_p_out, "dyO_p/D");
@@ -371,6 +393,8 @@ TH1::SetDefaultSumw2(kTRUE);
   Parse->Branch("dxsig_n", &dxsig_n_out, "dxsig_n/D");
   Parse->Branch("dxsig_n_fac", &dxsig_n_fac_out, "dxsig_n_fac/D");
   Parse->Branch("dxsig_p_fac", &dxsig_p_fac_out, "dxsig_p_fac/D");
+  Parse->Branch("nsigx_fid", &nsigx_fid_out , "nsigx_fid/D");
+  Parse->Branch("nsigy_fid", &nsigy_fid_out , "nsigy_fid/D");
   Parse->Branch("W2low", &W2low_out, "W2low/D");
   Parse->Branch("W2high", &W2high_out, "W2high/D");
   Parse->Branch("Final_MC_weight", &final_mc_weight_out, "final_MC_weight/D");
@@ -386,11 +410,15 @@ TH1::SetDefaultSumw2(kTRUE);
   Parse->Branch("passFid", &passFid_out, "passFid/I");
   Parse->Branch("file", &file_out, "file/I");
   Parse->Branch("mag", &mag_out, "mag/I");  
+  Parse->Branch("is_proton", &is_proton_out, "is_proton/I");
+  Parse->Branch("is_neutron", &is_neutron_out, "is_neutron/I");
 
   //logistical information
   TString nuc = "none"; 
   int num_nuc = 2; //always assume there are max 2 nucleons
   int num_files = 0;
+  int is_proton = 0; //false
+  int is_neutron = 0; //false
 
   TChain *C = nullptr;
 
@@ -402,9 +430,13 @@ TH1::SetDefaultSumw2(kTRUE);
   	//update current nucleon
   	if(r==0){
 	nuc = "p";
+	is_proton = 1;
+	is_neutron = 0;
 	num_files = pFiles;
 	}else if(r==1){
 	nuc = "n";
+	is_proton = 0;
+	is_neutron = 1;
 	num_files = nFiles;
 	}
 
@@ -579,7 +611,7 @@ TH1::SetDefaultSumw2(kTRUE);
 		C->SetBranchAddress("bb.gem.track.ngoodhits",&gem_goodhits);
   		C->SetBranchAddress("bb.gem.track.chi2ndf",&gem_ChiSqr);
 		// track branches
-		double ntrack, tr_px[maxtracks], tr_py[maxtracks], tr_pz[maxtracks], tr_p[maxtracks], tr_x[maxtracks], tr_y[maxtracks], tr_vx[maxtracks], tr_vy[maxtracks], tr_vz[maxtracks];
+		double ntrack, tr_px[maxtracks], tr_py[maxtracks], tr_pz[maxtracks], tr_p[maxtracks], tr_x[maxtracks], tr_y[maxtracks], tr_vx[maxtracks], tr_vy[maxtracks], tr_vz[maxtracks], tr_r_x[maxtracks], tr_r_y[maxtracks],tr_r_th[maxtracks], tr_r_ph[maxtracks], tr_th[maxtracks], tr_ph[maxtracks];
 
   		C->SetBranchStatus("bb.tr.n",1);
   		C->SetBranchStatus("bb.tr.px",1);
@@ -591,6 +623,12 @@ TH1::SetDefaultSumw2(kTRUE);
   		C->SetBranchStatus("bb.tr.vx",1);
   		C->SetBranchStatus("bb.tr.vy",1);
   		C->SetBranchStatus("bb.tr.vz",1);
+		C->SetBranchStatus("bb.tr.th",1);
+  		C->SetBranchStatus("bb.tr.ph",1);
+  		C->SetBranchStatus("bb.tr.r_th",1);
+  		C->SetBranchStatus("bb.tr.r_ph",1);
+  		C->SetBranchStatus("bb.tr.r_x",1);
+  		C->SetBranchStatus("bb.tr.r_y",1);
 
   		C->SetBranchAddress("bb.tr.n",&ntrack);
   		C->SetBranchAddress("bb.tr.px",&tr_px);
@@ -602,6 +640,12 @@ TH1::SetDefaultSumw2(kTRUE);
  	 	C->SetBranchAddress("bb.tr.vx",&tr_vx);
   		C->SetBranchAddress("bb.tr.vy",&tr_vy);
   		C->SetBranchAddress("bb.tr.vz",&tr_vz);
+		C->SetBranchAddress("bb.tr.th",&tr_th);
+  		C->SetBranchAddress("bb.tr.ph",&tr_ph);
+  		C->SetBranchAddress("bb.tr.r_th",&tr_r_th);
+  		C->SetBranchAddress("bb.tr.r_ph",&tr_r_ph);
+  		C->SetBranchAddress("bb.tr.r_x",&tr_r_x);
+  		C->SetBranchAddress("bb.tr.r_y",&tr_r_y);
 
 		//ekine branches
 		double ekine_Q2, ekine_W2, ekine_eps, ekine_nu, ekine_qx, ekine_qy, ekine_qz;
@@ -820,6 +864,10 @@ TH1::SetDefaultSumw2(kTRUE);
         			double hcal_e_bestclus = hcal_clus_e[clus_idx_best];
 				int hcal_nblk_bestclus = (int) hcal_clus_nblk[clus_idx_best];
 
+				//calculate the number of sigma away from fiducial boundaries. Store info for later
+        			double nsigx_fid = cuts::calculate_nsigma_fid_x(xhcal_expect,dxsig_p,dxsig_n,dx_pn,hcalaa);
+        			double nsigy_fid = cuts::calculate_nsigma_fid_y(yhcal_expect,dysig_p,hcalaa);
+
 				//setup booleans for cuts later. Save boolean values to tree
 
 				//HCal active area
@@ -842,6 +890,9 @@ TH1::SetDefaultSumw2(kTRUE);
 				
 				//pass HCal num clus
 				bool passHCal_Nclus = cuts::passHCal_NClus(nclus_hcal,hcalnclusmin);
+
+				//pass NSig Fid check
+        			bool passNSigFid = cuts::passNsigFid(nsigx_fid,nsigy_fid);
 
 				//calculate the final corrected MC weight
 				//handles both cases of using rejection sampling and not 
@@ -879,7 +930,15 @@ TH1::SetDefaultSumw2(kTRUE);
 				BBtr_x_out = tr_x[0];
         			BBtr_y_out = tr_y[0];
         			BBtr_p_out = tr_p[0];
-        			dyO_p_out = dyO_p;
+        			BBtr_vz_out = tr_vz[0];
+				BB_E_over_p_out = BB_E_over_p;
+				BBtr_th_out = tr_th[0];
+        			BBtr_ph_out = tr_ph[0];
+        			BBtr_r_x_out = tr_r_x[0];
+        			BBtr_r_y_out = tr_r_y[0];
+        			BBtr_r_th_out = tr_r_th[0];
+        			BBtr_r_ph_out = tr_r_ph[0];
+				dyO_p_out = dyO_p;
         			dyO_n_out = dyO_n;
         			dysig_p_out = dysig_p;
         			dysig_n_out = dysig_n;
@@ -891,7 +950,9 @@ TH1::SetDefaultSumw2(kTRUE);
         			dxsig_n_out = dxsig_n;
         			dxsig_n_fac_out = dxsig_n_fac; 
 				dxsig_p_fac_out = dxsig_p_fac;
-        			W2low_out = W2_low;
+        			nsigx_fid_out = nsigx_fid;
+        			nsigy_fid_out = nsigy_fid;
+				W2low_out = W2_low;
         			W2high_out = W2_high;
         			num_hcal_clusid_out = num_hcal_clusid ;
         			hcal_clus_blk_out = hcal_nblk_bestclus;
@@ -908,6 +969,8 @@ TH1::SetDefaultSumw2(kTRUE);
         			file_out = f;
         			mag_out = sbs_field;
 				final_mc_weight_out = final_mc_weight;
+				is_proton_out = is_proton;
+				is_neutron_out = is_neutron;
 
 				//Fill histograms of global cut parameters here without any restrictions
 				h_ntracks->Fill(ntrack,final_mc_weight);
@@ -1043,6 +1106,13 @@ TH1::SetDefaultSumw2(kTRUE);
 		
 				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON  && good_dy && !passFid){
         			hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+        			}
+		
+				//For cut stability
+        			h_nsigx_fid ->Fill(nsigx_fid,final_mc_weight);
+        			h_nsigy_fid ->Fill(nsigy_fid,final_mc_weight);
+        			if(passNSigFid){
+        			hdx_nsigfid->Fill(dx_bestclus,final_mc_weight);
         			}
 
 				//Fill the analysis tree

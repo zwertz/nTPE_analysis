@@ -25,6 +25,9 @@ namespace utility{
   //convert an int to a TString. Just a helper function
   TString intToTString(int datInt);
 
+  //convert a double to a TString. Just a helper function
+  TString doubToTString(double datDoub, int prec);
+
   //This is a helper function that will tell you the default directory for all analysis output
   TString getOutputDir();
 

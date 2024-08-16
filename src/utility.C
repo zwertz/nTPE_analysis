@@ -47,6 +47,16 @@ namespace utility{
   return datInt_string;
   }
 
+  //convert a double to a TString. Just a helper function
+  TString doubToTString(double datDoub, int prec){
+  stringstream ss;
+  ss << setprecision(prec) << datDoub;
+  std:string datDoub_temp;
+  ss >> datDoub_temp;
+  TString datDoub_string(datDoub_temp.c_str());
+  return datDoub_string;
+  }
+
   //This is a helper function that will tell you the default directory for all analysis output
   TString getOutputDir(){
   return output_directory;
@@ -78,14 +88,14 @@ namespace utility{
   }
 
   //Helper function to make output file name for for stability studies
-  TString makeOutputFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target,TString cutvar){
-  TString outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%s_%i.root",(getOutputDir()).Data(),cutvar.Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
+  TString makeOutputFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target){
+  TString outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
   return outfile;
   }
 
   //Helper function to make report file name for for stability studies
-  TString makeReportFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target, TString cutvar){
-  TString outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%s_%i.txt",(getOutputDir()).Data(),cutvar.Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
+  TString makeReportFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target){
+  TString outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%i.txt",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
   return outfile;
   }
 

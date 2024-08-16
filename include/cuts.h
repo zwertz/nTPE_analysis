@@ -49,6 +49,15 @@ bool passHCalE(double hcal_e,double hcalemin);
 //Function to check if number of cluster in HCal is above a min
 bool passHCal_NClus(double nclus_hcal,int hcalnclusmin);
 
+//A function that will determine how many sigma from the active area the expected value is. This function also incorporates information on if it is on the wrong side of the boundary, allowing negative values of sigma. Considers the Fiducial x-direction sigma factor.
+double calculate_nsigma_fid_x(double xhcal_expect, double dxsig_p, double dxsig_n, double dx_pn,vector<double> hcalaa);
+
+
+//A function that will determine how many sigma from the active area the expected value is. This function also incorporates information on if it is on the wrong side of the boundary, allowing negative values of sigma. Considers the Fiducial y-direction sigma factor.
+double calculate_nsigma_fid_y(double yhcal_expect, double dysig, vector<double> hcalaa);
+
+//nsigma fid check
+bool passNsigFid(double nsigx_fid,double nsigy_fid);
 
 
 }//end namespace

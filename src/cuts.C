@@ -198,5 +198,61 @@ return passNclus;
 }
 
 
+//A function that will determine how many sigma from the active area the expected value is. This function also incorporates information on if it is on the wrong side of the boundary, allowing negative values of sigma. Considers the Fiducial x-direction sigma factor.
+double calculate_nsigma_fid_x(double xhcal_expect, double dxsig_p, double dxsig_n, double dx_pn,vector<double> hcalaa){
+	//Active area top and bottom
+	double hcalx_top = hcalaa[0];
+	double hcalx_bot = hcalaa[1];
+
+	double xhcal_exp_pro = xhcal_expect - dx_pn; //define the proton expect postion based on the difference between the proton and neutron peaks
+	//Determine the distances to the top acceptance area boundary for both neutrons and protons
+	double distance_to_top_x_aa_n = xhcal_expect - hcalx_top; // For neutron, this is because the top of HCal is in the -x direction
+	double distance_to_top_x_aa_p = xhcal_exp_pro - hcalx_top; // For proton, this is because the top of HCal is in the -x direction
+
+	//Now determine the number of sigma these values are from the acceptance boundary. Divide by dxsig_p because its the top
+	double nsigma_top_n = distance_to_top_x_aa_n/dxsig_p;
+	double nsigma_top_p = distance_to_top_x_aa_p/dxsig_p;
+
+	//Determine the distances to the bottom acceptance area boundary for both neutrons and protons
+	double distance_to_bot_x_aa_n = hcalx_bot - xhcal_expect; // For neutron, this is because the bot of HCal is in the +x direction
+        double distance_to_bot_x_aa_p = hcalx_bot - xhcal_exp_pro; // For proton, this is because the bot of HCal is in the +x direction
+
+	//Now determine the number of sigma these values are from the acceptance boundary. Divide by dxsig_n because its the bot
+        double nsigma_bot_n = distance_to_bot_x_aa_n/dxsig_n;
+        double nsigma_bot_p = distance_to_bot_x_aa_p/dxsig_n;
+
+	//return the minimum of all the sigma values as that is the number of sigma we want
+	return std::min({nsigma_bot_n,nsigma_bot_p,nsigma_top_n,nsigma_top_p});
+}
+
+//A function that will determine how many sigma from the active area the expected value is. This function also incorporates information on if it is on the wrong side of the boundary, allowing negative values of sigma. Considers the Fiducial y-direction sigma factor.
+double calculate_nsigma_fid_y(double yhcal_expect, double dysig, vector<double> hcalaa){
+	//Active Area left and right
+	double hcaly_left = hcalaa[2];
+	double hcaly_right = hcalaa[3];
+
+	//Determine the distances to the left (negative) acceptance area boundary
+	double distance_to_left_y_aa = yhcal_expect - hcaly_left; //The left of HCal should be from the -y direction
+	//Now determine the number of sigma these values are from the acceptance boundary.
+	double nsigma_left = distance_to_left_y_aa / dysig;
+
+	//Determine the distances to the right (positive) acceptance area boundary
+	double distance_to_right_y_aa = hcaly_right - yhcal_expect; //The right of HCal should be from the +y direction
+	//Now determine the number of sigma these values are from the acceptance boundary.
+	double nsigma_right = distance_to_right_y_aa / dysig;
+
+	//return the minimum of all the sigma values as that is the number of sigma we want
+	return std::min(nsigma_left,nsigma_right);
+}
+
+//nsigma fid check
+bool passNsigFid(double nsigx_fid,double nsigy_fid){
+bool passNsigFid = nsigx_fid > 1 && nsigy_fid >1;
+
+return passNsigFid;
+}
+
+
+
 }//end namespace
 
