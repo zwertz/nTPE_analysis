@@ -169,6 +169,26 @@ TString cutvar::getCutVar(){return CutVar; }
 
 TString cutvar::getDataMCFlag(){return DatavMC_flag;}
 
+TString cutvar::getCutString(){return CutString;}
+
+double cutvar::get_dx_hist_low(){return dx_hist_low();}
+
+double cutvar::get_dx_hist_high(){return dx_hist_high;}
+
+double cutvar::get_dx_hist_bin(){return dx_hist_bin;}
+
+double cutvar::get_W2_hist_low(){return W2_hist_low;}
+
+double cutvar::get_W2_hist_high(){return W2_hist_high;}
+
+double cutvar::get_W2_hist_bin(){return W2_hist_bin;}
+
+double cutvar::get_cut_hist_low(){return cut_hist_low;}
+
+double cutvar::get_cut_hist_high(){return cut_hist_high;}
+
+double cutvar::get_cut_hist_bin(){return cut_hist_bin();}
+
 vector<pair<double,double>> cutvar::getXMinXMaxRange(){return xMin_xMax_range; }
 
 TH2D* cutvar::get2DdxCutHisto(){return dx_hist;}

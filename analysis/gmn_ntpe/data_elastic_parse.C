@@ -122,14 +122,11 @@ void data_elastic_parse(const char *setup_file_name){
 
   //Histograms///////
 
-  //Set this default to true so that way fits to histogram should be more correct. This effects statistical error
-  TH1::SetDefaultSumw2(kTRUE);
-
   //global cuts
   TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
   TH1D *h_ntracks_globcut = new TH1D("ntracks_globcut","Number of Tracks,global cut;", 150, 0, 5);
   TH1D *h_ntracks_cut = new TH1D("ntracks_cut","Number of Tracks, cuts;", 150, 0, 5);
-  TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2);
+  TH1F *h_PS_E = new TH1F("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2);
   TH1D *h_PS_E_globcut = new TH1D("h_ps_e_globcut"," PS Cluster Energy (GeV),global cut;",250,0.0,2.2);
   TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), Cuts;",250,0.0,2.2);
   TH1D *h_vert_z = new TH1D( "vert_z", "Vertex Position z-direction (m); m", 200, -0.2, 0.2 );

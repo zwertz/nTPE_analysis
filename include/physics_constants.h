@@ -21,10 +21,15 @@ namespace physics_constants{
   //proton
   static const double M_p = 0.93827208816; // GeV/c^2
   static const int mc_idx_p = 2212; //mc index
-  
+  static const double mu_p = 2.79284735; //proton magnetic moment
+
   //neutron
   static const double M_n = 0.93956542052; // GeV/c^2
   static const int mc_idx_n = 2112; //mc index
+  static const double mu_n = -1.9130427; ////Neutron anomalous magnetic moment
+
+  //charged pion
+  static const double M_pi = 0.13957; // GeV/c^2
 
   //atomic
 

@@ -70,7 +70,27 @@ TString getAxisTitle();
 
 TString getCutVar();
 
+TString getCutString();
+
 TString getDataMCFlag();
+
+double get_dx_hist_low();
+
+double get_dx_hist_high();
+
+double get_dx_hist_bin();
+
+double get_W2_hist_low();
+
+double get_W2_hist_high();
+
+double get_W2_hist_bin();
+
+double get_cut_hist_low();
+
+double get_cut_hist_high();
+
+double get_cut_hist_bin();
 
 vector<pair<double,double>> getXMinXMaxRange();
 
