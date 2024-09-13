@@ -1,11 +1,9 @@
-#ifndef CALC_FFS_RCS_OBJ.H
-#define CALC_FFS_RCS_OBJ.H
+#ifndef CALC_FFS_RCS_OBJ_H
+#define CALC_FFS_RCS_OBJ_H
 
 #include "TString.h"
 #include <vector>
 #include "physics_constants.h"
-#include "../../src/kinematic_obj.C"
-
 
 //Author: Ezekiel Wertz
 //A class to facilite calculating electromagnetic form factors via various supported parameterization. The most critical being what is used in SIMC. The class will also calculate the reduced cross-section. The FFs and the Reduced Cross-Section will be dependent on user-input which will allow for multiple supposed parameterizations. Initially this will include Kelly, Riordan, and Ye. The class object will hold these all as class variables. Public and private functions and the constructor will enable this class to be compatible with other scripts and classes in this analysis framework.
@@ -35,10 +33,10 @@ double GD_const = 0.71;
 vector<double> Kelly_GEp = {-0.24, 10.98, 12.82, 21.97};
 vector<double> Kelly_GEp_err = {0.12, 0.19, 1.1, 6.8}; 
 //For GMp/mu_p
-vector<double> Kelly_GMp = {0.12, 10.97,1 8.86, 6.55};
+vector<double> Kelly_GMp = {0.12, 10.97, 18.86, 6.55};
 vector<double> Kelly_GMp_err = {0.04, 0.11, 0.28, 1.2};
 //For GMn/mu_n
-vector<double> Kelly_GMn = {2.33, 14.72, 24.20, 84.10};
+vector<double> Kelly_GMn = {2.33, 14.72, 24.2, 84.1};
 vector<double> Kelly_GMn_err = {1.4, 1.7, 9.8, 41 };
 //GEn will be from Galster Parameterization
 double Kelly_A = 1.70;
@@ -60,9 +58,9 @@ vector<double> GEn_Ye_coef = {0.048919981379, -0.064525053912, -0.240825897382, 
 vector<double> GEn_Ye_err_coef = {-2.07194073, 1.13809127, 1.01431277, -3.13301380*pow(10,-1), -2.73293676*pow(10,-1), 2.57350595*pow(10,-1), -2.06042113*pow(10,-1), -1.68497332*pow(10,-1), 1.37784515*pow(10,-1), 7.57591964*pow(10,-2), -2.67511301*pow(10,-2), -1.72573088*pow(10,-2), 7.03581500*pow(10,-4), 1.47962095*pow(10,-3), 1.97375221*pow(10,-4)};
 //For GMn/mu_n
 vector<double> GMn_Div_mun_Ye_coef = {0.257758326959, -1.079540642058, 1.182183812195, 0.711015085833, -1.348080936796, -1.662444025208, 2.624354426029, 1.751234494568, -4.922300878888, 3.197892727312, -0.712072389946};
-vector<double> GMn_Div_mun_Ye_err_coef = {-2.06920873, 6.43156400*pow(10,-2), -3.55593786*pow(10,-1), 4.14897660*pow(10,-1), 1.95746824, 2.70525700*pow(10,-1), -1.52685784, -4.43527359*pow(10,-1), 5.16884065*pow(10,-1), 2.07915837*pow(10,-1), -7.48665703*pow(10,-2), -4.25411431*pow(10,-2), 1.54965016*pow(10,-3), 3.25322279*pow(10,-3), .:20819518*pow(10,-4)};
+vector<double> GMn_Div_mun_Ye_err_coef = {-2.06920873, 6.43156400*pow(10,-2), -3.55593786*pow(10,-1), 4.14897660*pow(10,-1), 1.95746824, 2.70525700*pow(10,-1), -1.52685784, -4.43527359*pow(10,-1), 5.16884065*pow(10,-1), 2.07915837*pow(10,-1), -7.48665703*pow(10,-2), -4.25411431*pow(10,-2), 1.54965016*pow(10,-3), 3.25322279*pow(10,-3), 4.20819518*pow(10,-4)};
 
-double ye_tcut = 4*physcics_constants::M_pi*physcics_constants::M_pi;
+double ye_tcut = 4*physics_constants::M_pi*physics_constants::M_pi;
 double ye_tnot = -0.7; //GeV^2
 
 //Helper function that calculates form factors based on the parameterization input and stores information in class variables. To be called by the constructor
@@ -81,7 +79,7 @@ double calculate_tau(double M);
 double calculate_epsilon(double tau);
 
 //Private function that calculates the form factor according to Kelly parameterization and 4 input parameters. Handles GEp, GMp/mu_p, GMn/mu_n
-double calcKelly(double a1, double b1, double b2, double b3);
+double calcKelly(double tau, double a1, double b1, double b2, double b3);
 
 //Private function that calculates GEp according to Kelly parameterization
 double GEp_Kelly();
@@ -146,12 +144,97 @@ public:
 //constructor
 calc_FFs_RCS_obj(TString my_param_type,TString kin_file, TString daKin);
 
+//destructor
+//Since we don't have any dynamically allocated memory or pointers this should be ok
+~calc_FFs_RCS_obj();
+
 //function to calculate the dipole form factor
-double GD(double Q2);
+double calculate_GD(double Q2);
 
 //function to calculate the Galster Parameterization. Normally used for just GEn
-double Galster(double tau, double Q2, double A, double B);
+double calculate_Galster(double tau, double Q2, double A, double B);
 
+//Public getter functions for most if not all the private class variables
+
+TString get_param_type();
+
+TString get_kin();
+
+TString get_kinematic_file();
+
+double get_reduced_cross_section_n();
+
+double get_reduced_cross_section_n_err();
+
+double get_reduced_cross_section_p();
+
+double get_reduced_cross_section_p_err();
+
+double get_reduced_cross_section_ratio();
+
+double get_reduced_cross_section_ratio_err();
+
+double get_Ebeam();
+
+double get_Eprime();
+
+double get_BB_angle_rad();
+
+double get_tau_p();
+
+double get_tau_n();
+
+double get_Q2();
+
+double get_epsilon_p();
+
+double get_epsilon_n();
+
+double get_GEp();
+
+double get_GEp_Div_GD();
+
+double get_GMp();
+
+double get_GMp_Div_mup();
+
+double get_GMp_Div_mup_GD();
+
+double get_GEn();
+
+double get_GEn_Div_GD();
+
+double get_GMn();
+
+double get_GMn_Div_mun();
+
+double get_GMn_Div_mun_GD();
+
+double get_GEp_err();
+
+double get_GEp_Div_GD_err();
+
+double get_GMp_err();
+
+double get_GMp_Div_mup_err();
+
+double get_GMp_Div_mup_GD_err();
+
+double get_GEn_err();
+
+double get_GEn_Div_GD_err();
+
+double get_GMn_err();
+
+double get_GMn_Div_mun_err();
+
+double get_GMn_Div_mun_GD_err();
+
+//Print all the relevant information. Mainly to compare to other calculations. QA check as well
+void print();
+
+//Print but for a report file
+void print(std::ofstream& report);
 
 };//end class
 #endif

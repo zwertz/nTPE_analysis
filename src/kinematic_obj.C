@@ -53,6 +53,11 @@
         } 
   }//end constructor
 
+  //desctructor
+  //no dyanmic memory and no points
+  kinematic_obj::~kinematic_obj(){}
+
+  //getter function implementations
   TString kinematic_obj::getKinematic(){ return kinematic; }
 
   double kinematic_obj::getBeamEnergy(){ return Ebeam; }

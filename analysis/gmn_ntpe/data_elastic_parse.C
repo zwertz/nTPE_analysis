@@ -2,7 +2,7 @@
 //02/01/2024
 //Purpose: Parsing Script for LD2 data to produce output histograms for later analysis
 
-
+//The exact ordering of this matters. ROOT for some reason cannot handle calls for files that have already been included. 
 #include "TF1.h"
 #include "TChain.h"
 #include "TTree.h"
@@ -20,15 +20,15 @@
 #include <sstream>
 #include <vector>
 #include "../../src/utility.C"
-#include "../../include/physics_constants.h"
 #include "../../src/exp_constants.C"
 #include "../../src/kinematic_obj.C"
-#include "../../src/parse_config.C"
+#include "../../src/fits.C"
 #include "../../src/data_object.C"
 #include "../../src/cuts.C"
 #include "../../src/physics.C"
-#include "../../src/fits.C"
+#include "../../src/parse_config.C"
 #include "../../src/plots.C"
+#include "../../src/calc_FFs_RCS_obj.C"
 
 //Main
 void data_elastic_parse(const char *setup_file_name){
@@ -595,7 +595,7 @@ void data_elastic_parse(const char *setup_file_name){
 
 	//Calculate Mott cross section for this event
 	double Mott_CS = physics::getMott_CS(physics_constants::alpha,etheta,pcorr,Ecorr);
-
+	
 	/* Can reconstruct e' momentum for downstream calculations differently:
 	* v1 - Use four-momentum member functions
  	* v2 - Use all available ekine (tree) vars and calculate vectors (should be the same as v1)

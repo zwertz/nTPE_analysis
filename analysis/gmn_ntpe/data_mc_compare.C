@@ -1,17 +1,19 @@
 
 //Author Ezekiel Wertz
 //04/09/2024
-//Purpose of the script is to extract n/p yield ratio by comparing real with MC. This will be controlled by a particular kinematic and field setting. So it will not be implemented over multiple kinematics or field settings. The script will take in histograms and information from separate already parsed data and MC files. These files should already implement elastic cuts, an intime-clustering for HCal,and a fiducial cut. The goal is to then respectively fit the dx distributions to get a best fit. Then compose a sum of these fits allowing for scaling parameters which map to the total MC yields. Need to determine how best to handle the background, that is grounded in physics. Ultimately will apply the three floating parameter fit to the data and check residuals and chi-square. Should also figure out how to vary the fit function, ideally to yield better results. The ratio will then be extracted.
+//Purpose of the script is to extract n/p cross-section ratio by comparing real with MC. This will be controlled by a particular kinematic and field setting. So it will not be implemented over multiple kinematics or field settings. The script will take in histograms and information from separate already parsed data and MC files. These files should already implement elastic cuts, an intime-clustering for HCal,and a fiducial cut. The goal is to then respectively fit the dx distributions to get a best fit. Then compose a sum of these fits allowing for scaling parameters which map to the total MC yields. Need to determine how best to handle the background, that is grounded in physics. Ultimately will apply the three floating parameter fit to the data and check residuals and chi-square. Should also figure out how to vary the fit function, ideally to yield better results. The ratio will then be extracted.
 
+//The exact ordering of this matters. ROOT for some reason cannot handle calls for files that have already been included.
 #include "TFile.h"
 #include <vector>
 #include <utility>
 #include "../../src/utility.C"
 #include "../../src/exp_constants.C"
+#include "../../src/kinematic_obj.C"
 #include "../../src/fits.C"
 #include "../../src/parse_config.C"
 #include "../../src/plots.C"
-
+#include "../../src/calc_FFs_RCS_obj.C"
 
 //Histograms needed for interpolation of elastic signal
 TH1D* hdx_p;
@@ -22,16 +24,18 @@ TH1D* hdx_n_nofid;
 
 //This fit function  must sit outside of main and has to be in this file so that way it has some knowledge of the histogram
 
+//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
 //Total function for MC + background.
 double fitFull(double *x, double *param){
 double dx = x[0];
 double proton_scale = param[0];
-double neutron_scale = param[1];
+double R_sf = param[1];
 
-double proton = proton_scale * hdx_p->Interpolate(dx);
-double neutron = neutron_scale * hdx_n->Interpolate(dx);
+double proton = hdx_p->Interpolate(dx);
+double neutron = hdx_n->Interpolate(dx);
 
-double fitFull = proton + neutron + fits::poly4_fit(x, &param[2]);
+//This is equivalent to neutron_scale*neutron + proton_scale*proton + background
+double fitFull = proton_scale*( R_sf*neutron + proton) + fits::poly4_fit(x, &param[2]);
 return fitFull;
 }
 
@@ -39,65 +43,72 @@ return fitFull;
 double fitFullNoBG(double *x, double *param){
 double dx = x[0];
 double proton_scale = param[0];
-double neutron_scale = param[1];
+double R_sf = param[1];
 
-double proton = proton_scale * hdx_p->Interpolate(dx);
-double neutron = neutron_scale * hdx_n->Interpolate(dx);
+double proton = hdx_p->Interpolate(dx);
+double neutron = hdx_n->Interpolate(dx);
 
-double fitFull = proton + neutron;
+//This is equivalent to neutron_scale*neutron + proton_scale*proton
+double fitFull = proton_scale*( R_sf*neutron + proton);
 return fitFull;
 }
 
+//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
 //Total function for MC + background. Independently shifts the neutron and proton peaks
 double fitFullShift(double *x, double *param){
 //MC float parameters
 double proton_scale = param[0];
-double neutron_scale = param[1];
+double R_sf = param[1];
 
 double dx_shift_p = param[2];
 double dx_shift_n = param[3];
 
 //Apply the shifts before any interpolation
-double proton = proton_scale * hdx_p->Interpolate(x[0] - dx_shift_p);
-double neutron = neutron_scale * hdx_n->Interpolate(x[0] - dx_shift_n);
+double proton = hdx_p->Interpolate(x[0] - dx_shift_p);
+double neutron = hdx_n->Interpolate(x[0] - dx_shift_n);
 
 //The total function is the proton and neutron peaks + a 4th order polynomial for background
-double fitFullshift = proton + neutron + fits::poly4_fit(x, &param[4]);
+//This is equivalent to neutron_scale*neutron + proton_scale*proton + background
+double fitFullshift = proton_scale*( R_sf*neutron + proton) + fits::poly4_fit(x, &param[4]);
 return fitFullshift;
 }
 
+//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
 //Total function for MC + background. Independently shifts the neutron and proton peaks
 double fitFullShiftNoFid(double *x, double *param){
 //MC float parameters
 double proton_scale = param[0];
-double neutron_scale = param[1];
+double R_sf = param[1];
 
 double dx_shift_p = param[2];
 double dx_shift_n = param[3];
 
 //Apply the shifts before any interpolation
-double proton = proton_scale * hdx_p_nofid->Interpolate(x[0] - dx_shift_p);
-double neutron = neutron_scale * hdx_n_nofid->Interpolate(x[0] - dx_shift_n);
+double proton = hdx_p_nofid->Interpolate(x[0] - dx_shift_p);
+double neutron = hdx_n_nofid->Interpolate(x[0] - dx_shift_n);
 
 //The total function is the proton and neutron peaks + a 4th order polynomial for background
-double fitFullshift = proton + neutron + fits::poly4_fit(x, &param[4]);
+//This is equivalent to neutron_scale*neutron + proton_scale*proton + background
+double fitFullshift = proton_scale*( R_sf*neutron + proton) + fits::poly4_fit(x, &param[4]);
 return fitFullshift;
 }
 
+//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
 //Full fit of proton and neutron peaks. No background. Independently shifts the neutron and proton peaks
 double fitFullShiftNoBG(double *x, double *param){
 //MC float parameters
 double proton_scale = param[0];
-double neutron_scale = param[1];
+double R_sf = param[1];
 
 double dx_shift_p = param[2];
 double dx_shift_n = param[3];
 
 //Apply the shifts before any interpolation
-double proton = proton_scale * hdx_p->Interpolate(x[0] - dx_shift_p);
-double neutron = neutron_scale * hdx_n->Interpolate(x[0] - dx_shift_n);
+double proton =  hdx_p->Interpolate(x[0] - dx_shift_p);
+double neutron = hdx_n->Interpolate(x[0] - dx_shift_n);
 
-double fitFullshift = proton + neutron;
+//This is equivalent to neutron_scale*neutron + proton_scale*proton
+double fitFullshift = proton_scale*( R_sf*neutron + proton);
 return fitFullshift;
 }
 
@@ -123,10 +134,14 @@ TString pass = mainConfig.getPass();
 int sbs_field = mainConfig.getSBSField();
 TString target = mainConfig.getTarg();
 TString fitopt = mainConfig.getFitOpt();
+TString kinematic_file = mainConfig.getKinFileName();
 
 double hcalfit_low = exp_constants::hcalposXi_mc; //lower fit/bin limit for hcal dx plots. 
 double hcalfit_high = exp_constants::hcalposXf_mc; //higher fit/bin limit for hcal dx plots.
 double hcal_fitrange = exp_constants::hcal_vrange; //Full range of hcal dx plots
+
+//Introduce an object that has information about the cross-section from the MC
+calc_FFs_RCS_obj myFFs("SIMC",kinematic_file,kin);
 
 
 //setup input file info
@@ -219,8 +234,11 @@ TF1 *bg_shiftFit_nofid = new TF1("bg_shiftFit_nofid",fits::poly4_fit,hcalfit_low
 ofstream report;
 report.open(reportfile);
 
+//Print out the FF object stuff to the report file
+ myFFs.print(report);
+
 //make canvas to show data and MC compare plot
-TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true,report);
+TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true,report,myFFs);
 
 //Do some fitting and get fit parameters. Do this for the background subtracted histogram
 TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit,totfit_ptr);
@@ -229,12 +247,12 @@ const char* fitType_nobg = "fitFullShiftNoBG";
 auto shiftpar_nobg_vec = fits::fitAndFineFit(hdx_data_nobg,"shiftFitNoBG",fitType_nobg,4,hcalfit_low,hcalfit_high,shiftQual_nobg,fitopt.Data());
 
 //make canvas to show data and MC compare plot. For background subtracted version
-TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_n_clone,"c2","shiftfit BG subtracted",fitType_nobg,shiftpar_nobg_vec,shiftQual_nobg,hcalfit_low,hcalfit_high,true);
+TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_n_clone,"c2","shiftfit BG subtracted",fitType_nobg,shiftpar_nobg_vec,shiftQual_nobg,hcalfit_low,hcalfit_high,true,myFFs);
 
 TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg,hdx_p_clone,hdx_n_clone,bg_shiftFit_clone,"c3","poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
 
 //Canvas for no fid
-TCanvas* c4 = plots::plotDataMCFitsResiduals(hdx_data_nofid_clone,hdx_p_nofid_clone,hdx_n_nofid_clone,bg_shiftFit_nofid,"c4","shiftfit poly4 BG nofid",fitType_nofid,shiftpar_vec_nofid,shiftQual_nofid,hcalfit_low,hcalfit_high,true,report);
+TCanvas* c4 = plots::plotDataMCFitsResiduals(hdx_data_nofid_clone,hdx_p_nofid_clone,hdx_n_nofid_clone,bg_shiftFit_nofid,"c4","shiftfit poly4 BG nofid",fitType_nofid,shiftpar_vec_nofid,shiftQual_nofid,hcalfit_low,hcalfit_high,true,report,myFFs);
 
 report.close();
 

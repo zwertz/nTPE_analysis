@@ -5,8 +5,6 @@
 
 #include "../include/parse_config.h"
 #include <iostream>
-#include "TCut.h"
-#include <vector>
 
   //constructor implementation
   parse_config::parse_config(const char *setup_file_name){
@@ -330,6 +328,10 @@
         return;
     }
   }//end constructor
+
+  //destructor
+  //no dynamic memory or pointers so no problem
+  parse_config::~parse_config(){}
 
 
   //Implement get functions for each variable

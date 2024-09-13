@@ -4,6 +4,9 @@
 //class to handle parsing my config files for all types of analysis
 //Author: Ezekiel Wertz
 
+#include "TString.h"
+#include "TCut.h"
+#include <vector>
 
 class parse_config{
   private:
@@ -34,6 +37,10 @@ class parse_config{
 public:
   //Constructor
   parse_config(const char *setup_file_name);
+
+  //destructor
+  //no dynamic memory or pointers so no problem
+  ~parse_config();
 
   //Get function for every private variable
   //Probably don't need set functions, once the constructor does the initial setup that should be only necessary

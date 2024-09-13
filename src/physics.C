@@ -1,5 +1,5 @@
 #include "../include/physics.h"
-
+#include "../include/physics_constants.h"
 
 //Author: Ezekiel Wertz
 //Companion implementation for the phyiscs functions

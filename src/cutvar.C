@@ -3,7 +3,6 @@
 //Companion implementation. A class to hold important quanties related to cut stability and systematic studies. utvar should only handle functions/processes on a case-by-case basis for data, mc p, mc n, and not all at once. A companion class to this is stability_analysis.h and stability_analysis.C. Will be modified as stability and systematic studies progress.
 
 #include "../include/cutvar.h"
-#include <iostream>
 
 //public constructor implementation. Constructor, will initialize a cutvar object. Which will be centrally used to handle a lot of the necessary info for the stability study. All private variables will be based on the cutvar input through conditionals.
 
@@ -133,6 +132,33 @@ cutvar::cutvar(TString myVar,TString datCut,TString daFlag, double dx_low, doubl
 
 }//end constructor
 
+//Copy constructor that takes a reference as input
+cutvar::cutvar(cutvar &myCut){
+
+	CutVar = myCut.getCutVar();
+        CutString = myCut.getCutString();
+        DatavMC_flag = myCut.getDataMCFlag();
+        dx_hist_low = myCut.get_dx_hist_low();
+        dx_hist_high = myCut.get_dx_hist_high();
+        dx_hist_bin = myCut.get_dx_hist_bin();
+        W2_hist_low = myCut.get_W2_hist_low();
+        W2_hist_high = myCut.get_W2_hist_high();
+        W2_hist_bin = myCut.get_W2_hist_bin();
+	dxHistogramName = myCut.getdxHistoName();
+        W2HistogramName = myCut.getW2HistoName();
+        AxisTitle = myCut.getAxisTitle();
+        xMin_xMax_range = myCut.getXMinXMaxRange();
+        cut_hist_low = myCut.get_cut_hist_low();
+        cut_hist_high = myCut.get_cut_hist_high();
+        cut_hist_bin =  myCut.get_cut_hist_bin();
+	dx_hist = get2DdxCutHisto();
+}
+
+//Destructor
+//Might have dynamically allocated memory or pointers. May have to worry about that.
+cutvar::~cutvar(){
+}
+
 //Function that will create a histogram of dx vs the cut variable. Relies on initialization of histo info from constructor.
 TH2D* cutvar::make2DdxCutHisto(TChain* C){
 //Draw the histogram with the given cut conditions
@@ -171,7 +197,7 @@ TString cutvar::getDataMCFlag(){return DatavMC_flag;}
 
 TString cutvar::getCutString(){return CutString;}
 
-double cutvar::get_dx_hist_low(){return dx_hist_low();}
+double cutvar::get_dx_hist_low(){return dx_hist_low;}
 
 double cutvar::get_dx_hist_high(){return dx_hist_high;}
 
@@ -187,7 +213,7 @@ double cutvar::get_cut_hist_low(){return cut_hist_low;}
 
 double cutvar::get_cut_hist_high(){return cut_hist_high;}
 
-double cutvar::get_cut_hist_bin(){return cut_hist_bin();}
+double cutvar::get_cut_hist_bin(){return cut_hist_bin;}
 
 vector<pair<double,double>> cutvar::getXMinXMaxRange(){return xMin_xMax_range; }
 

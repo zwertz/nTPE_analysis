@@ -1,13 +1,13 @@
 #ifndef CUTS_H
 #define CUTS_H
 
+//Author: Ezekiel Wertz
+//namespace to define common cut definitions or functions associated with cuts
+
 #include <vector>
 #include "TString.h"
 #include <iostream>
 #include "TTree.h"
-
-//Author: Ezekiel Wertz
-//namespace to define common cut definitions or functions associated with cuts
 
 namespace cuts{
 

@@ -10,9 +10,14 @@ TString kinematic;
 double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist,Q2,electron_p,nucleon_p;
 
 public:
-
+//Constructor
 kinematic_obj(const char *kinematic_file_name,TString Kin);
 
+//desctructor
+//no dyanmic memory and no points
+~kinematic_obj();
+
+//Necessary getter functions
 TString getKinematic();
 
 double getBeamEnergy();

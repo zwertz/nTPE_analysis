@@ -460,7 +460,7 @@ return sub_hist;
 }
 
 //Make a canvas that displays the Data and MC dx plot being compared along with background from a 4th order polynomial. Display relevant yield and ratio information
-TCanvas* plotDataMCFitsResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,std::ofstream& report){
+TCanvas* plotDataMCFitsResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,std::ofstream& report, calc_FFs_RCS_obj daFFInfo){
 
 //Recreate the fit
 TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
@@ -513,10 +513,25 @@ fit->Draw("same");
 //Yield info and integrals come before scaling to get sigma_n/sigma_p from MC. Need to further scale.
 
 //yield info for protons
-double p_sum_mc_error;
-double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
+//double p_sum_mc_error;
+//double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
 
-hdx_mc_p_after->Scale(params[0].first);
+//proton scale info
+double p_scale = params[0].first;
+double p_scale_error = params[0].second;
+
+//neutron scale info
+//double n_scale = params[1].first;
+//double n_scale_error = params[1].second;
+//Get Rsf from the fit parameters
+double R_sf = params[1].first;
+double R_sf_error = params[1].second;
+
+//scale info for neutrons
+double n_scale = R_sf*p_scale;
+double n_scale_error = n_scale*sqrt(pow(R_sf_error/R_sf,2)+pow(p_scale_error/p_scale,2));
+
+hdx_mc_p_after->Scale(p_scale);
 hdx_mc_p_after->SetLineColor(kRed);
 hdx_mc_p_after->SetFillColorAlpha(kRed-9,0.5);
 hdx_mc_p_after->SetFillStyle(3001);
@@ -528,10 +543,10 @@ hdx_mc_p_after->Draw("hist same");
         hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,params[3].first);
 	}
 //yield info for neutrons
-double n_sum_mc_error;
-double n_sum_mc = hdx_mc_n_before->IntegralAndError(0,hdx_mc_n_before->GetNbinsX()+1,n_sum_mc_error,"");
+//double n_sum_mc_error;
+//double n_sum_mc = hdx_mc_n_before->IntegralAndError(0,hdx_mc_n_before->GetNbinsX()+1,n_sum_mc_error,"");
 	
-hdx_mc_n_after->Scale(params[1].first);
+hdx_mc_n_after->Scale(n_scale);
 hdx_mc_n_after->SetLineColor(kBlue);
 hdx_mc_n_after->SetFillColorAlpha(kBlue-9,0.5);
 hdx_mc_n_after->SetFillStyle(3001);
@@ -544,52 +559,73 @@ bg->SetFillColorAlpha(kGreen-9,0.5);
 bg->SetFillStyle(1001);
 bg->Draw("same");
 
+//Just MC
+//Instead calculate the reduced cross-section for protons and neutrons using the FF parameterizations in SIMC. Here we are using a class developed by me to do this purpose
+double n_red_cross_section = daFFInfo.get_reduced_cross_section_n();
+double n_red_cross_section_err = daFFInfo.get_reduced_cross_section_n_err();
 
-//scale info for protons
-double p_scale = params[0].first;
-double p_scale_error = params[0].second;
+double p_red_cross_section = daFFInfo.get_reduced_cross_section_p();
+double p_red_cross_section_err = daFFInfo.get_reduced_cross_section_p_err();
+//Then do the n/p ratio. This is what we call Rsim
+double np_red_cross_section_ratio = daFFInfo.get_reduced_cross_section_ratio();
+double np_red_cross_section_ratio_err = daFFInfo.get_reduced_cross_section_ratio_err();
 
-//scale info for neutrons
-double n_scale = params[1].first;
-double n_scale_error = params[1].second;
+//Scale the MC information by the n and p scale factor or Rsf
+double n_red_cross_section_exp = n_red_cross_section*n_scale;
+double n_red_cross_section_exp_err = n_red_cross_section_exp * sqrt(pow(n_scale_error/n_scale,2) + pow(n_red_cross_section_err/n_red_cross_section,2));
+
+double p_red_cross_section_exp = p_red_cross_section*p_scale;
+double p_red_cross_section_exp_err = p_red_cross_section_exp * sqrt(pow(p_scale_error/p_scale,2) + pow(p_red_cross_section_err/p_red_cross_section,2));
 
 //Yield info and integrals come after scaling to get sigma_n/sigma_p for experiment. Don't need further scale.
 
+//The yield method is being turned off. As it includes detection efficiency and and nuclear and radiative effects baked in
 //yield info for protons
-double p_sum_exp_error;
-double p_sum_exp = hdx_mc_p_after->IntegralAndError(0,hdx_mc_p_after->GetNbinsX()+1,p_sum_exp_error,"");
+//double p_sum_exp_error;
+//double p_sum_exp = hdx_mc_p_after->IntegralAndError(0,hdx_mc_p_after->GetNbinsX()+1,p_sum_exp_error,"");
 
 //yield info for neutrons
-double n_sum_exp_error;
-double n_sum_exp = hdx_mc_n_after->IntegralAndError(0,hdx_mc_n_after->GetNbinsX()+1,n_sum_exp_error,"");
+//double n_sum_exp_error;
+//double n_sum_exp = hdx_mc_n_after->IntegralAndError(0,hdx_mc_n_after->GetNbinsX()+1,n_sum_exp_error,"");
 
-//get the ratios and the errors
-double np_sum_mc_ratio = n_sum_mc/p_sum_mc;
-double np_sum_exp_ratio = n_sum_exp/p_sum_exp;
-double np_scale_ratio = n_scale/p_scale;
+//double np_sum_mc_ratio = n_sum_mc/p_sum_mc;
+//double np_sum_exp_ratio = n_sum_exp/p_sum_exp;
 
-double np_sum_mc_ratio_error = np_sum_mc_ratio * sqrt(pow(n_sum_mc_error/n_sum_mc,2) + pow(p_sum_mc_error/p_sum_mc,2));
-double np_sum_exp_ratio_error = np_sum_exp_ratio * sqrt(pow(n_sum_exp_error/n_sum_exp,2) + pow(p_sum_exp_error/p_sum_exp,2));
-double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
+//get the exp np ratio
+double np_red_cross_section_ratio_exp = R_sf*np_red_cross_section_ratio;
+//get the np_scale ratio, we call it Rsf
+//double np_scale_ratio = n_scale/p_scale;
+
+//Get the corresponding errors
+//double np_sum_mc_ratio_error = np_sum_mc_ratio * sqrt(pow(n_sum_mc_error/n_sum_mc,2) + pow(p_sum_mc_error/p_sum_mc,2));
+//double np_sum_exp_ratio_error = np_sum_exp_ratio * sqrt(pow(n_sum_exp_error/n_sum_exp,2) + pow(p_sum_exp_error/p_sum_exp,2));
+double np_red_cross_section_ratio_exp_err = np_red_cross_section_ratio_exp * sqrt(pow(R_sf_error/R_sf,2) + pow(np_red_cross_section_ratio_err/np_red_cross_section_ratio,2));
+//double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
 
 //Make a legend to hold all the information we care about
-TLegend* legend = new TLegend(0.6, 0.5, 0.9, 0.9);
+TLegend* legend = new TLegend(0.57, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
 legend->AddEntry(bg,"Background","l");
 legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","l");
 legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","l");
 legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
-legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.3f #pm %0.3f",np_scale_ratio,np_scale_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
-legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
-legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
-legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
-legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.4f #pm %0.4f",R_sf,R_sf_error),"");
+//legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
+//legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
+//legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
+//legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
+//legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
+//legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
+legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
+legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
+legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
+legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
+legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
 legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",params[3].first,params[2].first),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
-legend->SetTextSize(0.03);
+legend->SetTextSize(0.025);
 legend->Draw("same");
 
 //Make the residual plot
@@ -633,13 +669,19 @@ report << "===================================================================" 
 report << "Report Information for " << fitName <<"." << endl;
 report << "Neutron scale factor: " << n_scale << " +/- " << n_scale_error << endl;
 report << "Proton scale factor: " << p_scale << " +/- " << p_scale_error << endl;
-report << "n/p scale ratio: " << np_scale_ratio << " +/- " << np_scale_ratio_error << endl;
-report << "MC neutron yield (before scale): " << n_sum_mc << " +/- " << n_sum_mc_error << endl;
-report << "MC proton  yield (before scale): " << p_sum_mc << " +/- " << p_sum_mc_error << endl;
-report << "MC n/p yield ratio (before scale): " << np_sum_mc_ratio << " +/- " << np_sum_mc_ratio_error << endl;
-report << "Experiment neutron yield (after scale): " << n_sum_exp << " +/- " << n_sum_exp_error << endl;
-report << "Experiment proton yield (after scale): " << p_sum_exp << " +/- " << p_sum_exp_error << endl;
-report << "Experiment n/p yield ratio (after scale): " << np_sum_exp_ratio << " +/- " << np_sum_exp_ratio_error << endl;
+report << "n/p scale ratio, R_sf: " << R_sf << " +/- " << R_sf_error << endl;
+report << "MC neutron reduced cross-section (before scale): " << n_red_cross_section << " +/- " << n_red_cross_section_err << endl;
+report << "MC proton reduced cross-section (before scale): " << p_red_cross_section << " +/- " << p_red_cross_section_err << endl;
+report << "MC n/p reduced cross-section ratio (before scale): " << np_red_cross_section_ratio << " +/- " << np_red_cross_section_ratio_err << endl;
+//report << "MC neutron yield (before scale): " << n_sum_mc << " +/- " << n_sum_mc_error << endl;
+//report << "MC proton  yield (before scale): " << p_sum_mc << " +/- " << p_sum_mc_error << endl;
+//report << "MC n/p yield ratio (before scale): " << np_sum_mc_ratio << " +/- " << np_sum_mc_ratio_error << endl;
+report << "Experiment neutron reduced cross-section (after scale): " << n_red_cross_section_exp << " +/- " << n_red_cross_section_exp_err << endl;
+report << "Experiment proton reduced cross-section (after scale): " << p_red_cross_section_exp << " +/- " << p_red_cross_section_exp_err << endl;
+report << "Experiment n/p RCS ratio (after scale): " << np_red_cross_section_ratio_exp << " +/- " << np_red_cross_section_ratio_exp_err << endl;
+//report << "Experiment neutron yield (after scale): " << n_sum_exp << " +/- " << n_sum_exp_error << endl;
+//report << "Experiment proton yield (after scale): " << p_sum_exp << " +/- " << p_sum_exp_error << endl;
+//report << "Experiment n/p yield ratio (after scale): " << np_sum_exp_ratio << " +/- " << np_sum_exp_ratio_error << endl;
 report << "neutron dx shift parameter: " << params[3].first << endl;
 report << "proton dx shift parameter: " << params[2].first << endl;
 report << "Chi^2/ndf: " << fit->GetChisquare() << "/" << fit->GetNDF() << endl;
@@ -651,7 +693,7 @@ return myTotCan;
 
 
 //Make a canvas that displays the Data and MC dx plot being compared. With background already subtracked. Display relevant yield and ratio information
-TCanvas* plotDataMCFitsResiduals_NoBG(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit){
+TCanvas* plotDataMCFitsResiduals_NoBG(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,calc_FFs_RCS_obj daFFInfo){
 
 //Recreate the fit from the parameters	
 TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
@@ -704,10 +746,25 @@ fit->Draw("same");
 //Yield info and integrals come before scaling to get sigma_n/sigma_p from MC. Need to further scale.
 
 //yield info for protons
-double p_sum_mc_error;
-double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
+//double p_sum_mc_error;
+//double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
 
-hdx_mc_p_after->Scale(params[0].first);
+//proton scale info
+double p_scale = params[0].first;
+double p_scale_error = params[0].second;
+
+//neutron scale info
+//double n_scale = params[1].first;
+//double n_scale_error = params[1].second;
+//Get Rsf from the fit parameters
+double R_sf = params[1].first;
+double R_sf_error = params[1].second;
+
+//scale info for neutrons
+double n_scale = R_sf*p_scale;
+double n_scale_error = n_scale*sqrt(pow(R_sf_error/R_sf,2)+pow(p_scale_error/p_scale,2));
+
+hdx_mc_p_after->Scale(p_scale);
 hdx_mc_p_after->SetLineColor(kRed);
 hdx_mc_p_after->SetFillColorAlpha(kRed-9,0.5);
 hdx_mc_p_after->SetFillStyle(3001);
@@ -719,60 +776,83 @@ hdx_mc_p_after->Draw("hist same");
 	hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,params[3].first);
         }
 //yield info for neutrons
-double n_sum_mc_error;
-double n_sum_mc = hdx_mc_n_before->IntegralAndError(0,hdx_mc_n_before->GetNbinsX()+1,n_sum_mc_error,"");
+//double n_sum_mc_error;
+//double n_sum_mc = hdx_mc_n_before->IntegralAndError(0,hdx_mc_n_before->GetNbinsX()+1,n_sum_mc_error,"");
 	
-hdx_mc_n_after->Scale(params[1].first);
+hdx_mc_n_after->Scale(n_scale);
 hdx_mc_n_after->SetLineColor(kBlue);
 hdx_mc_n_after->SetFillColorAlpha(kBlue-9,0.5);
 hdx_mc_n_after->SetFillStyle(3001);
 hdx_mc_n_after->SetLineWidth(2);
 hdx_mc_n_after->Draw("hist same");
 
+//The yield method is being turned off. As it includes detection efficiency and and nuclear and radiative effects baked in
 //Yield info and integrals come after scaling to get sigma_n/sigma_p for experiment. Don't need further scale.
 
 //yield info for protons
-double p_sum_exp_error;
-double p_sum_exp = hdx_mc_p_after->IntegralAndError(0,hdx_mc_p_after->GetNbinsX()+1,p_sum_exp_error,"");
+//double p_sum_exp_error;
+//double p_sum_exp = hdx_mc_p_after->IntegralAndError(0,hdx_mc_p_after->GetNbinsX()+1,p_sum_exp_error,"");
 
 //yield info for neutrons
-double n_sum_exp_error;
-double n_sum_exp = hdx_mc_n_after->IntegralAndError(0,hdx_mc_n_after->GetNbinsX()+1,n_sum_exp_error,"");
+//double n_sum_exp_error;
+//double n_sum_exp = hdx_mc_n_after->IntegralAndError(0,hdx_mc_n_after->GetNbinsX()+1,n_sum_exp_error,"");
 
-//proton scale info
-double p_scale = params[0].first;
-double p_scale_error = params[0].second;
+//Just MC
+//Instead calculate the reduced cross-section for protons and neutrons using the FF parameterizations in SIMC. Here we are using a class developed by me to do this purpose
+double n_red_cross_section = daFFInfo.get_reduced_cross_section_n();
+double n_red_cross_section_err = daFFInfo.get_reduced_cross_section_n_err();
 
-//neutron scale info
-double n_scale = params[1].first;
-double n_scale_error = params[1].second;
+double p_red_cross_section = daFFInfo.get_reduced_cross_section_p();
+double p_red_cross_section_err = daFFInfo.get_reduced_cross_section_p_err();
+//Then do the n/p ratio. This is what we call Rsim
+double np_red_cross_section_ratio = daFFInfo.get_reduced_cross_section_ratio();
+double np_red_cross_section_ratio_err = daFFInfo.get_reduced_cross_section_ratio_err();
+
+//Scale the MC information by the n and p scale factor or Rsf
+double n_red_cross_section_exp = n_red_cross_section*n_scale;
+double n_red_cross_section_exp_err = n_red_cross_section_exp * sqrt(pow(n_scale_error/n_scale,2) + pow(n_red_cross_section_err/n_red_cross_section,2));
+
+double p_red_cross_section_exp = p_red_cross_section*p_scale;
+double p_red_cross_section_exp_err = p_red_cross_section_exp * sqrt(pow(p_scale_error/p_scale,2) + pow(p_red_cross_section_err/p_red_cross_section,2));
 
 //get the ratios and the errors
-double np_sum_mc_ratio = n_sum_mc/p_sum_mc;
-double np_sum_exp_ratio = n_sum_exp/p_sum_exp;
-double np_scale_ratio = n_scale/p_scale;
+//double np_sum_mc_ratio = n_sum_mc/p_sum_mc;
+//double np_sum_exp_ratio = n_sum_exp/p_sum_exp;
 
-double np_sum_mc_ratio_error = np_sum_mc_ratio * sqrt(pow(n_sum_mc_error/n_sum_mc,2) + pow(p_sum_mc_error/p_sum_mc,2));
-double np_sum_exp_ratio_error = np_sum_exp_ratio * sqrt(pow(n_sum_exp_error/n_sum_exp,2) + pow(p_sum_exp_error/p_sum_exp,2));
-double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
+//get the exp np ratio
+double np_red_cross_section_ratio_exp = R_sf*np_red_cross_section_ratio;
+//get the np_scale ratio, we call it Rsf
+//double np_scale_ratio = n_scale/p_scale;
+
+//double np_sum_mc_ratio_error = np_sum_mc_ratio * sqrt(pow(n_sum_mc_error/n_sum_mc,2) + pow(p_sum_mc_error/p_sum_mc,2));
+//double np_sum_exp_ratio_error = np_sum_exp_ratio * sqrt(pow(n_sum_exp_error/n_sum_exp,2) + pow(p_sum_exp_error/p_sum_exp,2));
+//Get the corresponding errors
+double np_red_cross_section_ratio_exp_err = np_red_cross_section_ratio_exp * sqrt(pow(R_sf_error/R_sf,2) + pow(np_red_cross_section_ratio_err/np_red_cross_section_ratio,2));
+//double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
 
 //Make a legend to hold all the information we care about
-TLegend* legend = new TLegend(0.6, 0.5, 0.9, 0.9);
+TLegend* legend = new TLegend(0.57, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
 legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","l");
 legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","l");
 legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
-legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.3f #pm %0.3f",np_scale_ratio,np_scale_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
-legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
-legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
-legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
-legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.4f #pm %0.4f",R_sf,R_sf_error),"");
+//legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
+//legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
+//legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
+//legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
+//legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
+//legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
+legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
+legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
+legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
+legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %0.6f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
+legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %0.6f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
+legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
 legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",params[3].first,params[2].first),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
-legend->SetTextSize(0.03);
+legend->SetTextSize(0.025);
 legend->Draw("same");
 
 //Residual plot
@@ -840,7 +920,7 @@ hdx_mc_p->Scale(params[0].first);
 	if(shiftfit){
         hdx_mc_n = plots::shiftHistogramX(hdx_mc_n,params[3].first);
         }
-hdx_mc_n->Scale(params[1].first);
+hdx_mc_n->Scale(params[1].first*params[0].first);
 
 //Add the two MC histograms together for direct comparison
 TH1D* sumHist = new TH1D("sumHist1","dx for both MC protons and neutrons",hdx_mc_p->GetNbinsX(),hdx_mc_p->GetXaxis()->GetXmin(),hdx_mc_p->GetXaxis()->GetXmax());

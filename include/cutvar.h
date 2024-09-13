@@ -7,6 +7,7 @@
 #include "TString.h"
 #include <vector>
 #include <utility>
+#include <iostream>
 
 class cutvar{
 private:
@@ -59,6 +60,13 @@ public:
 //Constructor, will initialize a cutvar object. Which will be centrally used to handle a lot of the necessary info for the stability study. All private variables will be based on the cutvar input through conditionals.
 
 cutvar(TString myVar,TString datCut, TString daFlag, double dx_low, double dx_high, double dx_bin, double W2_low, double W2_high, double W2_bin,TChain* C );
+
+//Destructor
+//Might have dynamically allocated memory or pointers. May have to worry about that.
+~cutvar();
+
+//Copy constructor that takes a reference as input
+cutvar(cutvar &myCut);
 
 //Getter functions for each private variable. To provide controlle access. 
 

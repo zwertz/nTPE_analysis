@@ -2,16 +2,33 @@
 //03/15/2024
 //Purpose: Parsing simulation information from a simc generator by nucleon, build histrograms for further analysis
 
+//The exact ordering of this matters. ROOT for some reason cannot handle calls for files that have already been included. 
+#include "TF1.h"
+#include "TChain.h"
+#include "TTree.h"
+#include "TFile.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TCut.h"
+#include "TEventList.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
+#include "TMath.h"
+#include "TString.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
 #include "../../src/utility.C"
-#include "../../include/physics_constants.h"
 #include "../../src/exp_constants.C"
 #include "../../src/kinematic_obj.C"
-#include "../../src/parse_config.C"
+#include "../../src/fits.C"
 #include "../../src/data_object.C"
 #include "../../src/cuts.C"
 #include "../../src/physics.C"
-#include "../../src/fits.C"
+#include "../../src/parse_config.C"
 #include "../../src/plots.C"
+#include "../../src/calc_FFs_RCS_obj.C"
 
 //Main
 void mc_parse(const char *setup_file_name){

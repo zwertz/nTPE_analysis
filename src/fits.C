@@ -1,6 +1,7 @@
 //Author Ezekiel Wertz
 //Implementation of fit functions that are common throughout analysis
 
+
 namespace fits{
 
 //4th-order polynomial
@@ -146,25 +147,5 @@ long double fit_error =TMath::Sqrt(Vaa + pow(x,2)*Vbb + pow(x,4)*Vcc + pow(x,6)*
 
 return fit_error;
 }
-
-//A fit function for dx slices. Primarily used in stability_analysis class
-double mc_p_n_poly2_slice_fit(double *x, double *param){
-
-        //MC float parameters
-        double proton_scale = param[0];
-        double neutron_scale = param[1];
-
-        double dx_shift_p = param[2];
-        double dx_shift_n = param[3];
-
-        //Apply the shifts before any interpolation
-        double proton = proton_scale * histo_p->Interpolate(x[0] - dx_shift_p);
-        double neutron = neutron_scale * histo_n->Interpolate(x[0] - dx_shift_n);
- 
-        //The total function is the proton and neutron peaks + a 2nd order polynomial for background
-        double fit = proton + neutron + fits::poly2_fit(x, &param[4]);
-        return fit;
-}
-
 
 }//end namepspace

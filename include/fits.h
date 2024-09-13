@@ -1,5 +1,5 @@
 #ifndef FITS_H
-#define FITS_h
+#define FITS_H
 
 #include <vector>
 #include <utility>
@@ -23,7 +23,6 @@ double getFitError(TF1* fit);
 //Get the variance on a fit from the quadrature sum of the diagonal entries. Which the diagonal entries should be the variance on each parameter.
 double getFitError(TFitResultPtr fit_ptr);
 
-//A fit function for dx slices. Primarily used in stability_analysis class
-double mc_p_n_poly2_slice_fit(double *x, double *param);
 
 }//end namespace
+#endif

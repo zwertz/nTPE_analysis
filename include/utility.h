@@ -1,11 +1,13 @@
 #ifndef UTILITY_H
 #define UTILITY_H
 
+#include "TString.h"
+#include <string>
+#include <vector>
+
 
 //Author Ezekiel Wertz
 //A location to hold useful functions that do a task
-
-#include "TString.h"
 
 namespace utility{
 

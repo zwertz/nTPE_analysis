@@ -2,14 +2,43 @@
 //07/31/2024
 //Purpose: A script to evaluate the stability of various analysis cuts. Ultimately needed to justify final cut decisions. Presumably will evolve to to justify systematic error analysis.
 
+//The exact ordering of this matters. ROOT for some reason cannot handle calls for files that have already been included.
 #include "TFile.h"
 #include <vector>
 #include "../../src/utility.C"
 #include "../../src/exp_constants.C"
+#include "../../src/kinematic_obj.C"
 #include "../../src/fits.C"
+#include "../../src/physics.C"
 #include "../../src/parse_config.C"
 #include "../../src/plots.C"
+#include "../../src/calc_FFs_RCS_obj.C"
 #include "../../src/cutvar.C"
+#include "../../src/stability_analysis.C"
+
+//This must live in the script so it has knowledge of the histograms for interpolation
+//A fit function for dx slices. Primarily used in stability_analysis class
+TH1D* histo_p;
+TH1D* histo_n;
+
+double mc_p_n_poly2_slice_fit(double *x, double *param){
+
+        //MC float parameters
+        double proton_scale = param[0];
+        double R_sf = param[1];
+
+        double dx_shift_p = param[2];
+        double dx_shift_n = param[3];
+
+        //Apply the shifts before any interpolation
+        double proton = histo_p->Interpolate(x[0] - dx_shift_p);
+        double neutron = histo_n->Interpolate(x[0] - dx_shift_n);
+
+        //The total function is the proton and neutron peaks + a 2nd order polynomial for background
+        double fit = proton_scale*( R_sf*neutron + proton) + fits::poly2_fit(x, &param[4]);
+        return fit;
+}
+
 void stability_study(const char *setup_file_name){
 
   //Define a clock to check macro processing time
@@ -80,11 +109,12 @@ void stability_study(const char *setup_file_name){
   TString ps_e_study_mc_p = ps_e_study_mc + "&&" + isProtonCut;
   TString ps_e_study_mc_n = ps_e_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
-  cutvar psVar_data("BBps_e", ps_e_study_data, data_flag_string, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_data);
+  TString psVar_string = "BBps_e";
+  cutvar psVar_data(psVar_string, ps_e_study_data, data_flag_string, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_data);
   //For MC proton
-  cutvar psVar_mc_p("BBps_e", ps_e_study_mc_p, mc_p_flag_string, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+  cutvar psVar_mc_p(psVar_string, ps_e_study_mc_p, mc_p_flag_string, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
   //For MC neutron
-  cutvar psVar_mc_n("BBps_e", ps_e_study_mc_n, mc_n_flag_string, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+  cutvar psVar_mc_n(psVar_string, ps_e_study_mc_n, mc_n_flag_string, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
   //Get the 2D histgroms associated with the cut var for both data and mc
   TH2D* ps_e_dxhist_data = psVar_data.get2DdxCutHisto();
   TH2D* ps_e_dxhist_mc_p = psVar_mc_p.get2DdxCutHisto();
@@ -97,7 +127,14 @@ void stability_study(const char *setup_file_name){
   //For MC neutron dx histo
   vector<TH1D*> slice_psVar_mc_n = psVar_mc_n.sliceAndProjectHisto_xMinxMax(ps_e_dxhist_mc_n,psVar_mc_n.getAxisTitle().Data(),"dx");
 
+  //Fit type
+  const char* FitType = "mc_p_n_poly2_slice_fit";
 
+  //Maybe not best practice. Need histo_p and histo_n to be non null. So they get past the function call. Ultimately these will be manipulated in the function call
+  histo_p = (TH1D*)slice_psVar_mc_p[0]->Clone("Test_histo_p");
+  histo_n = (TH1D*)slice_psVar_mc_n[0]->Clone("Test_histo_n");
+  //Setup a stability analysis object. This is useful for getting physics quantities for the overall dx slices
+  stability_analysis psVar_stability(psVar_data,psVar_mc_p,psVar_mc_n,slice_psVar_data,slice_psVar_mc_p,slice_psVar_mc_n,FitType,histo_p,histo_n);
 
 
   fout->Write();

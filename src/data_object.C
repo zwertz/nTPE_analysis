@@ -4,7 +4,6 @@
 
 #include "../include/data_object.h"
 #include <iostream>
-#include "TString.h"
 #include "TMath.h"
 
 
@@ -185,6 +184,10 @@ data_object::data_object(int runnum,const char *data_file_name,const char *kinem
  input_file = data_object::makeInputFileName();
 
 }//end constructor
+
+//destructor
+//no dynamically allocated memory or pointers
+data_object::~data_object(){}
 
 //Implement getter functions
  int data_object::getRun(){ return run; }
