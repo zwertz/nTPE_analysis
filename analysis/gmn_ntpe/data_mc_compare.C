@@ -14,104 +14,7 @@
 #include "../../src/parse_config.C"
 #include "../../src/plots.C"
 #include "../../src/calc_FFs_RCS_obj.C"
-
-//Histograms needed for interpolation of elastic signal
-TH1D* hdx_p;
-TH1D* hdx_n;
-TH1D* hdx_p_nofid;
-TH1D* hdx_n_nofid;
-
-
-//This fit function  must sit outside of main and has to be in this file so that way it has some knowledge of the histogram
-
-//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
-//Total function for MC + background.
-double fitFull(double *x, double *param){
-double dx = x[0];
-double proton_scale = param[0];
-double R_sf = param[1];
-
-double proton = hdx_p->Interpolate(dx);
-double neutron = hdx_n->Interpolate(dx);
-
-//This is equivalent to neutron_scale*neutron + proton_scale*proton + background
-double fitFull = proton_scale*( R_sf*neutron + proton) + fits::poly4_fit(x, &param[2]);
-return fitFull;
-}
-
-//Full fit of proton and neutron peaks. No background
-double fitFullNoBG(double *x, double *param){
-double dx = x[0];
-double proton_scale = param[0];
-double R_sf = param[1];
-
-double proton = hdx_p->Interpolate(dx);
-double neutron = hdx_n->Interpolate(dx);
-
-//This is equivalent to neutron_scale*neutron + proton_scale*proton
-double fitFull = proton_scale*( R_sf*neutron + proton);
-return fitFull;
-}
-
-//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
-//Total function for MC + background. Independently shifts the neutron and proton peaks
-double fitFullShift(double *x, double *param){
-//MC float parameters
-double proton_scale = param[0];
-double R_sf = param[1];
-
-double dx_shift_p = param[2];
-double dx_shift_n = param[3];
-
-//Apply the shifts before any interpolation
-double proton = hdx_p->Interpolate(x[0] - dx_shift_p);
-double neutron = hdx_n->Interpolate(x[0] - dx_shift_n);
-
-//The total function is the proton and neutron peaks + a 4th order polynomial for background
-//This is equivalent to neutron_scale*neutron + proton_scale*proton + background
-double fitFullshift = proton_scale*( R_sf*neutron + proton) + fits::poly4_fit(x, &param[4]);
-return fitFullshift;
-}
-
-//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
-//Total function for MC + background. Independently shifts the neutron and proton peaks
-double fitFullShiftNoFid(double *x, double *param){
-//MC float parameters
-double proton_scale = param[0];
-double R_sf = param[1];
-
-double dx_shift_p = param[2];
-double dx_shift_n = param[3];
-
-//Apply the shifts before any interpolation
-double proton = hdx_p_nofid->Interpolate(x[0] - dx_shift_p);
-double neutron = hdx_n_nofid->Interpolate(x[0] - dx_shift_n);
-
-//The total function is the proton and neutron peaks + a 4th order polynomial for background
-//This is equivalent to neutron_scale*neutron + proton_scale*proton + background
-double fitFullshift = proton_scale*( R_sf*neutron + proton) + fits::poly4_fit(x, &param[4]);
-return fitFullshift;
-}
-
-//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
-//Full fit of proton and neutron peaks. No background. Independently shifts the neutron and proton peaks
-double fitFullShiftNoBG(double *x, double *param){
-//MC float parameters
-double proton_scale = param[0];
-double R_sf = param[1];
-
-double dx_shift_p = param[2];
-double dx_shift_n = param[3];
-
-//Apply the shifts before any interpolation
-double proton =  hdx_p->Interpolate(x[0] - dx_shift_p);
-double neutron = hdx_n->Interpolate(x[0] - dx_shift_n);
-
-//This is equivalent to neutron_scale*neutron + proton_scale*proton
-double fitFullshift = proton_scale*( R_sf*neutron + proton);
-return fitFullshift;
-}
-
+#include "../../src/fit_histogram.C"
 
 //Main
 void data_mc_compare(const char *setup_file_name){
@@ -159,15 +62,15 @@ TFile *fout = new TFile(outfile,"RECREATE");
 //Get Histograms we will need from the respective data or MC files
 TH1D *hdx_data = dynamic_cast<TH1D*>(data_file->Get("dx_cut")); //The data dx histogram with all cuts
 
-hdx_p = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_p")); //the MC dx histrogram for protons with all cuts
+TH1D *hdx_p = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_p")); //the MC dx histrogram for protons with all cuts
 
-hdx_n = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_n")); //the MC dx histrogram for neutrons with all cuts
+TH1D *hdx_n = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_n")); //the MC dx histrogram for neutrons with all cuts
 
 TH1D *hdx_data_nofid = dynamic_cast<TH1D*>(data_file->Get("dx_cut_nofid")); //The data dx histogram with all cuts but fid
 
-hdx_p_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_p")); //the MC dx histrogram for protons with all cuts but fid
+TH1D *hdx_p_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_p")); //the MC dx histrogram for protons with all cuts but fid
 
-hdx_n_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_n")); //the MC dx histrogram for neutrons with all cuts but fid
+TH1D *hdx_n_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_n")); //the MC dx histrogram for neutrons with all cuts but fid
 
 
 //Histogram clones for this analysis
@@ -190,43 +93,62 @@ TH1D *hdx_data_fit_error = (TH1D*)(hdx_data->Clone("dx_data_fit_error"));
 TH1D *hdx_data_nofid_clone = (TH1D*)(hdx_data_nofid->Clone("dx_data_nofid_clone"));
 
 //do some fitting and get the fit parameters, Error, ChiSquare, and NDF from the fit. This function is not perfect as it returns the parameter and Error pair vector and updates the pair to hold the ChiSquare and NDF. Better way to code this would be a structure that holds all of that information. 
-pair<double,double> shiftQual;
-const char* fitType = "fitFullShift";
-auto shiftpar_vec = fits::fitAndFineFit(hdx_data_clone,"shiftFit",fitType,9,hcalfit_low,hcalfit_high,shiftQual,fitopt.Data());
+const char* fitType = "fitFullShift_polyBG";
+//Create a fit_histogram object which is a class that handles fitting dx histograms depending on input
+fit_histogram *dxhisto_allcuts = new fit_histogram(hdx_data_clone,hdx_p,hdx_n,"shiftFit",fitType,4,9,hcalfit_low,hcalfit_high,fitopt.Data() ); 
+vector<double> shiftpar_bkgd = dxhisto_allcuts->get_bkgd_params();
+vector<double> shiftpar_bkgd_err = dxhisto_allcuts->get_bkgd_param_errs();
+string fitTypeString = fitType;
+vector<pair<double,double>> shiftpar_vec = dxhisto_allcuts->get_fitParamsErrs();
 
 //fit parameters for dx plot without fid cut. A check essentially
-pair<double,double> shiftQual_nofid;
-const char* fitType_nofid = "fitFullShiftNoFid";
-auto shiftpar_vec_nofid = fits::fitAndFineFit(hdx_data_nofid_clone,"shiftFit_nofid",fitType_nofid,9,hcalfit_low,hcalfit_high,shiftQual_nofid,fitopt.Data());
+const char* fitType_nofid = "fitFullShift_polyBG";
+//Creat a fit_histogram object for the dx no fid
+fit_histogram *dxhisto_nofid = new fit_histogram(hdx_data_nofid_clone,hdx_p_nofid,hdx_n_nofid,"shiftFit_nofid",fitType,4,9,hcalfit_low,hcalfit_high,fitopt.Data() );
+vector<double> shiftpar_bkgd_nofid = dxhisto_nofid->get_bkgd_params();
+vector<double> shiftpar_bkgd_nofid_err = dxhisto_nofid->get_bkgd_param_errs();
 
 //Make background functions
-TF1 *bg_shiftFit = new TF1("bg_shiftFit",fits::poly4_fit,hcalfit_low,hcalfit_high,5);
+TF1 *bg_shiftFit = new TF1("bg_shiftFit",dxhisto_allcuts,&fit_histogram::polyN_fit,hcalfit_low,hcalfit_high,5,"fit_histogram","polyN_fit");
 //set the background parameters
 	for(int j=0; j<5; ++j ){
-	bg_shiftFit->SetParameter(j,shiftpar_vec[j+4].first);
-	bg_shiftFit->SetParError(j,shiftpar_vec[j+4].second);
+	bg_shiftFit->SetParameter(j,shiftpar_bkgd[j]);
+	bg_shiftFit->SetParError(j,shiftpar_bkgd_err[j]);
 	}
+
 //Make background function clone
-TF1 *bg_shiftFit_clone = new TF1("bg_shiftFit_clone",fits::poly4_fit,hcalfit_low,hcalfit_high,5);
+TF1 *bg_shiftFit_clone = new TF1("bg_shiftFit_clone",dxhisto_allcuts,&fit_histogram::polyN_fit,hcalfit_low,hcalfit_high,5,"fit_histogram","polyN_fit");
 //set the background parameters
  	for(int j=0; j<5; ++j ){
-        bg_shiftFit_clone->SetParameter(j,shiftpar_vec[j+4].first);
-        bg_shiftFit_clone->SetParError(j,shiftpar_vec[j+4].second);
+        bg_shiftFit_clone->SetParameter(j,shiftpar_bkgd[j]);
+        bg_shiftFit_clone->SetParError(j,shiftpar_bkgd_err[j]);
         }
 
-TF1 *total_fit_bg_error = new TF1("total_fit_bg_error",fitType,hcalfit_low,hcalfit_high,9);
+	
+TF1 *total_fit_bg_error;
+	//This conditional works but we will need to modify it if we need any new types of functions
+        if(fitTypeString == "fitFull_polyBG"){
+        total_fit_bg_error = new TF1("total_fit_bg_error",dxhisto_allcuts,&fit_histogram::fitFull_polyBG,hcalfit_low,hcalfit_high,9,"fit_histogram","fitFull_polyBG");
+        }else if(fitTypeString =="fitFullShift_polyBG"){
+        total_fit_bg_error = new TF1("total_fit_bg_error",dxhisto_allcuts,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,9,"fit_histogram","fitFullShift_polyBG");
+        }else{
+        cout << "The plot function you are trying to implement " << fitType << " is no good! Figure it out now!" << endl;
+        total_fit_bg_error = new TF1("total_fit_bg_error",dxhisto_allcuts,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,9,"fit_histogram","fitFullShift_polyBG");
+        }
+
 TFitResultPtr totfit_ptr = hdx_data_fit_error->Fit(total_fit_bg_error,"QS");
+
 //set the background parameters
-	for(int k=0; k<9; ++k){
+	for(int k=0; k<shiftpar_vec.size(); ++k){
 	total_fit_bg_error->SetParameter(k,shiftpar_vec[k].first);
 	total_fit_bg_error->SetParError(k,shiftpar_vec[k].second);
 	}
 
 //background for the nofid plot
-TF1 *bg_shiftFit_nofid = new TF1("bg_shiftFit_nofid",fits::poly4_fit,hcalfit_low,hcalfit_high,5);
+TF1 *bg_shiftFit_nofid = new TF1("bg_shiftFit_nofid",dxhisto_nofid,&fit_histogram::polyN_fit,hcalfit_low,hcalfit_high,5,"fit_histogram","polyN_fit");
 	for(int j=0; j<5; ++j ){
-        bg_shiftFit_nofid->SetParameter(j,shiftpar_vec_nofid[j+4].first);
-        bg_shiftFit_nofid->SetParError(j,shiftpar_vec_nofid[j+4].second);
+        bg_shiftFit_nofid->SetParameter(j,shiftpar_bkgd_nofid[j]);
+        bg_shiftFit_nofid->SetParError(j,shiftpar_bkgd_nofid_err[j]);
         }
 
 //handle the information sent to the report file
@@ -238,21 +160,21 @@ report.open(reportfile);
  myFFs.print(report);
 
 //make canvas to show data and MC compare plot
-TCanvas* c0 = plots::plotDataMCFitsResiduals(hdx_data_clone,hdx_p_clone,hdx_n_clone,bg_shiftFit,"c0","shiftfit poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true,report,myFFs);
+TCanvas* c0 = plots::plotDataMCFitsResiduals(dxhisto_allcuts,bg_shiftFit,"c0",true,report,myFFs);
 
 //Do some fitting and get fit parameters. Do this for the background subtracted histogram
 TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit,totfit_ptr);
-pair<double,double> shiftQual_nobg;
 const char* fitType_nobg = "fitFullShiftNoBG";
-auto shiftpar_nobg_vec = fits::fitAndFineFit(hdx_data_nobg,"shiftFitNoBG",fitType_nobg,4,hcalfit_low,hcalfit_high,shiftQual_nobg,fitopt.Data());
+fit_histogram *dxhisto_nobg = new fit_histogram(hdx_data_nobg,hdx_p,hdx_n,"shiftFit_nobg",fitType_nobg,4,9,hcalfit_low,hcalfit_high,fitopt.Data() );
+
 
 //make canvas to show data and MC compare plot. For background subtracted version
-TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(hdx_data_nobg,hdx_p_clone,hdx_n_clone,"c2","shiftfit BG subtracted",fitType_nobg,shiftpar_nobg_vec,shiftQual_nobg,hcalfit_low,hcalfit_high,true,myFFs);
+TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(dxhisto_nobg,"c2",true,report,myFFs);
 
-TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg,hdx_p_clone,hdx_n_clone,bg_shiftFit_clone,"c3","poly4 BG",fitType,shiftpar_vec,shiftQual,hcalfit_low,hcalfit_high,true);
+TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg,hdx_p_clone,hdx_n_clone,bg_shiftFit_clone,"c3","poly4 BG",fitType,shiftpar_vec,hcalfit_low,hcalfit_high,true);
 
 //Canvas for no fid
-TCanvas* c4 = plots::plotDataMCFitsResiduals(hdx_data_nofid_clone,hdx_p_nofid_clone,hdx_n_nofid_clone,bg_shiftFit_nofid,"c4","shiftfit poly4 BG nofid",fitType_nofid,shiftpar_vec_nofid,shiftQual_nofid,hcalfit_low,hcalfit_high,true,report,myFFs);
+TCanvas* c4 = plots::plotDataMCFitsResiduals(dxhisto_nofid,bg_shiftFit_nofid,"c4",true,report,myFFs);
 
 report.close();
 

@@ -6,7 +6,7 @@
 //// This should remove the necessity of the simulation variables being globals
 
 //constructor to handle polynomial backgrounds. This implementation inherently assumes you are shifting the histograms as well
-fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, const char *fitType, int poly_ord, int param_count, double xmin, double xmax, string& fit_options){
+fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_name, const char* fit_type, int poly_ord, int param_count, double xmin, double xmax,const string& fit_options){
 	
 	
 	//First check that the histograms are not null
@@ -14,44 +14,44 @@ fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, 
 	cerr << "At least one of the histograms are null in the constructor!" << endl;
 	}
 
-	//convert the const char to a string
-	string fitTypeString = fitType;
+	fitType = fit_type;
+	fitName = fit_name;
 
 	//check that the fitType is implemented or not. Will need to update that if more fit types/functions are implemented
-	if(fitTypeString != "fitFull_polyBG" || fitTypeString != "fitFullNoBG" || fitTypeString != "fitFullShift_polyBG" || fitTypeString !="fitFullShiftNoBG" || fitTypeString != "polyN_fit"){
+	if(fitType != "fitFull_polyBG" && fitType != "fitFullNoBG" && fitType != "fitFullShift_polyBG" && fitType !="fitFullShiftNoBG" && fitType != "polyN_fit"){
 	cerr << "The fitType: " << fitType << " is not properly implemented! Find the error or implement the fit!" << endl;
 	}
 
 	//Store the class variables we can right a way.
-	hist_data = (TH1D*) h_data->Clone(Form("h_dx_data_%s",fitType));
-	hist_p = (TH1D*) h_p->Clone(Form("h_dx_mc_p_%s",fitType));
-	hist_n = (TH1D*) h_n->Clone(Form("h_dx_mc_n_%s",fitType));
-	fitFunc = fitType;
+	hist_data = (TH1D*) h_data->Clone(Form("h_dx_data_%s",fitName.c_str()));
+	hist_p = (TH1D*) h_p->Clone(Form("h_dx_mc_p_%s",fitName.c_str()));
+	hist_n = (TH1D*) h_n->Clone(Form("h_dx_mc_n_%s",fitName.c_str()));
 	polyorder = poly_ord;
 	paramCount = param_count;
 	xMin = xmin;
 	xMax = xmax;
-	fitName = fit_name;
 	fitOptions = fit_options;
 
+	
 	//Now fit the data histo with our function with a polynomial background
-	vector<pair<double,double>> paramsErrsChi = fitAndFineFit(hist_data,fitName,fitFunc,paramCount,xMin,xMax,fitOptions);
+	vector<pair<double,double>> paramsErrsChi = fitAndFineFit(hist_data,fitName,fitType,paramCount,xMin,xMax,fitOptions);
 
 	//Initialize the fit params errs vector. So we can store the original fit information
-	for(int i=0; i<paramCount; i++){
-	fitParamsErrs.first[i] = paramsErrsChi[i].first;
-	fitParamsErrs.second[i] = paramsErrsChi[i].second;
+	for(int l=0; l<paramCount; ++l){
+	pair<double,double> mydoub(paramsErrsChi[l].first,paramsErrsChi[l].second);
+	fitParamsErrs.push_back(mydoub);
+	
 	}
 	
 	//Now that we have the fit parameters. Make it easy to access the parts we will need
 	scale_p = paramsErrsChi[0].first;
 	scale_p_err = paramsErrsChi[0].second;
-
+	
 	Rsf = paramsErrsChi[1].first;
         Rsf_err = paramsErrsChi[1].second;
 
 	scale_n = Rsf * scale_p;
-	scale_n_err = scale_n*sqrt(pow(Rsf_error/Rsf,2)+pow(scale_p_err/scale_p,2)); //Treating these as indpendent parameters and adding in quadrature is not quite right. One should really do a dependent error analsis. However, this is not going to be use in an extraction. Could be worse.
+	scale_n_err = scale_n*sqrt(pow(Rsf_err/Rsf,2)+pow(scale_p_err/scale_p,2)); //Treating these as indpendent parameters and adding in quadrature is not quite right. One should really do a dependent error analsis. However, this is not going to be use in an extraction. Could be worse.
 
 	shift_p = paramsErrsChi[2].first;
 	shift_p_err = paramsErrsChi[2].second;
@@ -61,44 +61,50 @@ fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, 
 	
 	//Handle the polynomial parameters. This should be compatible with N order polynomial
 	for(int j = 4; j < paramCount; j++){
-	bkgd_params[j-4] = paramsErrsChi[j].first;
-	bkgd_param_errs[j-4] = paramsErrsChi[j].second;
+	bkgd_params.push_back(paramsErrsChi[j].first);
+	bkgd_param_errs.push_back(paramsErrsChi[j].second);
 	}
-	Chisq = paramsErrsChi[paramCount+1].first;
-	NDF = paramsErrsChi[paramCount+1].second;
-
+	
+	ChiSq = paramsErrsChi[paramCount].first;
+	NDF = paramsErrsChi[paramCount].second;
+	
 	//This should initizalie everything but bgscale and bgscale error
 } //end of a constructor
 
 //constructor to handle user-input (essentially anticut or MC inelastic) backgrounds
-fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, const char *fitType, vector<double> bkgd_coeffs, int param_count, double xmin, double xmax, string& fit_options){
+fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_name, const char* fit_type, vector<double> bkgd_coeffs, int param_count, double xmin, double xmax,const  string& fit_options){
         //First check that the histograms are not null
         if(!hist_data || !hist_p || !hist_n){
         cerr << "At least one of the histograms are null in the constructor!" << endl;
         }
-
-        //convert the const char to a string
-        string fitTypeString = fitType;
+	
+	fitType = fit_type;
+	fitName = fit_name;
 
         //check that the fitType is implemented or not. Will need to update that if more fit types/functions are implemented
-        if(fitTypeString != "fitFull_polyBG" || fitTypeString != "fitFullNoBG" || fitTypeString != "fitFullShift_polyBG" || fitTypeString !="fitFullShiftNoBG" || fitTypeString != "polyN_fit"){
+        if(fitType != "fitFull_polyBG" && fitType != "fitFullNoBG" && fitType != "fitFullShift_polyBG" && fitType !="fitFullShiftNoBG" && fitType != "polyN_fit"){
         cerr << "The fitType: " << fitType << " is not properly implemented! Find the error or implement the fit!" << endl;
         }
 
 	//Store the class variables we can right a way.
-        hist_data = (TH1D*) h_data->Clone(Form("h_dx_data_%s",fitType));
-        hist_p = (TH1D*) h_p->Clone(Form("h_dx_mc_p_%s",fitType));
-        hist_n = (TH1D*) h_n->Clone(Form("h_dx_mc_n_%s",fitType));
-        fitFunc = fitType;
+        hist_data = (TH1D*) h_data->Clone(Form("h_dx_data_%s",fitName.c_str()));
+        hist_p = (TH1D*) h_p->Clone(Form("h_dx_mc_p_%s",fitName.c_str()));
+        hist_n = (TH1D*) h_n->Clone(Form("h_dx_mc_n_%s",fitName.c_str()));
         bkgd_params = bkgd_coeffs;
         paramCount = param_count;
         xMin = xmin;
         xMax = xmax;
-        fitName = fit_name;
         fitOptions = fit_options;
 
 	//Now fit the data histo with our function with a polynomial background
-        vector<pair<double,double>> paramsErrsChi = fitAndFineFit(hist_data,fitName,fitFunc,paramCount,xMin,xMax,fitOptions);
+        vector<pair<double,double>> paramsErrsChi = fitAndFineFit(hist_data,fitName.c_str(),fitType.c_str(),paramCount,xMin,xMax,fitOptions);
+
+	 //Initialize the fit params errs vector. So we can store the original fit information
+        for(int l=0; l<paramCount; ++l){
+        pair<double,double> mydoub(paramsErrsChi[l].first,paramsErrsChi[l].second);
+        fitParamsErrs.push_back(mydoub);
+
+        }
 
 	//Now that we have the fit parameters. Make it easy to access the parts we will need
         scale_p = paramsErrsChi[0].first;
@@ -108,7 +114,7 @@ fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, 
         Rsf_err = paramsErrsChi[1].second;
 
         scale_n = Rsf * scale_p;
-        scale_n_err = scale_n*sqrt(pow(Rsf_error/Rsf,2)+pow(scale_p_err/scale_p,2)); //Treating these as indpendent parameters and adding in quadrature is not quite right. One should really do a dependent error analsis. However, this is not going to be use in an extraction. Could be worse.
+        scale_n_err = scale_n*sqrt(pow(Rsf_err/Rsf,2)+pow(scale_p_err/scale_p,2)); //Treating these as indpendent parameters and adding in quadrature is not quite right. One should really do a dependent error analsis. However, this is not going to be use in an extraction. Could be worse.
 
         shift_p = paramsErrsChi[2].first;
         shift_p_err = paramsErrsChi[2].second;
@@ -122,11 +128,11 @@ fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, 
 
         //Handle the polynomial parameters. This should be compatible with N order polynomial
         for(int j = 5; j < paramCount; j++){
-        bkgd_params[j-5] = paramsErrsChi[j].first;
-        bkgd_param_errs[j-5] = paramsErrsChi[j].second;
+        bkgd_params.push_back(paramsErrsChi[j].first);
+        bkgd_param_errs.push_back(paramsErrsChi[j].second);
         }
-        Chisq = paramsErrsChi[paramCount+1].first;
-        NDF = paramsErrsChi[paramCount+1].second;
+        ChiSq = paramsErrsChi[paramCount].first;
+        NDF = paramsErrsChi[paramCount].second;
 
         //This should initizalie everything but poly order
 
@@ -138,6 +144,7 @@ fit_histogram::~fit_histogram(){
 delete hist_data;
 delete hist_p;
 delete hist_n;
+delete fitFunc;
 }
 
 //Implemented no longer really used
@@ -212,7 +219,7 @@ double neutron = hist_n->Interpolate(x[0] - dx_shift_n);
 double val = proton_scale*( R_sf*neutron + proton);
 
 	//loop over the known bkgd coefficients and scale the background accordingly
-	for(int i =0, i < bkgd_params.size(); i++ ){
+	for(int i =0; i < bkgd_params.size(); i++ ){
 	val += bg_scale * (bkgd_params[i] * pow(x[0],i));
 	}
 
@@ -250,24 +257,41 @@ double poly_func = 0.0;
 return poly_func;
 }
 
-
-
-
 //function to fit the histogram then fine fit and return all desired parameters.
-vector<pair<double,double>> fit_histogram::fitAndFineFit(TH1D* histogram, const string& fitName, const string& fitFormula, int paramCount, double hcalfit_low, double hcalfit_high, const string& fitOptions = "RBMQ0"){
+vector<pair<double,double>> fit_histogram::fitAndFineFit(TH1D* histogram,  string fitName,  string fitFormula, int paramCount, double hcalfit_low, double hcalfit_high, const string& fitOptions = "RBMQ0"){
 
 //make the vector we will eventually return. It will hold the parameters and the last pair will be chi2 and ndf
 vector<pair<double,double>> paramsAndErrs(paramCount+1);
 
+//Will need io make sure new fitTypes get implemented if necessary
+//Explicilty implement the lambda function, need to see if this works, these are tricky
 //Make a fit based on the information provided
-TF1* datFit = new TF1(fitName.c_str(),fitFormula.c_str(),hcalfit_low,hcalfit_high,paramCount);
+TF1 *datFit = new TF1(fitName.c_str(),[this,fitFormula](double *x, double *par) -> double {
+	if(fitFormula == "fitFull_polyBG"){
+	return this->fitFull_polyBG(x, par);
+	}else if(fitFormula == "fitFullNoBG"){
+	return this->fitFullNoBG(x, par);
+	}else if(fitFormula =="fitFullShift_polyBG"){
+	return this->fitFullShift_polyBG(x, par);
+	}else if(fitFormula =="fitFullShiftNoBG"){
+	return this->fitFullShiftNoBG(x, par);
+	}else{
+	cout << "The Lambda function you are trying to implement " << fitFormula << " is no good! Figure it out now!" << endl;
+	return this->fitFullShift_polyBG(x, par);
+	}
+  },hcalfit_low,hcalfit_high,paramCount);
+
+
+string mystring("Shift");
 
 //check if the fitFormula has shifted parameters
-	if(fitFormula.contains("Shift")){
+	if(fitFormula.find(mystring) != string::npos){
+	
 	//verify that hte shifts are going to be within the fit parameter
 	datFit->SetParLimits(2,hcalfit_low,hcalfit_high);
 	datFit->SetParLimits(3,hcalfit_low,hcalfit_high);
-	|
+	}
+
 //Fit the provided histogram with the fit we have
 histogram->Fit(datFit,fitOptions.c_str());
 
@@ -281,79 +305,96 @@ vector<double> fineFitParams(paramCount);
         //cout << datFit->GetParameter(j) << endl;
         }
 
-//Fine fit to get a better set of parameters
-TF1* datFineFit = new TF1((fitName+"_fine").c_str(),fitFormula.c_str(),hcalfit_low,hcalfit_high,paramCount);
+//Fine fit to get a better set of parameters. Make it equal to the fit function in the class. This function should only get called by the constructor
+fitFunc = new TF1((fitName+"_fine").c_str(),[this,fitFormula](double *x, double *par) -> double {
+        if(fitFormula == "fitFull_polyBG"){
+        return this->fitFull_polyBG(x, par);
+        }else if(fitFormula == "fitFullNoBG"){
+        return this->fitFullNoBG(x, par);
+        }else if(fitFormula =="fitFullShift_polyBG"){
+        return this->fitFullShift_polyBG(x, par);
+        }else if(fitFormula =="fitFullShiftNoBG"){
+        return this->fitFullShiftNoBG(x, par);
+        }else{
+        cout << "The Lambda function you are trying to implement " << fitFormula << " is no good! Figure it out now!" << endl;
+        return this->fitFullShift_polyBG(x, par);
+        }
+	},hcalfit_low,hcalfit_high,paramCount);
 
 //set the fine fit intiall parameters to be the ones we just found
-datFineFit->SetParameters(fineFitParams.data());
+fitFunc->SetParameters(fineFitParams.data());
 
 //Fit the histogram again but with these better intial parameters
-histogram->Fit(datFineFit,fitOptions.c_str());
+histogram->Fit(fitFunc,fitOptions.c_str());
 
         //update the parameters and errors with the ones we just found from fine fit
         for(int k=0; k<paramCount; ++k){
-        paramsAndErrs[k].first = datFineFit->GetParameter(k);
-        paramsAndErrs[k].second = datFineFit->GetParError(k);
+        paramsAndErrs[k].first = fitFunc->GetParameter(k);
+        paramsAndErrs[k].second = fitFunc->GetParError(k);
         //Diagnostic
-        cout << datFineFit->GetParameter(k) << endl;
+        cout << fitFunc->GetParameter(k) << endl;
         }
 
 //don't like these lines because it kind of circumvents the idea of a return
 //get the Chisquare and NDF from the fit which is useful for analysis
-paramsAndErrs[paramCount+1].first = datFineFit->GetChisquare();
-paramsAndErrs[paramCount+1].second = datFineFit->GetNDF();
+paramsAndErrs[paramCount].first = fitFunc->GetChisquare();
+paramsAndErrs[paramCount].second = fitFunc->GetNDF();
 
-//cleanup
-delete datFit;
-delete datFineFit;
+
 return paramsAndErrs;
 }//end fit and fine fit func
 
 //Getter functions for class variables
-string& get_fitType();
+string fit_histogram::get_fitType(){return fitType;}
 
-string& get_fitName();
+string fit_histogram::get_fitName(){return fitName;}
 
-string& get_fitOptions();
+string& fit_histogram::get_fitOptions(){return fitOptions;}
 
-double get_xMin();
+double fit_histogram::get_xMin(){return xMin;}
 
-double get_xMax();
+double fit_histogram::get_xMax(){return xMax;}
 
-double get_scale_p();
+double fit_histogram::get_scale_p(){return scale_p;}
 
-double get_scale_p_err();
+double fit_histogram::get_scale_p_err(){return scale_p_err;}
 
-double get_scale_n();
+double fit_histogram::get_scale_n(){return scale_n;}
 
-double get_scale_n_err();
+double fit_histogram::get_scale_n_err(){return scale_n_err;}
 
-double get_shift_p();
+double fit_histogram::get_shift_p(){return shift_p;}
 
-double get_shift_p_err();
+double fit_histogram::get_shift_p_err(){return shift_p_err;}
 
-double get_shift_n();
+double fit_histogram::get_shift_n(){return shift_n;}
 
-double get_shift_n_err();
+double fit_histogram::get_shift_n_err(){return shift_n_err;}
 
-double get_Rsf();
+double fit_histogram::get_Rsf(){return Rsf;}
 
-double get_Rsf_err();
+double fit_histogram::get_Rsf_err(){return Rsf_err;}
 
-double get_BGscale();
+double fit_histogram::get_BGscale(){return BGscale;}
 
-double get_BGscale_err();
+double fit_histogram::get_BGscale_err(){return BGscale_err;}
 
-int get_polyorder();
+int fit_histogram::get_polyorder(){return polyorder;}
 
-double get_ChiSq;()
+double fit_histogram::get_ChiSq(){return ChiSq;}
 
-double get_NDF();
+double fit_histogram::get_NDF(){return NDF;}
 
-int get_paramCount();
+int fit_histogram::get_paramCount(){return paramCount;}
 
-vector<pair<double,double>> get_fitParamsErrs();
+vector<pair<double,double>> fit_histogram::get_fitParamsErrs(){return fitParamsErrs;}
 
-vector<double> get_bkgd_params();
+vector<double> fit_histogram::get_bkgd_params(){return bkgd_params;}
 
-vector<double> get_bkgd_param_errs();
+vector<double> fit_histogram::get_bkgd_param_errs(){return bkgd_param_errs;}
+
+TH1D* fit_histogram::get_hist_data(){return hist_data;}
+
+TH1D* fit_histogram::get_hist_p(){return hist_p;}
+
+TH1D* fit_histogram::get_hist_n(){return hist_n;}

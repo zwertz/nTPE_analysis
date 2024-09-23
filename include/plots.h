@@ -2,6 +2,7 @@
 #define PLOTS_H
 
 #include "../include/calc_FFs_RCS_obj.h"
+#include "../include/fit_histogram.h"
 
 //Author Ezekiel Wertz
 //A location to hold functions that make canvases or plots, beyond just standard output to root tree
@@ -40,13 +41,13 @@ TH1D* subtractBG(TH1D* hist, TF1* bgFit,double fit_error);
 TH1D* subtractHist(TH1D* hist1,TH1D* hist2);
 
 //Make a canvas that displays the Data and MC dx plot being compared along with background from a 4th order polynomial. Display relevant yield and ratio information
-TCanvas* plotDataMCFitsResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name, const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,std::ofstream& report, calc_FFs_RCS_obj daFFInfo);
+TCanvas* plotDataMCFitsResiduals(fit_histogram* myFitHisto,TF1* bg,const char *name, bool shiftfit, std::ofstream& report, calc_FFs_RCS_obj daFFInfo);
 
 //Make a canvas that displays the Data and MC dx plot being compared. With background already subtracked. Display relevant yield and ratio information
-TCanvas* plotDataMCFitsResiduals_NoBG(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,calc_FFs_RCS_obj daFFInfo);
+TCanvas* plotDataMCFitsResiduals_NoBG(fit_histogram* myFitHisto,const char *name, bool shiftfit, std::ofstream& report, calc_FFs_RCS_obj daFFInfo);
 
 //Function to plot the background histogram with corresponding fit function. Then a residual between the fit and histogram.
-TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit);
+TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params,double hcalfit_low, double hcalfit_high,bool shiftfit);
 
 }//end namespace
 #endif

@@ -460,27 +460,51 @@ return sub_hist;
 }
 
 //Make a canvas that displays the Data and MC dx plot being compared along with background from a 4th order polynomial. Display relevant yield and ratio information
-TCanvas* plotDataMCFitsResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,std::ofstream& report, calc_FFs_RCS_obj daFFInfo){
+
+TCanvas* plotDataMCFitsResiduals(fit_histogram* myFitHisto,TF1* bg,const char *name, bool shiftfit, std::ofstream& report, calc_FFs_RCS_obj daFFInfo){
+
+//Initialize some information from the fit_histogram object
+TH1D* hdx_data = myFitHisto->get_hist_data();
+TH1D* hdx_mc_p = myFitHisto->get_hist_p();
+TH1D* hdx_mc_n = myFitHisto->get_hist_n();
+string fitName = myFitHisto->get_fitName();
+cout << fitName << endl;
+string fitType = myFitHisto->get_fitType();
+vector<pair<double,double>> params = myFitHisto->get_fitParamsErrs();
+double hcalfit_low = myFitHisto->get_xMin();
+double hcalfit_high = myFitHisto->get_xMax();
+double n_shift = myFitHisto->get_shift_n();
+double p_shift = myFitHisto->get_shift_p();
 
 //Recreate the fit
-TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
+TF1* fit;
+
+	//This conditional works but we will need to modify it if we need any new types of functions
+	if(fitType == "fitFull_polyBG"){
+	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFull_polyBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFull_polyBG");
+	}else if(fitType =="fitFullShift_polyBG"){
+	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShift_polyBG");
+	}else{
+	cout << "The plot function you are trying to implement " << fitType << " is no good! Figure it out now!" << endl;
+	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShift_polyBG");
+	}
 	//file the fit with the parameters
 	for(int i=0; i < params.size();++i){
 	fit->SetParameter(i,params[i].first);
 	fit->SetParError(i,params[i].second);
 	}
-fit->SetChisquare(qual.first);
-fit->SetNDF(qual.second);
+fit->SetChisquare(myFitHisto->get_ChiSq());
+fit->SetNDF(myFitHisto->get_NDF());
 
 //Make clones of the mc histograms
-TH1D *hdx_mc_p_before = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_before"));
+//TH1D *hdx_mc_p_before = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_before"));
 TH1D *hdx_mc_p_after = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_after"));
 
-TH1D *hdx_mc_n_before = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_before"));
+//TH1D *hdx_mc_n_before = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_before"));
 TH1D *hdx_mc_n_after = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_after"));
 
 //Create a canvas we will use to store information
-TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName),1600,1200);
+TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName.c_str()),1600,1200);
 //create two pads on the canvas
 TPad *pad1 = new TPad("pad1", "Pad with the fit", 0.0, 0.3, 1.0, 1.0);
 TPad *pad2 = new TPad("pad2", "Pad with the residuals", 0.0, 0.0, 1.0, 0.3);
@@ -497,7 +521,7 @@ pad1->cd();
 //data dx
 hdx_data->SetLineColor(kBlack);
 hdx_data->SetLineWidth(1);
-hdx_data->SetTitle(Form("dx, %s;m",fitName));
+hdx_data->SetTitle(Form("dx, %s;m",fitName.c_str()));
 hdx_data->SetStats(0);
 hdx_data->Draw("hist");
 //fit the data dx
@@ -506,8 +530,8 @@ fit->SetLineWidth(2);
 fit->Draw("same");
 //proton MC dx
 	if(shiftfit){
-	hdx_mc_p_before = plots::shiftHistogramX(hdx_mc_p_before,params[2].first);
-        hdx_mc_p_after = plots::shiftHistogramX(hdx_mc_p_after,params[2].first);
+	//hdx_mc_p_before = plots::shiftHistogramX(hdx_mc_p_before,p_shift);
+        hdx_mc_p_after = plots::shiftHistogramX(hdx_mc_p_after,p_shift);
 	}
 
 //Yield info and integrals come before scaling to get sigma_n/sigma_p from MC. Need to further scale.
@@ -517,19 +541,19 @@ fit->Draw("same");
 //double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
 
 //proton scale info
-double p_scale = params[0].first;
-double p_scale_error = params[0].second;
+double p_scale = myFitHisto->get_scale_p();
+double p_scale_error = myFitHisto->get_scale_p_err();
 
 //neutron scale info
 //double n_scale = params[1].first;
 //double n_scale_error = params[1].second;
 //Get Rsf from the fit parameters
-double R_sf = params[1].first;
-double R_sf_error = params[1].second;
+double R_sf = myFitHisto->get_Rsf();
+double R_sf_error = myFitHisto->get_Rsf_err();
 
 //scale info for neutrons
-double n_scale = R_sf*p_scale;
-double n_scale_error = n_scale*sqrt(pow(R_sf_error/R_sf,2)+pow(p_scale_error/p_scale,2));
+double n_scale = myFitHisto->get_scale_n();
+double n_scale_error = myFitHisto->get_scale_n_err();
 
 hdx_mc_p_after->Scale(p_scale);
 hdx_mc_p_after->SetLineColor(kRed);
@@ -539,8 +563,8 @@ hdx_mc_p_after->SetLineWidth(2);
 hdx_mc_p_after->Draw("hist same");
 //neutron MC dx
 	if(shiftfit){
-	hdx_mc_n_before = plots::shiftHistogramX(hdx_mc_n_before,params[3].first);
-        hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,params[3].first);
+	//hdx_mc_n_before = plots::shiftHistogramX(hdx_mc_n_before,n_shift);
+        hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,n_shift);
 	}
 //yield info for neutrons
 //double n_sum_mc_error;
@@ -623,7 +647,7 @@ legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cro
 legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
 legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
 legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
-legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",params[3].first,params[2].first),"");
+legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",n_shift,p_shift),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
 legend->SetTextSize(0.025);
 legend->Draw("same");
@@ -682,8 +706,8 @@ report << "Experiment n/p RCS ratio (after scale): " << np_red_cross_section_rat
 //report << "Experiment neutron yield (after scale): " << n_sum_exp << " +/- " << n_sum_exp_error << endl;
 //report << "Experiment proton yield (after scale): " << p_sum_exp << " +/- " << p_sum_exp_error << endl;
 //report << "Experiment n/p yield ratio (after scale): " << np_sum_exp_ratio << " +/- " << np_sum_exp_ratio_error << endl;
-report << "neutron dx shift parameter: " << params[3].first << endl;
-report << "proton dx shift parameter: " << params[2].first << endl;
+report << "neutron dx shift parameter: " << n_shift << endl;
+report << "proton dx shift parameter: " << p_shift << endl;
 report << "Chi^2/ndf: " << fit->GetChisquare() << "/" << fit->GetNDF() << endl;
 report << "===================================================================" << endl << endl;
 
@@ -693,27 +717,50 @@ return myTotCan;
 
 
 //Make a canvas that displays the Data and MC dx plot being compared. With background already subtracked. Display relevant yield and ratio information
-TCanvas* plotDataMCFitsResiduals_NoBG(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit,calc_FFs_RCS_obj daFFInfo){
+TCanvas* plotDataMCFitsResiduals_NoBG(fit_histogram* myFitHisto,const char *name, bool shiftfit, std::ofstream& report, calc_FFs_RCS_obj daFFInfo){
 
-//Recreate the fit from the parameters	
-TF1* fit = new TF1("fit",fitType,hcalfit_low,hcalfit_high,params.size());
+//Initialize some information from the fit_histogram object
+TH1D* hdx_data = myFitHisto->get_hist_data();
+TH1D* hdx_mc_p = myFitHisto->get_hist_p();
+TH1D* hdx_mc_n = myFitHisto->get_hist_n();
+string fitName = myFitHisto->get_fitName();
+string fitType = myFitHisto->get_fitType();
+vector<pair<double,double>> params = myFitHisto->get_fitParamsErrs();
+double hcalfit_low = myFitHisto->get_xMin();
+double hcalfit_high = myFitHisto->get_xMax();
+double n_shift = myFitHisto->get_shift_n();
+double p_shift = myFitHisto->get_shift_p();
+
+//Recreate the fit
+TF1* fit;
+
+        //This conditional works but we will need to modify it if we need any new types of functions
+        if(fitType == "fitFullNoBG"){
+        fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullNoBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullNoBG");
+        }else if(fitType =="fitFullShiftNoBG"){
+        fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShiftNoBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShiftNoBG");
+        }else{
+        cout << "The plot function you are trying to implement " << fitType << " is no good! Figure it out now!" << endl;
+        fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShiftNoBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShiftNoBG");
+        }
         //file the fit with the parameters
-	for(int i=0; i < params.size();++i){
+        for(int i=0; i < params.size();++i){
         fit->SetParameter(i,params[i].first);
         fit->SetParError(i,params[i].second);
         }
-fit->SetChisquare(qual.first);
-fit->SetNDF(qual.second);
+fit->SetChisquare(myFitHisto->get_ChiSq());
+fit->SetNDF(myFitHisto->get_NDF());
+
 
 //Make clones of the mc histograms
-TH1D *hdx_mc_p_before = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_before"));
+//TH1D *hdx_mc_p_before = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_before"));
 TH1D *hdx_mc_p_after = (TH1D*)(hdx_mc_p->Clone("hdx_mc_p_after"));
 
-TH1D *hdx_mc_n_before = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_before"));
+//TH1D *hdx_mc_n_before = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_before"));
 TH1D *hdx_mc_n_after = (TH1D*)(hdx_mc_n->Clone("hdx_mc_n_after"));
 
 //Create a canvas we will use to store information
-TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName),1600,1200);
+TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName.c_str()),1600,1200);
 //create two pads on the canvas
 TPad *pad1 = new TPad("pad1", "Pad with the fit", 0.0, 0.3, 1.0, 1.0);
 TPad *pad2 = new TPad("pad2", "Pad with the residuals", 0.0, 0.0, 1.0, 0.3);
@@ -730,7 +777,7 @@ pad1->cd();
 //data dx
 hdx_data->SetLineColor(kBlack);
 hdx_data->SetLineWidth(1);
-hdx_data->SetTitle(Form("dx, %s;m",fitName));
+hdx_data->SetTitle(Form("dx, %s;m",fitName.c_str()));
 hdx_data->SetStats(0);
 hdx_data->Draw("hist");
 //fit the data dx
@@ -739,8 +786,8 @@ fit->SetLineWidth(2);
 fit->Draw("same");
 //proton MC dx
         if(shiftfit){
-	hdx_mc_p_before = plots::shiftHistogramX(hdx_mc_p_before,params[2].first);
-        hdx_mc_p_after = plots::shiftHistogramX(hdx_mc_p_after,params[2].first);
+	//hdx_mc_p_before = plots::shiftHistogramX(hdx_mc_p_before,p_shift);
+        hdx_mc_p_after = plots::shiftHistogramX(hdx_mc_p_after,p_shift);
 	}
 
 //Yield info and integrals come before scaling to get sigma_n/sigma_p from MC. Need to further scale.
@@ -750,19 +797,19 @@ fit->Draw("same");
 //double p_sum_mc = hdx_mc_p_before->IntegralAndError(0,hdx_mc_p_before->GetNbinsX()+1,p_sum_mc_error,"");
 
 //proton scale info
-double p_scale = params[0].first;
-double p_scale_error = params[0].second;
+double p_scale = myFitHisto->get_scale_p();
+double p_scale_error = myFitHisto->get_scale_p_err();
 
 //neutron scale info
 //double n_scale = params[1].first;
 //double n_scale_error = params[1].second;
 //Get Rsf from the fit parameters
-double R_sf = params[1].first;
-double R_sf_error = params[1].second;
+double R_sf = myFitHisto->get_Rsf();
+double R_sf_error = myFitHisto->get_Rsf_err();
 
 //scale info for neutrons
-double n_scale = R_sf*p_scale;
-double n_scale_error = n_scale*sqrt(pow(R_sf_error/R_sf,2)+pow(p_scale_error/p_scale,2));
+double n_scale = myFitHisto->get_scale_n();
+double n_scale_error = myFitHisto->get_scale_n_err();
 
 hdx_mc_p_after->Scale(p_scale);
 hdx_mc_p_after->SetLineColor(kRed);
@@ -772,8 +819,8 @@ hdx_mc_p_after->SetLineWidth(2);
 hdx_mc_p_after->Draw("hist same");
 //neutron MC dx
         if(shiftfit){
-        hdx_mc_n_before = plots::shiftHistogramX(hdx_mc_n_before,params[3].first);
-	hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,params[3].first);
+        //hdx_mc_n_before = plots::shiftHistogramX(hdx_mc_n_before,n_shift);
+	hdx_mc_n_after = plots::shiftHistogramX(hdx_mc_n_after,n_shift);
         }
 //yield info for neutrons
 //double n_sum_mc_error;
@@ -896,7 +943,7 @@ return myTotCan;
 
 }
 //Function to plot the background histogram with corresponding fit function. Then a residual between the fit and histogram.
-TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params, pair<double,double> qual,double hcalfit_low, double hcalfit_high,bool shiftfit){
+TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params,double hcalfit_low, double hcalfit_high,bool shiftfit){
 
 //Create a canvas we will use to store information
 TCanvas *myTotCan = new TCanvas(name,Form("Data with Fits and Residuals %s",fitName),1600,1200);

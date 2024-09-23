@@ -12,8 +12,9 @@ class fit_histogram{
 
 private:
 
-string& fitType;
-string& fitName, fitOptions;
+string fitType;
+string fitName;
+string fitOptions;
 
 TH1D *hist_data; //data histogram for dx containing both n and p info
 TH1D *hist_p;  // proton simulation histogram
@@ -44,7 +45,21 @@ vector<pair<double,double>> fitParamsErrs;
 vector<double> bkgd_params;
 vector<double> bkgd_param_errs;
 
-//Fit functions that we should probably keep private. As the class/constructor will choose which function and fit type is used
+vector<pair<double,double>> fitAndFineFit(TH1D* histogram, string fitName, string fitFormula, int paramCount, double hcalfit_low, double hcalfit_high, const string& fitOptions = "RBMQ0");
+
+public:
+//constructor to handle polynomial backgrounds. This implementation inherently assumes you are shifting the histograms as well
+fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_name, const char* fitType, int poly_ord, int param_count, double xmin, double xmax, const string& fit_options);
+
+//constructor to handle user-input (essentially anticut or MC inelastic) backgrounds
+fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_name, const char* fitType, vector<double> bkgd_coeffs, int param_count, double xmin, double xmax, const string& fit_options);
+
+//A function that should be able to generate any order polynomail. We are most interested in even order polynomials. A prerequiste is that polyorder must be not null. Or this will most likely crash
+double polyN_fit(double *x, double *param);
+
+//destructor
+//We will need to delete the dynamically allocated memory
+~fit_histogram();
 
 //No proton and neutron central value shifts. MC proton and neutron shape via the Interpolate function. Assumes a polynomial background and should be able to handle any order. 2nd and 4th order are most common.
 double fitFull_polyBG(double *x, double *param);
@@ -53,36 +68,25 @@ double fitFull_polyBG(double *x, double *param);
 double fitFullNoBG(double *x, double *param);
 
 //Shift proton and neutron central values. MC proton and neutron shape via the Interpolate function. Assumes a polynomial background and should be able to handle any order. 2nd and 4th order are most common.
-double fitFullShift_polyBG(double *x, double *param);
-
-//Shift proton and neutron central values. MC proton and neutron shape via the Interpolate function. Assumes a polynomial background and should be able to handle any order. 2nd and 4th order are most common.
 double fitFullShiftNoBG(double *x, double *param);
-
-//A function that should be able to generate any order polynomail. We are most interested in even order polynomials. A prerequiste is that polyorder must be not null. Or this will most likely crash
-double polyN_fit(double *x, double *param);
 
 double fitFullShift_scale_polyBG(double *x, double *param);
 
-vector<pair<double,double>> fitAndFineFit(TH1D* histogram, const string& fitName, const string& fitFormula, int paramCount, double hcalfit_low, double hcalfit_high, const string& fitOptions = "RBMQ0");
+//Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
+//Total function for MC + background. Independently shifts the neutron and proton peaks
+double fitFullShift_polyBG(double *x, double *param);
 
-public:
-//constructor to handle polynomial backgrounds. This implementation inherently assumes you are shifting the histograms as well
-fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, const char *fitType, int poly_ord, int param_count, double xmin, double xmax, string& fit_options);
+TH1D* get_hist_data();
 
-//constructor to handle user-input (essentially anticut or MC inelastic) backgrounds
-fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, string fit_name, const char *fitType, vector<double> bkgd_coeffs, int param_count, double xmin, double xmax, string& fit_options);
+TH1D* get_hist_p();
 
-	
-//destructor
-//We will need to delete the dynamically allocated memory
-~fit_histogram();
+TH1D* get_hist_n();
 
-//Getter functions for class variables
-string& get_fitType();
+string get_fitType();
 
-string& get_fitName();
+string get_fitName();
 
-string&	get_fitOptions();
+string& get_fitOptions();
 
 double get_xMin();
 
@@ -114,7 +118,7 @@ double get_BGscale_err();
 
 int get_polyorder();
 
-double get_ChiSq;()
+double get_ChiSq();
 
 double get_NDF();
 
