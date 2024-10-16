@@ -227,6 +227,9 @@
                         }else if(key == "dysig_cut_fac"){
 			dysig_cut_fac = val.Atof();
 			//cout << "dy sigma cut factor " << dysig_cut_fac << endl;
+			}else if(key == "spot_sig"){
+			spot_sig = val.Atof();
+			//cout << "spot sigma " << spot_sig << endl;
 			}else if(key == "proton_thresh_fac"){
                         proton_thresh_fac = val.Atoi();
                         //cout << "Proton thresh factor: " << proton_thresh_fac << endl;
@@ -275,7 +278,19 @@
                         }else if(key == "hcalemin"){
                         hcalemin = val.Atof();
                         //cout << "hcalemin " << hcalemin << endl;
-                        }else if(key == "thetapq_low"){
+			}else if(key == "fidxmin"){
+			fidx_min = val.Atof();
+			//cout << "fidx_min" << fidx_min << endl;
+			}else if(key == "fidxmax"){
+                        fidx_max = val.Atof();
+                        //cout << "fidx_max" << fidx_max << endl;
+			}else if(key == "fidymin"){
+                        fidy_min = val.Atof();
+                        //cout << "fidy_min" << fidy_min << endl;
+                        }else if(key == "fidymax"){
+                        fidy_max = val.Atof();
+                        //cout << "fidy_max" << fidy_max << endl;
+			}else if(key == "thetapq_low"){
                         thetapq_low = val.Atof();
                         //cout << "thetapq_low " << thetapq_low << endl;
                         }else if(key == "thetapq_high"){
@@ -491,6 +506,16 @@
   double parse_config::getLumiOverride(){return luminosity_override;}
 
   double parse_config::getVolOverride(){return genvol_override;}
+
+  double parse_config::get_fidxmin(){return fidx_min;}
+
+  double parse_config::get_fidxmax(){return fidx_max;}
+
+  double parse_config::get_fidymin(){return fidy_min;}
+
+  double parse_config::get_fidymax(){return fidy_max;}
+
+  double parse_config::get_spotsig(){return spot_sig;}
 
   bool parse_config::get_MCOverride(){return mc_override;}
 

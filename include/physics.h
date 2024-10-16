@@ -22,7 +22,11 @@ namespace physics{
  TVector3 getHCal_origin(double hcaldist, double hcal_offset, TVector3 hcal_xaxis, TVector3 hcal_zxaxis);
 
  //Try to calculate the effects of the SBS magnetic field
- double getBdL(int sbs_field);
+ double getBdL(int sbs_field,TString Kin);
+
+ //Get expected proton deflection, somewhat crude model
+ //thetabend = 0.3*BdL/p
+ double get_protonDeflection(double BdL, double p, double hcaldist, double sbsdist);
 
  //Calculate the outgoing energy based on losses in the target
  //Currently does not account for the aluminum target cell, requires modification

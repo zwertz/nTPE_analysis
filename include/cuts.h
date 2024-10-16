@@ -59,6 +59,9 @@ double calculate_nsigma_fid_y(double yhcal_expect, double dysig, vector<double> 
 //nsigma fid check
 bool passNsigFid(double nsigx_fid,double nsigy_fid);
 
+//Spot cut on HCal dx and dy to select protons or neutrons
+bool passHCal_Spot(double dx, double dy, double dxO, double dyO, double dxsigma, double dysigma, double radius);
+
 
 }//end namespace
 #endif

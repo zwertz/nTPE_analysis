@@ -252,7 +252,11 @@ bool passNsigFid = nsigx_fid > 1 && nsigy_fid >1;
 return passNsigFid;
 }
 
-
+//Spot cut on HCal dx and dy to select protons or neutrons
+bool passHCal_Spot(double dx, double dy, double dxO, double dyO, double dxsigma, double dysigma, double radius){
+bool HCal_spot = pow((dx-dxO)/dxsigma,2) + pow((dy-dyO)/dysigma,2) <= pow(radius,2);
+return HCal_spot;
+}
 
 }//end namespace
 

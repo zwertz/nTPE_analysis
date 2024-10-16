@@ -29,6 +29,7 @@
 #include "../../src/parse_config.C"
 #include "../../src/plots.C"
 #include "../../src/calc_FFs_RCS_obj.C"
+#include "../../src/fit_histogram.C"
 
 //Main
 void mc_parse(const char *setup_file_name){
@@ -221,12 +222,12 @@ int nFiles = 0;
   TH2D *hxy_cut = new TH2D("hxy_cut","HCal X vs Y, all cuts, best cluster;y_{HCAL} (m); x_{HCAL} (m)",300, -2.0, 2.0, 500, -3.0, 3.0);
 
 //E-arm
-  TH1D *h_W2_globcut = new TH1D( "W2_globcut", "W2 (GeV) global cut; GeV", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_W2_glob_W2_cut = new TH1D( "W2_glob_W2_cut", "W2 (GeV) global & W2 cuts; GeV", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_W2_notW2_cut = new TH1D( "W2_notW2_cut", "W2 (GeV) all cuts, but W2; GeV", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV) all cuts; GeV", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_Q2_globcut = new TH1D( "Q2_globcut", "Q2 (GeV) global cut; GeV", 300, 0.0, 6.0 );
-  TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV) all cuts; GeV", 300, 0.0, 6.0 );
+  TH1D *h_W2_globcut = new TH1D( "W2_globcut", "W2 (GeV^{2}) global cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_glob_W2_cut = new TH1D( "W2_glob_W2_cut", "W2 (GeV^{2}) global & W2 cuts; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_notW2_cut = new TH1D( "W2_notW2_cut", "W2 (GeV^{2}) all cuts, but W2; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV^{2}) all cuts; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_Q2_globcut = new TH1D( "Q2_globcut", "Q2 (GeV^{2}) global cut; GeV^{2}", 300, 0.0, 6.0 );
+  TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV^{2}) all cuts; GeV^{2}", 300, 0.0, 6.0 );
   TH2D *hxy_expect_globcut = new TH2D("hxy_expect_globcut","HCal X Expect vs Y Expect, global cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_glob_W2_cut = new TH2D("hxy_expect_glob_W2_cut","HCal X Expect vs Y Expect, global & W2 cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_n = new TH2D("hxy_expect_n","HCal X Expect vs Y Expect, elastic cuts neutron;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );

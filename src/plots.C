@@ -558,7 +558,7 @@ double n_scale_error = myFitHisto->get_scale_n_err();
 hdx_mc_p_after->Scale(p_scale);
 hdx_mc_p_after->SetLineColor(kRed);
 hdx_mc_p_after->SetFillColorAlpha(kRed-9,0.5);
-hdx_mc_p_after->SetFillStyle(3001);
+hdx_mc_p_after->SetFillStyle(1001);
 hdx_mc_p_after->SetLineWidth(2);
 hdx_mc_p_after->Draw("hist same");
 //neutron MC dx
@@ -573,7 +573,7 @@ hdx_mc_p_after->Draw("hist same");
 hdx_mc_n_after->Scale(n_scale);
 hdx_mc_n_after->SetLineColor(kBlue);
 hdx_mc_n_after->SetFillColorAlpha(kBlue-9,0.5);
-hdx_mc_n_after->SetFillStyle(3001);
+hdx_mc_n_after->SetFillStyle(1001);
 hdx_mc_n_after->SetLineWidth(2);
 hdx_mc_n_after->Draw("hist same");
 
@@ -626,30 +626,31 @@ double np_red_cross_section_ratio_exp = R_sf*np_red_cross_section_ratio;
 double np_red_cross_section_ratio_exp_err = np_red_cross_section_ratio_exp * sqrt(pow(R_sf_error/R_sf,2) + pow(np_red_cross_section_ratio_err/np_red_cross_section_ratio,2));
 //double np_scale_ratio_error = np_scale_ratio * sqrt(pow(n_scale_error/n_scale,2) + pow(p_scale_error/p_scale,2));
 
+//Temporary Legend change for nice presentation. Change back later
 //Make a legend to hold all the information we care about
 TLegend* legend = new TLegend(0.57, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
-legend->AddEntry(bg,"Background","l");
-legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","l");
-legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","l");
-legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
-legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.4f #pm %0.4f",R_sf,R_sf_error),"");
+legend->AddEntry(bg,"Background","f l");
+legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","f l");
+legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","f l");
+//legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
+legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.6f #pm %0.6f",R_sf,R_sf_error),"");
 //legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
 //legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
 //legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
-legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
-legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
-legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
-legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
-legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
-legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",n_shift,p_shift),"");
+//legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
+//legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
+//legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
+//legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
+//legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
+//legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
+//legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",n_shift,p_shift),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
-legend->SetTextSize(0.025);
+//legend->SetTextSize(0.025);
 legend->Draw("same");
 
 //Make the residual plot
@@ -680,7 +681,7 @@ legend_res->AddEntry(residual_fit,"Data-Total Fit","l");
 pad2->cd();
 //residual->Draw("hist");
 gStyle->SetErrorX(0);
-residual_fit->Draw("hist E1");
+residual_fit->Draw("E1");
 legend_res->SetTextSize(0.075);
 legend_res->Draw("same");
 //Draw a line at y=0 just for better reading of the residual
@@ -814,7 +815,7 @@ double n_scale_error = myFitHisto->get_scale_n_err();
 hdx_mc_p_after->Scale(p_scale);
 hdx_mc_p_after->SetLineColor(kRed);
 hdx_mc_p_after->SetFillColorAlpha(kRed-9,0.5);
-hdx_mc_p_after->SetFillStyle(3001);
+hdx_mc_p_after->SetFillStyle(1001);
 hdx_mc_p_after->SetLineWidth(2);
 hdx_mc_p_after->Draw("hist same");
 //neutron MC dx
@@ -829,7 +830,7 @@ hdx_mc_p_after->Draw("hist same");
 hdx_mc_n_after->Scale(n_scale);
 hdx_mc_n_after->SetLineColor(kBlue);
 hdx_mc_n_after->SetFillColorAlpha(kBlue-9,0.5);
-hdx_mc_n_after->SetFillStyle(3001);
+hdx_mc_n_after->SetFillStyle(1001);
 hdx_mc_n_after->SetLineWidth(2);
 hdx_mc_n_after->Draw("hist same");
 
@@ -881,8 +882,8 @@ double np_red_cross_section_ratio_exp_err = np_red_cross_section_ratio_exp * sqr
 TLegend* legend = new TLegend(0.57, 0.5, 0.9, 0.9);
 legend->AddEntry(hdx_data,"Data","l");
 legend->AddEntry(fit, "Total Fit","l");
-legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","l");
-legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","l");
+legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","f l");
+legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","f l");
 legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
 legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.4f #pm %0.4f",R_sf,R_sf_error),"");
 //legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
@@ -929,7 +930,7 @@ legend_res->AddEntry(residual_fit,"Data-Total Fit","l");
 
 //Draw the residual on the second pad
 pad2->cd();
-residual_fit->Draw("E1 hist");
+residual_fit->Draw("E1 ");
 legend_res->SetTextSize(0.075);
 legend_res->Draw("same");
 
@@ -1015,7 +1016,7 @@ residual_fit->SetStats(0);
 TLegend* legend_res = new TLegend(0.75, 0.8, 0.9, 1.0);
 legend_res->AddEntry(residual_fit,"BGHist-BG Fit","l");
 
-residual_fit->Draw("E1 hist");
+residual_fit->Draw("E1 ");
 legend_res->SetTextSize(0.075);
 legend_res->Draw("same");
 

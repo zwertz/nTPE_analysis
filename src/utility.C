@@ -118,6 +118,13 @@ namespace utility{
   return outfile;
   }
 
+  //Helper function to make output file name for HCal Efficiency for uniformity
+  TString makeOutputFileNameHCalEffUniformity(TString exp,TString pass, TString Kin, int SBS_field,TString target){
+  TString outfile = Form("%s/Zeke_HCalEff_uniformity_%s_%s_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
+  //cout << outfile << endl;
+  return outfile;
+  }
+
   //TODO: Will need a function to make file name for compare HCal Efficiency data with MC
 
   //Helper function to make output file for HCal Efficiency Bootstrap

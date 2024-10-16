@@ -27,4 +27,18 @@ namespace exp_constants{
   return hcal_offset;
   }//end function
 
+  //maximum value of the field of the sbs magnet in Tesla. It is kinematic dependent because of magnet collision.
+  const double getMaxSBSField(TString Kin){
+	double maxsbsfield = 0.0; //Tesla
+	if(Kin == "SBS4"){
+	maxsbsfield = 1.71;
+	}else if(Kin == "SBS8" || Kin == "SBS9" || Kin == "SBS7"|| Kin == "SBS11"|| Kin == "SBS14"){
+	maxsbsfield = 1.26;
+	}else{
+	//We should never get here, cause then we have kinematic for data we dont have
+	cout << "Error: No sbs max field for this kinematic: " << Kin << "Figure out what you did!" << endl;
+	}
+  return maxsbsfield;
+  }
+
 }//end namespace

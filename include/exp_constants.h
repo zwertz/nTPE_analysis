@@ -62,11 +62,10 @@ namespace exp_constants{
  
   //SBS Magnet
   static const double sbsdipolegap = 48.0*2.54/100.0; //about 1.22 m
-  static const double maxsbsfield = 1.26; //Tesla
 
   //////Static Target/Scattering Chamber Parameters
   // target
-  static const double l_tgt = 0.15; // Length of the target (m), keep in m and convert in equation
+  static const double l_tgt = 15.0; // Length of the target (cm)
   static const double celldiameter = 1.6*2.54; //cm, this is to properly cancel units
 
   // LH2
@@ -90,6 +89,7 @@ namespace exp_constants{
   //Make functions to get hcal v offset. since it is pass dependent
   const double getHCalOffset( TString pass);
   
+  const double getMaxSBSField(TString Kin);
 
 }
 #endif

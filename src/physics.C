@@ -37,11 +37,19 @@ namespace physics{
  return hcal_origin;
  }
 
- //Try to calculate the effects of the SBS magnetic field
- double getBdL(int sbs_field){
- double BdL = (exp_constants::maxsbsfield)*(exp_constants::sbsdipolegap)*(sbs_field/100);
-
+ //Try to calculate the effects of the SBS magnetic field.
+ double getBdL(int sbs_field,TString Kin){
+ double BdL = (exp_constants::getMaxSBSField(Kin))*(exp_constants::sbsdipolegap)*(sbs_field/100.0);
+ //cout << BdL << " " << exp_constants::getMaxSBSField(Kin) << " " << exp_constants::sbsdipolegap << " " << sbs_field << endl;
  return BdL;
+ }
+
+ //Get expected proton deflection, somewhat crude model
+ //thetabend = 0.3*BdL/p
+ double get_protonDeflection(double BdL, double p, double hcaldist, double sbsdist){
+ double proton_deflection = tan(0.3*(BdL/p)) * (hcaldist - (sbsdist + (exp_constants::sbsdipolegap/2.0)));
+ //cout << hcaldist << " " << sbsdist << " " << exp_constants::sbsdipolegap << endl;
+ return proton_deflection;
  }
 
  //Calculate the outgoing energy based on losses in the target
@@ -50,13 +58,13 @@ namespace physics{
  double Eloss_outgoing;
         //LH2 
 	if(target == "LH2"){
- 	Eloss_outgoing = (exp_constants::celldiameter/2)/sin(bbtheta)*(exp_constants::lh2_rho_tgt)*(exp_constants::lh2_dEdx); //Approximately 1 MeV, one could correct more using the raster position
+ 	Eloss_outgoing = (exp_constants::celldiameter/2.0)/sin(bbtheta)*(exp_constants::lh2_rho_tgt)*(exp_constants::lh2_dEdx); //Approximately 1 MeV, one could correct more using the raster position
 	//LD2
 	}else if(target == "LD2"){
-	Eloss_outgoing = (exp_constants::celldiameter/2)/sin(bbtheta)*(exp_constants::ld2_rho_tgt)*(exp_constants::ld2_dEdx);
+	Eloss_outgoing = (exp_constants::celldiameter/2.0)/sin(bbtheta)*(exp_constants::ld2_rho_tgt)*(exp_constants::ld2_dEdx);
 	}else if(target == "Dummy"){
 	//Not sure if this is correct kind of just using the others as an example and assuming its similar but with Aluminum for the windows.
-	Eloss_outgoing = (exp_constants::celldiameter/2)/sin(bbtheta)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
+	Eloss_outgoing = (exp_constants::celldiameter/2.0)/sin(bbtheta)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
 	}else{
 	//give an error statement for and don't calculate the Eloss_outgoing.
 	cout << "Warning: Target " << target << " is not handle by energy loss function! Defaulting to zero." << endl;
@@ -72,10 +80,10 @@ namespace physics{
 
  	//LH2
  	if(target == "LH2"){
-	Eloss = (vz+(exp_constants::l_tgt/2))*(exp_constants::lh2_rho_tgt)*(exp_constants::lh2_dEdx) + (exp_constants::lh2_uwallthick)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
+	Eloss = ((exp_constants::l_tgt/2.0))*(exp_constants::lh2_rho_tgt)*(exp_constants::lh2_dEdx) + (exp_constants::lh2_uwallthick)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
 	//LD2
 	}else if(target == "LD2"){
-	Eloss = (vz+(exp_constants::l_tgt/2))*(exp_constants::ld2_rho_tgt)*(exp_constants::ld2_dEdx) + (exp_constants::ld2_uwallthick)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
+	Eloss = ((exp_constants::l_tgt/2.0))*(exp_constants::ld2_rho_tgt)*(exp_constants::ld2_dEdx) + (exp_constants::ld2_uwallthick)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
 	//Not sure if this is correct kind of just using the others as an example and assuming its similar but with Aluminum for the windows.I
 	}else if(target == "Dummy"){
 	Eloss = (exp_constants::ld2_uwallthick)*(exp_constants::rho_Al)*(exp_constants::dEdx_Al);
@@ -95,20 +103,20 @@ namespace physics{
  
  //Make a vector based on vertex information. Right now this is only in vz. Could change later and include vx, and vy. Instead of assuming 0
  TVector3 getVertex(double vz){
- TVector3 vertex( 0, 0, vz );
+ TVector3 vertex( 0.0, 0.0, vz );
 
  return vertex;
  }
 
  //reconstructed momentum, corrected for mean energy loss. Still need to include losses from Al shielding or target windows later
  double getp_recon_corr(double tr_p, double Eloss_outgoing){
- double pcorr = tr_p - Eloss_outgoing;
+ double pcorr = tr_p + Eloss_outgoing;
  return pcorr;
  }
 
  //four momentum vector for electron beam with correted Energy value
  TLorentzVector getpBeam(double Ecorr){
- TLorentzVector Pbeam(0,0,Ecorr,Ecorr);
+ TLorentzVector Pbeam(0.0,0.0,Ecorr,Ecorr);
  return Pbeam;
  }
   
@@ -124,18 +132,18 @@ namespace physics{
  
  	//LH2 or protons
  	if(target == "LH2" || target == "p"){
-	ptarg.SetPxPyPzE(0,0,0,physics_constants::M_p);
+	ptarg.SetPxPyPzE(0.0,0.0,0.0,physics_constants::M_p);
 	//LD2
 	//For Quasi-elastic scattering dummy should be like deuterium
 	}else if(target == "LD2" || target == "np"|| target == "Dummy"){
-	ptarg.SetPxPyPzE(0,0,0,0.5*(physics_constants::M_p+physics_constants::M_n));
+	ptarg.SetPxPyPzE(0.0,0.0,0.0,0.5*(physics_constants::M_p+physics_constants::M_n));
 	//just neutrons
 	}else if(target == "n"){
-	ptarg.SetPxPyPzE(0,0,0,physics_constants::M_n);
+	ptarg.SetPxPyPzE(0.0,0.0,0.0,physics_constants::M_n);
 	}else{
 	//give an error
 	cout << "Error: Target " << target << " is not handled by this function! No value given." << endl;
-	} 
+	}
   return ptarg;
  }
 
@@ -176,7 +184,7 @@ namespace physics{
 	}else{
         //give an error
 	cout << "Error: Target " << target << " is not handled by this function! Defaulting to zero." << endl;
-        pcentral = 0;
+        pcentral = 0.0;
 	}
  return pcentral;
  }
@@ -189,7 +197,7 @@ namespace physics{
 
  //Calculate Mott cross section for this event
  double getMott_CS(double alpha,double etheta,double pcorr, double Ecorr){
- double Mott_CS = (pow(alpha,2)*pow(cos(etheta/2),2)*pcorr)/(4*pow(Ecorr,3)*pow(sin(etheta/2),4));
+ double Mott_CS = (pow(alpha,2)*pow(cos(etheta/2.0),2)*pcorr)/(4.0*pow(Ecorr,3)*pow(sin(etheta/2.0),4));
  return Mott_CS;
  }
 
@@ -413,14 +421,14 @@ namespace physics{
  
  	//LH2 or protons
 	if(target == "LH2" || target == "p" ){
-	tau = Q2/(4*pow(physics_constants::M_p,2));
+	tau = Q2/(4.0*pow(physics_constants::M_p,2));
  	//LD2
  	//For Quasi-elastic scattering dummy should be like deuterium
  	}else if(target == "LD2" || target == "np"|| target == "Dummy"){
-	tau = Q2/(4*pow(0.5*(physics_constants::M_p + physics_constants::M_n),2));
+	tau = Q2/(4.0*pow(0.5*(physics_constants::M_p + physics_constants::M_n),2));
  	//just neutrons
  	}else if(target == "n"){
-	tau = Q2/(4*pow(physics_constants::M_n,2));
+	tau = Q2/(4.0*pow(physics_constants::M_n,2));
 	}else{
         //give an error
 	cout << "Error: Target " << target << " is not handled by this function! No value given." << endl;
@@ -430,7 +438,7 @@ namespace physics{
 
  //calculate polarization of the virtual photon, epsilon
  double get_epsilon(double tau, double etheta){
- double epsilon = 1 / (1 + 2 * (1 + tau) * pow(tan(etheta/2),2));
+ double epsilon = 1.0 / (1.0 + 2.0 * (1.0 + tau) * pow(tan(etheta/2.0),2));
  return epsilon;
  }
 

@@ -3,7 +3,7 @@
 
 #include "../include/stability_analysis.h"
 
-stability_analysis::stability_analysis(cutvar &dataVar,cutvar &MC_pVar,cutvar &MC_nVar, vector<TH1D*> daDataHisto, vector<TH1D*> daMCPHisto, vector<TH1D*> daMCNHisto,const string& fitFormula, TH1D* histo_p, TH1D* histo_n){
+stability_analysis::stability_analysis(cutvar &dataVar,cutvar &MC_pVar,cutvar &MC_nVar, vector<TH1D*> daDataHisto, vector<TH1D*> daMCPHisto, vector<TH1D*> daMCNHisto,const char* fit_type){
 
 	if(dataVar.getCutVar() != MC_pVar.getCutVar() || dataVar.getCutVar() != MC_nVar.getCutVar()){
 	cout << "Something went wrong, the cutvar types were not the same between the data, MC p, and MC n cutvars! Figure it out!" << endl;
@@ -30,8 +30,10 @@ stability_analysis::stability_analysis(cutvar &dataVar,cutvar &MC_pVar,cutvar &M
 	slice_histo_mc_p = daMCPHisto;
 	slice_histo_mc_n = daMCNHisto;
 
+	fitType = fit_type;
+
 	//call the stability calculation Rsf function to populate relevant class variable vectors
-	stability_calculateRsfQuantities(fitFormula, histo_p,histo_n);
+	stability_calculateRsfQuantities();
 	
 
 }//end constructor implemenation
@@ -90,7 +92,7 @@ vector<vector<double>> stability_analysis::get_poly_result_vector_vectors(){retu
 vector<vector<double>> stability_analysis::get_poly_result_err_vector_vectors(){return poly_result_err_vector_vectors;}
 
 //A function that will consider each sliced dx histogram for a given cut variable. And calculate Rsf from all 3 histograms for each slice. Then store relevant information in class vectors. Which will be accessed with getter functions.This is called by the constructor so all of the private variables are properly initialized.
-void stability_analysis::stability_calculateRsfQuantities(const string& fitFormula,TH1D* histo_p, TH1D* histo_n){
+void stability_analysis::stability_calculateRsfQuantities(){
 	data_Histo_size = slice_histo_data.size();
 	
 	if(data_Var->get_dx_hist_low() != MC_p_Var->get_dx_hist_low() || data_Var->get_dx_hist_low() != MC_n_Var->get_dx_hist_low()){
@@ -102,58 +104,38 @@ void stability_analysis::stability_calculateRsfQuantities(const string& fitFormu
 	double xmin = data_Var->get_dx_hist_low();
 	double xmax = data_Var->get_dx_hist_high();
 
-	//initial parameter guess
-	double initialParameters[7]={1,1,-0.05,-0.05,1,1,-1};
 	//loop over the histos in the vectors, since we require that all of the histo vectors have the same size in the constructor. It should not matter which we use as loop control
 	for(int slice_num = 0; slice_num<data_Histo_size; slice_num++){
 	//Store the histogram clones for that slice locally
 	
 	
 	TH1D* histo_data = (TH1D*) slice_histo_data[slice_num]->Clone(Form("hist_data_%s_%i",myCutVar.Data(),slice_num));
-	histo_p = (TH1D*) slice_histo_mc_p[slice_num]->Clone(Form("hist_p_%s_%i",myCutVar.Data(),slice_num));
-	histo_n = (TH1D*) slice_histo_mc_n[slice_num]->Clone(Form("hist_n_%s_%i",myCutVar.Data(),slice_num));
+	TH1D* histo_p = (TH1D*) slice_histo_mc_p[slice_num]->Clone(Form("hist_p_%s_%i",myCutVar.Data(),slice_num));
+	TH1D* histo_n = (TH1D*) slice_histo_mc_n[slice_num]->Clone(Form("hist_n_%s_%i",myCutVar.Data(),slice_num));
 
-	//Make a fit to the overall histogram for dx. In this case we used the MC proton and neutron shapes + a 2nd order poly background
-	TF1 *myFit = new TF1(Form("overall_fit_%s_%i",myCutVar.Data(),slice_num),fitFormula.c_str(),xmin,xmax,7);
-
-	myFit->SetParameters(initialParameters);
-        // set parameter limits. SetParLimits -> (par#, min, max)
-        myFit->SetParLimits(0, 0, 2000); // scale_p greater than 0
-        myFit->SetParLimits(1, 0,2000); // scale_n greater than 0
-        myFit->SetParLimits(2, -0.10,0.10); // shift_p less than +- 10cm
-        myFit->SetParLimits(3, -0.10,0.10); // shift_n less than +- 10cm
-        myFit->SetParLimits(6,-10000000,-0.0000000001); // x^2 term negative to force downward concavity 
-        myFit->SetNpx(500);
-	histo_data->GetXaxis()->SetRangeUser(xmin,xmax);
-
-	//now fit the data histogram with the fit info
-	histo_data->Fit(myFit,"Q R");
-
+	//Attempting to make this compatible with the fit histogram class, since that class's job is to handle fitting and getting Rsf and so forth
+	fit_histogram *da_slice_histo = new fit_histogram(histo_data,histo_p,histo_n,Form("overall_fit_%s_%i",myCutVar.Data(),slice_num),fitType.c_str(),2,7,xmin,xmax,"QR"); 
+	
 	//retrieve important fit results
-	double scale_p  = myFit->GetParameter(0);
-        double scale_p_err = myFit->GetParError(0);
+	double scale_p  = da_slice_histo->get_scale_p();
+        double scale_p_err = da_slice_histo->get_scale_p_err();
         //Physics result R_sf is a fit parameter
-	double Rsf  = myFit->GetParameter(1);
-        double Rsf_err = myFit->GetParError(1);
+	double Rsf  = da_slice_histo->get_Rsf();
+        double Rsf_err = da_slice_histo->get_Rsf_err();
 
-	double scale_n = Rsf*scale_p;
-	double scale_n_err = scale_n*sqrt(pow(Rsf_err/Rsf,2)+pow(scale_p_err/scale_p,2));
+	double scale_n = da_slice_histo->get_scale_n();
+	double scale_n_err = da_slice_histo->get_scale_n_err();
 
-        double shift_p= myFit->GetParameter(2);
-        double shift_p_err= myFit->GetParError(2);
-        double shift_n = myFit->GetParameter(3);
-        double shift_n_err = myFit->GetParError(3);
+        double shift_p= da_slice_histo->get_shift_p();
+        double shift_p_err= da_slice_histo->get_shift_p_err();
+        double shift_n = da_slice_histo->get_shift_n();
+        double shift_n_err = da_slice_histo->get_shift_n_err();
 
-        double ChiSq= myFit->GetChisquare();
-        double ndf = myFit->GetNDF();
+        double ChiSq = da_slice_histo->get_ChiSq();
+        double ndf = da_slice_histo->get_NDF();
 
-	vector<double> poly_result;
-	vector<double> poly_result_err;
-
-		for (int i =0 ; i < 3; i++){
-          	poly_result.push_back( myFit->GetParameter(4+i) );
-          	poly_result_err.push_back(myFit->GetParError(4+i) );
-        	}
+	vector<double> poly_result = da_slice_histo->get_bkgd_params();
+	vector<double> poly_result_err = da_slice_histo->get_bkgd_param_errs();
 
 	//save results into the vectors, which are class variables
 	scale_p_vector.push_back(scale_p);
@@ -171,7 +153,6 @@ void stability_analysis::stability_calculateRsfQuantities(const string& fitFormu
         poly_result_vector_vectors.push_back(poly_result);
         poly_result_err_vector_vectors.push_back(poly_result_err);
 	
-	delete myFit;
 	}//end for loop
 }//end Rsf calculate function
 

@@ -10,18 +10,18 @@ class stability_analysis{
 private:
 vector<TH1D*> slice_histo_data, slice_histo_mc_p, slice_histo_mc_n;
 TString myCutVar;
+string fitType;
 cutvar *data_Var, *MC_p_Var, *MC_n_Var;
-TH1D* hist_data, hist_p, hist_n;
 vector<double> scale_p_vector, scale_n_vector, scale_p_err_vector, scale_n_err_vector, shift_p_vector, shift_n_vector, shift_p_err_vector, shift_n_err_vector, ChiSq_vector, ndf_vector, Rsf_vector, Rsf_err_vector;
 vector<vector<double>> poly_result_vector_vectors, poly_result_err_vector_vectors;
 int data_Histo_size, mc_p_Histo_size, mc_n_Histo_size;
 
 //A function that will consider each sliced dx histogram for a given cut variable. And calculate Rsf from all 3 histograms for each slice. Then store relevant information in class vectors. Which will be accessed with getter functions. This is called by the constructor so all of the private variables are properly initialized.
-void stability_calculateRsfQuantities(const string& fitFormula, TH1D* histo_p, TH1D* histo_n);
+void stability_calculateRsfQuantities();
 
 public:
 //Standard constructor, it should initialize all the class variables we care about.
-stability_analysis(cutvar &dataVar,cutvar &MC_pVar,cutvar &MC_nVar, vector<TH1D*> daDataHisto, vector<TH1D*> daMCPHisto, vector<TH1D*> daMCNHisto,const string& fitFormula,TH1D* histo_p, TH1D* histo_n);
+stability_analysis(cutvar &dataVar,cutvar &MC_pVar,cutvar &MC_nVar, vector<TH1D*> daDataHisto, vector<TH1D*> daMCPHisto, vector<TH1D*> daMCNHisto,const char* fit_type);
 
 //destructor
 //We have dynamically allocated memory, I think. But no pointers so we need to explicitly handle that.

@@ -13,31 +13,9 @@
 #include "../../src/parse_config.C"
 #include "../../src/plots.C"
 #include "../../src/calc_FFs_RCS_obj.C"
+#include "../../src/fit_histogram.C"
 #include "../../src/cutvar.C"
 #include "../../src/stability_analysis.C"
-
-//This must live in the script so it has knowledge of the histograms for interpolation
-//A fit function for dx slices. Primarily used in stability_analysis class
-TH1D* histo_p;
-TH1D* histo_n;
-
-double mc_p_n_poly2_slice_fit(double *x, double *param){
-
-        //MC float parameters
-        double proton_scale = param[0];
-        double R_sf = param[1];
-
-        double dx_shift_p = param[2];
-        double dx_shift_n = param[3];
-
-        //Apply the shifts before any interpolation
-        double proton = histo_p->Interpolate(x[0] - dx_shift_p);
-        double neutron = histo_n->Interpolate(x[0] - dx_shift_n);
-
-        //The total function is the proton and neutron peaks + a 2nd order polynomial for background
-        double fit = proton_scale*( R_sf*neutron + proton) + fits::poly2_fit(x, &param[4]);
-        return fit;
-}
 
 void stability_study(const char *setup_file_name){
 
@@ -103,7 +81,7 @@ void stability_study(const char *setup_file_name){
 
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data ps
-  TString ps_e_study_data = TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString ps_e_study_data = TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
   //For MC ps 
   TString ps_e_study_mc = TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut;
   TString ps_e_study_mc_p = ps_e_study_mc + "&&" + isProtonCut;
@@ -128,13 +106,21 @@ void stability_study(const char *setup_file_name){
   vector<TH1D*> slice_psVar_mc_n = psVar_mc_n.sliceAndProjectHisto_xMinxMax(ps_e_dxhist_mc_n,psVar_mc_n.getAxisTitle().Data(),"dx");
 
   //Fit type
-  const char* FitType = "mc_p_n_poly2_slice_fit";
-
+  const char* FitType = "fitFullShift_polyBG";
   //Maybe not best practice. Need histo_p and histo_n to be non null. So they get past the function call. Ultimately these will be manipulated in the function call
-  histo_p = (TH1D*)slice_psVar_mc_p[0]->Clone("Test_histo_p");
-  histo_n = (TH1D*)slice_psVar_mc_n[0]->Clone("Test_histo_n");
+  //histo_p = (TH1D*)slice_psVar_mc_p[0]->Clone("Test_histo_p");
+  //histo_n = (TH1D*)slice_psVar_mc_n[0]->Clone("Test_histo_n");
   //Setup a stability analysis object. This is useful for getting physics quantities for the overall dx slices
-  stability_analysis psVar_stability(psVar_data,psVar_mc_p,psVar_mc_n,slice_psVar_data,slice_psVar_mc_p,slice_psVar_mc_n,FitType,histo_p,histo_n);
+  stability_analysis psVar_stability(psVar_data,psVar_mc_p,psVar_mc_n,slice_psVar_data,slice_psVar_mc_p,slice_psVar_mc_n,FitType);
+
+
+  //1D histogram of hcal xexp with neutron spot cut
+  TString n_hcal_exp_data = EnergyCut + "&&" + TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut + "&&" +NeutronSpotCut;
+
+  //draw the histo we care about
+  C_data->Draw("xexp>>xexp_neutron(600,-3,3)",n_hcal_exp_data.Data(),"COLZ E");
+  // Retrieve and customize histogram
+  TH1D *hcal_x_exp_hist_neutron= (TH1D*)gDirectory->Get("hcal_x_exp_hist_neutron");
 
 
   fout->Write();

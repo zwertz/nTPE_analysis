@@ -29,6 +29,7 @@
 #include "../../src/parse_config.C"
 #include "../../src/plots.C"
 #include "../../src/calc_FFs_RCS_obj.C"
+#include "../../src/fit_histogram.C"
 
 //Main
 void data_elastic_parse(const char *setup_file_name){
@@ -36,7 +37,7 @@ void data_elastic_parse(const char *setup_file_name){
   //Define a clock to check macro processing time
   TStopwatch *watch = new TStopwatch(); 
   watch->Start( kTRUE );
-
+  
   //parse object to get in the information that The One Config file has and is manipulated
   parse_config mainConfig(setup_file_name); 
   //mainConfig.printDataYields();
@@ -83,7 +84,7 @@ void data_elastic_parse(const char *setup_file_name){
   double dysig_cut_fac = mainConfig.get_dySigCutFac();
   int hcalnclusmin = mainConfig.get_HCalNclusMin();
 
-
+  
   //store all important kinematic info in local variables
   kinematic_obj myKin(kinematic_file,kin);
   double EBeam = myKin.getBeamEnergy();
@@ -91,7 +92,8 @@ void data_elastic_parse(const char *setup_file_name){
   double sbsdist = myKin.getSBSDist();
   double bbtheta = myKin.getBBAngle_Rad();
   double hcaltheta = myKin.getHCalAngle_Rad();
-  
+  double p_nuc_centr = myKin.getNucleonP();
+
   //setup hcal physical bounds that match database for each pass
   vector<double> hcalpos = cuts::hcal_Position_data(pass);
 
@@ -100,7 +102,12 @@ void data_elastic_parse(const char *setup_file_name){
 
   //setup fiducial region based on dx and dy spot information
   vector<double> hcalfid = cuts::hcalfid(dxsig_p,dxsig_n,dysig_p,hcalaa,dxsig_p_fac,dysig_p_fac);
-
+ 
+  //print out the information for the fid region
+  for(int k=0; k<hcalfid.size();k++){
+  cout <<"HCal Fid "<< k << " :" << hcalfid[k] << endl;
+  }
+  
   int num_runs = runNums.size();
   double hcalfit_low = exp_constants::hcalposXi_mc; //lower fit/bin limit for hcal dx plots. 
   double hcalfit_high = exp_constants::hcalposXf_mc; //higher fit/bin limit for hcal dx plots.
@@ -119,6 +126,7 @@ void data_elastic_parse(const char *setup_file_name){
   TString outfile = utility::makeOutputFileNameParse(exp,pass,kin,sbs_field,target);
   TFile *fout = new TFile(outfile,"RECREATE");
 
+  double dx_pn = mainConfig.get_dxpn();
 
   //Histograms///////
 
@@ -162,12 +170,12 @@ void data_elastic_parse(const char *setup_file_name){
   TH2D *hxy_cut = new TH2D("hxy_cut","HCal X vs Y, all cuts, best cluster;y_{HCAL} (m); x_{HCAL} (m)",300, -2.0, 2.0, 500, -3.0, 3.0);
 
   //E-arm
-  TH1D *h_W2_globcut = new TH1D( "W2_globcut", "W2 (GeV) global cut; GeV", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_W2_glob_W2_cut = new TH1D( "W2_glob_W2_cut", "W2 (GeV) global & W2 cuts; GeV", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV) all cuts; GeV", binfac*W2fitmax, 0.0, W2fitmax );  
-  TH1D *h_W2_notW2_cut = new TH1D( "W2_notW2_cut", "W2 (GeV) all cuts, but W2; GeV", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_Q2_globcut = new TH1D( "Q2_globcut", "Q2 (GeV) global cut; GeV", 300, 0.0, 6.0 );
-  TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV) all cuts; GeV", 300, 0.0, 6.0 );
+  TH1D *h_W2_globcut = new TH1D( "W2_globcut", "W2 (GeV^{2}) global cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_glob_W2_cut = new TH1D( "W2_glob_W2_cut", "W2 (GeV^{2}) global & W2 cuts; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV^{2}) all cuts; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );  
+  TH1D *h_W2_notW2_cut = new TH1D( "W2_notW2_cut", "W2 (GeV^{2}) all cuts, but W2; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_Q2_globcut = new TH1D( "Q2_globcut", "Q2 (GeV^{2}) global cut; GeV^{2}", 300, 0.0, 6.0 );
+  TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV^{2}) all cuts; GeV^{2}", 300, 0.0, 6.0 );
   TH2D *hxy_expect_globcut = new TH2D("hxy_expect_globcut","HCal X Expect vs Y Expect, global cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_glob_W2_cut = new TH2D("hxy_expect_glob_W2_cut","HCal X Expect vs Y Expect, global & W2 cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_n = new TH2D("hxy_expect_n","HCal X Expect vs Y Expect, elastic cuts neutron;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
@@ -206,14 +214,20 @@ void data_elastic_parse(const char *setup_file_name){
 
   //general
   TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0002 );
-  
+  TH2D *hdx_xhcal = new TH2D("hdx_xhcal","dx vs xhcal; xhcal; x_{HCAL}-x_{expect} (m)",600,-3.0,3.0,hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high);
+  TH2D *hdx_pN = new TH2D("hdx_pN", "dx vs nucleon momentum p_{N};p_{N} (GeV);x_{HCAL}-x_{expect} (m)",300,0.88*p_nuc_centr,1.12*p_nuc_centr,hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high);
+  TH2D *hdx_prodef_pN = new TH2D("hdx_prodef_pN", "dx + proton deflection vs nucleon momentum p_{N};p_{N} (GeV);x_{HCAL}-x_{expect} + proton deflection (m)",300,0.88*p_nuc_centr,1.12*p_nuc_centr,hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high);
+  TH1D *hdx_prodef = new TH1D( "dx_prodef","HCal dx + proton deflection; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hdx_defcut = new TH1D( "dx_defcut","HCal dx ; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hprodef = new TH1D( "hprodef","proton deflection; (m)", 300, 0.86*dx_pn, 1.1*dx_pn );
+
   //Added for cut stability studies
   TH1D* h_nsigx_fid = new TH1D("h_nsigx_fid", "nsigx_fid",200,-20,20);
   TH1D* h_nsigy_fid = new TH1D("h_nsigy_fid", "nsigy_fid",200,-20,20);
 
   //allocate memory at each run
   TChain *C = nullptr;
-
+  
   //create output tree
   TTree *Parse = new TTree("Parse","Analysis Tree");
 
@@ -287,6 +301,9 @@ void data_elastic_parse(const char *setup_file_name){
   int BBps_nblk_out;
 
   double hcal_sh_atime_diff_out;
+  double proton_deflection_out;
+  double p_N_out;
+  double p_central_out;
 
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
@@ -345,7 +362,10 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("nsigy_fid", &nsigy_fid_out , "nsigy_fid/D");
   Parse->Branch("W2low", &W2low_out, "W2low/D");
   Parse->Branch("W2high", &W2high_out, "W2high/D");
-  Parse->Branch("hcal_sh_atime_dff", &hcal_sh_atime_diff_out, "hcal_sh_atime_diff/D");
+  Parse->Branch("hcal_sh_atime_diff", &hcal_sh_atime_diff_out, "hcal_sh_atime_diff/D");
+  Parse->Branch("proton_deflection", &proton_deflection_out, "proton_deflection/D");
+  Parse->Branch("p_N", &p_N_out, "p_N/D");
+  Parse->Branch("p_central", &p_central_out, "p_centrial/D");
 
   Parse->Branch("num_hcal_clusid", &num_hcal_clusid_out, "num_hcal_clusid/I");
   Parse->Branch("hcal_clus_blk", &hcal_clus_blk_out, "hcal_clus_blk/I");
@@ -359,11 +379,10 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("run", &run_out, "run/I");
   Parse->Branch("mag", &mag_out, "mag/I");
 
-  double dx_pn = mainConfig.get_dxpn();
 
   //loop over the run numbers
   for(int j = 0; j<num_runs; j++){
-
+  
   //get run specific information
   data_object datData = myData[j];
   int run = datData.getRun();
@@ -372,6 +391,7 @@ void data_elastic_parse(const char *setup_file_name){
   double hcaldist = datData.getHCalDist();
   double hcaltheta = datData.getHCalAngle_Rad();
   double bbtheta = datData.getBBAngle_Rad();
+  double sbsdist = datData.getSBSDist();
   TString input_file_name = datData.getInputFile();
   
   //add the file to the TChain
@@ -383,22 +403,27 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchStatus("*",0);
 
   //HCal general branches
-  double x_hcal,y_hcal,e_hcal,nclus_hcal,idx_hcal;
-
+  double x_hcal,y_hcal,e_hcal,nclus_hcal,idx_hcal, nblkHCAL;
+  
+  //C->SetBranchStatus("sbs.hcal.nblk",1);
   C->SetBranchStatus("sbs.hcal.x",1);
   C->SetBranchStatus("sbs.hcal.y",1);
   C->SetBranchStatus("sbs.hcal.e",1);
   C->SetBranchStatus("sbs.hcal.nclus",1); 
   C->SetBranchStatus("sbs.hcal.index",1);
 
+  //C->SetBranchAddress("sbs.hcal.nblk",&nblkHCAL);
   C->SetBranchAddress("sbs.hcal.x", &x_hcal);
   C->SetBranchAddress("sbs.hcal.y", &y_hcal);
   C->SetBranchAddress("sbs.hcal.e", &e_hcal);
   C->SetBranchAddress("sbs.hcal.nclus", &nclus_hcal);
   C->SetBranchAddress("sbs.hcal.index", &idx_hcal);
 
+  //Type case from double to int
+  int HCalnblk = (int) nblkHCAL;
+
   //HCal cluster branches
-  double hcal_clus_atime[exp_constants::maxclus], hcal_clus_e[exp_constants::maxclus], hcal_clus_x[exp_constants::maxclus], hcal_clus_y[exp_constants::maxclus],hcal_clus_nblk[exp_constants::maxclus];
+  double hcal_clus_atime[exp_constants::maxclus], hcal_clus_e[exp_constants::maxclus], hcal_clus_x[exp_constants::maxclus], hcal_clus_y[exp_constants::maxclus],hcal_clus_nblk[exp_constants::maxclus], rowblkHCAL[exp_constants::maxclus], colblkHCAL[exp_constants::maxclus];
   int num_hcal_clusid;
 
   C->SetBranchStatus("sbs.hcal.clus.atime",1);
@@ -408,6 +433,8 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchStatus("sbs.hcal.clus.e",1);
   C->SetBranchStatus("Ndata.sbs.hcal.clus.id", 1);
   C->SetBranchStatus("sbs.hcal.clus.nblk", 1);
+  C->SetBranchStatus("sbs.hcal.clus_blk.row", 1);
+  C->SetBranchStatus("sbs.hcal.clus_blk.col", 1);
 
   C->SetBranchAddress("sbs.hcal.clus.atime", &hcal_clus_atime);
   C->SetBranchAddress("sbs.hcal.clus.e", &hcal_clus_e);
@@ -415,6 +442,9 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchAddress("sbs.hcal.clus.y", &hcal_clus_y);
   C->SetBranchAddress("Ndata.sbs.hcal.clus.id", &num_hcal_clusid);
   C->SetBranchAddress("sbs.hcal.clus.nblk", &hcal_clus_nblk);
+
+  //C->SetBranchAddress("sbs.hcal.clus_blk.row",&rowblkHCAL);
+  //C->SetBranchAddress("sbs.hcal.clus_blk.col",&colblkHCAL);
 
   //BBCal shower
   double atime_sh, e_sh, nclus_sh, nblk_sh, BB_E_over_p;
@@ -516,9 +546,14 @@ void data_elastic_parse(const char *setup_file_name){
   C->SetBranchAddress("e.kine.q_y", &ekine_qy);
   C->SetBranchAddress("e.kine.q_z", &ekine_qz);
 
+  //These need to be here to get the info from the previous tree and put it in the parse version
+  //Parse->Branch( "nblkHCAL", HCalnblk, "nblkHCAL/I" );
+  //Parse->Branch( "rowblkHCAL", rowblkHCAL, "rowblkHCAL[nblkHCAL]/D" );
+  //Parse->Branch( "colblkHCAL", colblkHCAL, "colblkHCAL[nblkHCAL]/D" );
+
   //global cut branches
   //already handled above
-
+  
   //setup global cut formula
   TTreeFormula *GlobalCut = new TTreeFormula( "GlobalCut", globalcut, C );
 
@@ -528,7 +563,6 @@ void data_elastic_parse(const char *setup_file_name){
   TVector3 hcal_yaxis = physics::getHCal_yaxis(hcal_xaxis,hcal_zaxis);
   //define HCal origin
   TVector3 hcal_origin = physics::getHCal_origin(hcaldist,hcal_offset,hcal_xaxis,hcal_zaxis);  
-  double BdL = physics::getBdL(sbs_field);
   //mean energy loss of the beam before scattering
   double Eloss_outgoing = physics::getEloss_outgoing(bbtheta,target);
 
@@ -554,7 +588,7 @@ void data_elastic_parse(const char *setup_file_name){
     	}
         //Is true if failed global cut
     	bool failglobal = cuts::failedGlobal(GlobalCut);
-
+	
 	///////////
 	//Electron-arm physics calculations
 	
@@ -595,13 +629,13 @@ void data_elastic_parse(const char *setup_file_name){
 
 	//Calculate Mott cross section for this event
 	double Mott_CS = physics::getMott_CS(physics_constants::alpha,etheta,pcorr,Ecorr);
-	
+		
 	/* Can reconstruct e' momentum for downstream calculations differently:
 	* v1 - Use four-momentum member functions
  	* v2 - Use all available ekine (tree) vars and calculate vectors (should be the same as v1)
 	* v3 - Use reconstructed angles as independent qty (usually preferable given GEM precision at most kinematics)
  	* v4 - Use reconstructed momentum as independent qty */
-
+	
 	//four momentum transferred squared
 	double Q2; 
 
@@ -692,6 +726,12 @@ void data_elastic_parse(const char *setup_file_name){
 
 	//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
         double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
+	
+	//Calculate expected proton deflection with a somewhat crude module
+	double BdL = physics::getBdL(sbs_field,kin);
+	//cout << BdL << " " << q_vec.Mag() << " " << hcaldist << " " << sbsdist << endl;
+	double proton_deflection = physics::get_protonDeflection(BdL,p_N.Vect().Mag(),hcaldist,sbsdist);
+	//cout << proton_deflection << endl;
 
 	//////////////////////
 	//INTIME CLUSTER ANALYSIS
@@ -721,7 +761,7 @@ void data_elastic_parse(const char *setup_file_name){
 
 	//setup booleans for cuts later. Save boolean values to tree
 	//global is above
-
+	
 	//HCal active area
 	bool hcalaa_ON = cuts::hcalaa_ON(xhcal_bestclus,yhcal_bestclus,hcalaa);
 	bool hcalaa_ON_exp = cuts::hcalaa_ON(xhcal_expect,yhcal_expect,hcalaa);
@@ -816,6 +856,9 @@ void data_elastic_parse(const char *setup_file_name){
   	run_out = run ;
   	mag_out = field;
 	hcal_sh_atime_diff_out = coin_bestclus;
+	proton_deflection_out = proton_deflection;
+	p_N_out = p_N.Vect().Mag();
+	p_central_out = pcentral;
 
 	//Fill histograms of global cut parameters here without any restrictions
 	h_ntracks->Fill(ntrack);	
@@ -846,7 +889,7 @@ void data_elastic_parse(const char *setup_file_name){
         h_SH_nclus_globcut->Fill(nclus_sh);
 	h_TPS_SH_globcut->Fill(e_ps+e_sh);
 	h_bbEoverp_globcut->Fill(BB_E_over_p);
-	
+
 	//physics quantities
 	hxy_globcut->Fill(yhcal_bestclus,xhcal_bestclus);
 	h_W2_globcut->Fill(W2);
@@ -856,7 +899,7 @@ void data_elastic_parse(const char *setup_file_name){
 	hdx_globcut->Fill(dx_bestclus);
 	hdy_globcut->Fill(dy_bestclus);
 	}
-
+	
 	//Fill some histograms if pass global cut and W2 cut. Mostly just e-arm cuts
 	if(!failglobal && goodW2){
 	hxy_glob_W2_cut->Fill(yhcal_bestclus,xhcal_bestclus);
@@ -871,28 +914,40 @@ void data_elastic_parse(const char *setup_file_name){
 	hxy_expect_p->Fill(yhcal_expect,(xhcal_expect-dx_pn));
 	hMott_cs->Fill(Mott_CS);
 	}
-
+	
 	//Now let's add in our first major hadron arm cut along with all the cuts from before.
 	if(!failglobal && goodW2 && hcalaa_ON){
 	hxy_acceptancecut->Fill(yhcal_bestclus,xhcal_bestclus);
 	}
-	
+
+	//related checks for proton deflection
+	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && good_dy){
+	hdx_xhcal->Fill(xhcal_bestclus,dx_bestclus);
+	hdx_pN->Fill(p_N.Vect().Mag(),dx_bestclus);
+	hdx_prodef_pN->Fill(p_N.Vect().Mag(),dx_bestclus+proton_deflection);
+	hdx_prodef->Fill(dx_bestclus+proton_deflection);
+	hdx_defcut->Fill(dx_bestclus);
+	hprodef->Fill(proton_deflection);
+	}
+
 	//e-arm and h-arm cuts, except fiducial
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy ){
 	hdxdy_nofid->Fill(dy_bestclus, dx_bestclus);
 	hdx_cut_nofid->Fill(dx_bestclus);
 	hdy_cut_nofid->Fill(dy_bestclus);
+	hdx_xhcal->Fill(xhcal_bestclus,dx_bestclus);
 		if(!passFid){
 		hdx_cut_failfid->Fill(dx_bestclus);
 		}
 
 	}	
-
+	
 	//all cuts but W2
 	if(!failglobal && passHCalE && passHCal_Nclus && hcalaa_ON && passCoin && good_dy && passFid){
 	h_W2_notW2_cut->Fill(W2);
 
 	}
+	
 	//all cuts
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
 	h_ntracks_cut->Fill(ntrack);
@@ -906,7 +961,6 @@ void data_elastic_parse(const char *setup_file_name){
         h_SH_nclus_cut->Fill(nclus_sh);
         h_TPS_SH_cut->Fill(e_ps+e_sh);
         h_bbEoverp_cut->Fill(BB_E_over_p);
-	
 	hxy_cut->Fill(yhcal_bestclus,xhcal_bestclus);
         h_W2_cut->Fill(W2);
         h_Q2_cut->Fill(Q2);
@@ -921,7 +975,7 @@ void data_elastic_parse(const char *setup_file_name){
 	hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn));
 	hdxvE->Fill(hcal_e_bestclus,dx_bestclus);
 	hdxvW2->Fill(W2,dx_bestclus);
-
+	
 	}
 	
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && !passFid){
@@ -935,17 +989,17 @@ void data_elastic_parse(const char *setup_file_name){
 	hdx_nsigfid->Fill(dx_bestclus);
 	}
 
-
+	
 	//Fill the analysis tree
 	Parse->Fill();
-
+	
 	}//end event loop
 
 	// reset chain for the next run config
 	C->Reset();
-
+  
   }//end loop over the run numbers
-
+  
   //make lines for active area on HCal
   vector<TLine*> Lines_aa = plots::setupLines(hcalaa,2,kRed);
  
@@ -973,8 +1027,8 @@ void data_elastic_parse(const char *setup_file_name){
 
   //Write everything to output file
   fout->Write();
-
+   
   // Send time efficiency report to console
-  cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;	
+  cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;
 
 }//end Main
