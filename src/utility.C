@@ -68,8 +68,8 @@ namespace utility{
   }
 
   //Helper function to make output file name for parse mc root file
-  TString makeOutputFileName_MCParse(TString exp, TString Kin, int SBS_field){
-  TString outfile = Form("%s/Zeke_MC_pn_parsed_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),SBS_field);
+  TString makeOutputFileName_MCParse(TString exp, TString Kin, int SBS_field,TString target){
+  TString outfile = Form("%s/Zeke_MC_pn_parsed_%s_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),Kin.Data(),target.Data(),SBS_field);
   return outfile;
   }
 
@@ -125,7 +125,13 @@ namespace utility{
   return outfile;
   }
 
-  //TODO: Will need a function to make file name for compare HCal Efficiency data with MC
+  //Helper function to make output file name for HCal Efficiency map analysis
+  TString makeOutputFileName_HCalEffMap(TString exp,TString pass, TString Kin,TString target){
+  TString outfile = Form("%s/Zeke_HCalEff_map_%s_%s_%s_%s.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data());
+  //cout << outfile << endl;
+  return outfile;
+
+  }
 
   //Helper function to make output file for HCal Efficiency Bootstrap
   TString makeOutputFileName_HCalBS(TString exp,TString pass, TString Kin, int SBS_field,TString target,int first_event, int last_event){

@@ -28,7 +28,7 @@ class parse_config{
   double hcalemin,proton_thresh_fac, neutron_thresh_fac,num_bin, pmin, pmax, Emin, Emax;
 
   //For data HCal Efficiency analysis
-  double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac,fidx_min,fidx_max,fidy_min,fidy_max,spot_sig;
+  double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac,fidx_min,fidx_max,fidy_min,fidy_max,spot_sig,fitx_low,fitx_high,fity_low,fity_high;
 
   //For stability studies
   TString EnergyCut, TrackQualityCut, TargetVertexCut, W2Cut, FidXCut, FidYCut, dyCut, eOverpCut, HCal_Shower_atime_Cut, HCal_Energy_Cut, OpticsCut, ProtonSpotCut, NeutronSpotCut, isProtonCut, isNeutronCut;
@@ -210,6 +210,14 @@ public:
   double get_fidymax();
 
   double get_spotsig();
+
+  double get_fitxlow();
+
+  double get_fitxhigh();
+
+  double get_fitylow();
+
+  double get_fityhigh();
 
   bool get_syncJobs();
 

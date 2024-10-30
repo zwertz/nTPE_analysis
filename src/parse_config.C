@@ -20,8 +20,8 @@
 	if(!myline.BeginsWith("#")){
 	TObjArray *demObjs = myline.Tokenize(" ");
 	int numObjs = demObjs->GetEntries();
-        
-		if(numObjs>1){
+        	//changed to zero don't think it's an issue. Used to be 1.
+		if(numObjs>0){
 		TString temp = ((TObjString*) (*demObjs)[0])->GetString();
 		bool myBool = utility::check_number(temp.Data());
 		//cout << myBool << endl;
@@ -290,6 +290,18 @@
                         }else if(key == "fidymax"){
                         fidy_max = val.Atof();
                         //cout << "fidy_max" << fidy_max << endl;
+			}else if(key == "fitx_low"){
+			fitx_low = val.Atof();
+			//cout << "fitx low " << fitx_low << endl;
+			}else if(key == "fitx_high"){
+                        fitx_high = val.Atof();
+                        //cout << "fitx high " << fitx_high << endl;
+			}else if(key == "fity_low"){
+                        fity_low = val.Atof();
+                        //cout << "fity low " << fity_low << endl;
+                        }else if(key == "fity_high"){
+                        fity_high = val.Atof();
+                        //cout << "fity high " << fity_high << endl;
 			}else if(key == "thetapq_low"){
                         thetapq_low = val.Atof();
                         //cout << "thetapq_low " << thetapq_low << endl;
@@ -514,6 +526,14 @@
   double parse_config::get_fidymin(){return fidy_min;}
 
   double parse_config::get_fidymax(){return fidy_max;}
+
+  double parse_config::get_fitxlow(){return fitx_low;}
+
+  double parse_config::get_fitxhigh(){return fitx_high;}
+
+  double parse_config::get_fitylow(){return fity_low;}
+
+  double parse_config::get_fityhigh(){return fity_high;}
 
   double parse_config::get_spotsig(){return spot_sig;}
 

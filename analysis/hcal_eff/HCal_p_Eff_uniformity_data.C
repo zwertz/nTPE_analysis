@@ -32,9 +32,11 @@
 #include "../../src/fit_histogram.C"
 
 //Main
-void HCal_p_Eff_uniformity(const char *setup_file_name){
+void HCal_p_Eff_uniformity_data(const char *setup_file_name){
 //Set this default to true so that way fits to histogram should be more correct. This effects statistical error
 TH1::SetDefaultSumw2(kTRUE);
+
+  //gStyle->SetErrorX(0);
 
 //Define a clock to check macro processing time
   TStopwatch *watch = new TStopwatch();
@@ -70,48 +72,52 @@ TH1::SetDefaultSumw2(kTRUE);
   double W2_low = mainConfig.getW2Low();
   double W2_high = mainConfig.getW2High();
   double spot_sig = mainConfig.get_spotsig();
+  double fitx_low = mainConfig.get_fitxlow();
+  double fitx_high = mainConfig.get_fitxhigh();
+  double fity_low = mainConfig.get_fitylow();
+  double fity_high = mainConfig.get_fityhigh();
+
 
   //setup hcal active area with bounds that match database depending on pass
   vector<double> hcalaa = cuts::hcal_ActiveArea_data(1,1,pass);
 
   TFile *data_file = new TFile(Data_input_file_name.Data());
-  //TFile *mc_file = new TFile(MC_input_file_name.Data());
 
   //setup output file
   TString outfile = utility::makeOutputFileNameHCalEffUniformity(exp,pass,kin,sbs_field,target);
   TFile *fout = new TFile(outfile,"RECREATE");
 
   //Histograms we will fill
-  TH1D *h_W2_globcut = new TH1D( "W2_globcut", "W2 (GeV^{2}) global cut and fiducial cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_W2_hcalcut = new TH1D( "W2_hcalcut", "W2 (GeV^{2}) global+fiducial+HCal cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
-  TH1D *h_W2_anticut = new TH1D( "W2_anticut", "W2 (GeV^{2}) global+fiducial+!HCal cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_globcut = new TH1D( "hW2_globcut", "W2 (GeV^{2}) global cut and fiducial cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_hcalcut = new TH1D( "hW2_hcalcut", "W2 (GeV^{2}) global+fiducial+HCal cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_W2_anticut = new TH1D( "hW2_anticut", "W2 (GeV^{2}) global+fiducial+!HCal cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
 
-  TH1D *hx_expect_all = new TH1D("hx_expect_all","HCal X Expect, global cut;HCal X Expect (m)", 500, -3.0, 2.0 );
-  TH1D *hx_expect_hcalcut = new TH1D("hx_expect_hcalcut","HCal X Expect, global+HCal cut;HCal X Expect (m)", 500, -3.0, 2.0 );
-  TH1D *hx_expect_anticut = new TH1D("hx_expect_anticut","HCal X Expect, global+ !HCal cut;HCal X Expect (m)", 500, -3.0, 2.0 );
+  TH1D *hx_expect_all = new TH1D("hx_expect_all","HCal X Expect, global cut;HCal X Expect (m)", 147, -3.5, 3.0 );
+  TH1D *hx_expect_hcalcut = new TH1D("hx_expect_hcalcut","HCal X Expect, global+HCal cut;HCal X Expect (m)", 147, -3.5, 3.0 );
+  TH1D *hx_expect_anticut = new TH1D("hx_expect_anticut","HCal X Expect, global+ !HCal cut;HCal X Expect (m)", 147, -3.5, 3.0 );
 
-  TH1D *hy_expect_all = new TH1D("hy_expect_all","HCal Y Expect, global cut;HCal Y Expect (m)", 250, -1.25, 1.25 );
-  TH1D *hy_expect_hcalcut = new TH1D("hy_expect_hcalcut","HCal Y Expect, global+HCal cut;HCal Y Expect (m)", 250, -1.25, 1.25 );
-  TH1D *hy_expect_anticut = new TH1D("hy_expect_anticut","HCal Y Expect, global+ !HCal cut;HCal Y Expect (m)", 250, -1.25, 1.25 );
+  TH1D *hy_expect_all = new TH1D("hy_expect_all","HCal Y Expect, global cut;HCal Y Expect (m)", 67, -1.25, 1.25 );
+  TH1D *hy_expect_hcalcut = new TH1D("hy_expect_hcalcut","HCal Y Expect, global+HCal cut;HCal Y Expect (m)", 67, -1.25, 1.25 );
+  TH1D *hy_expect_anticut = new TH1D("hy_expect_anticut","HCal Y Expect, global+ !HCal cut;HCal Y Expect (m)", 67, -1.25, 1.25 );
 
-  TH2D *hxy_expect_all = new TH2D("hxy_expect_all","HCal X Expect vs Y Expect, global cut;HCal Y Expect (m); HCal X Expect (m)", 250, -1.25, 1.25, 250, -3.0, 2.0 );
-  TH2D *hxy_expect_hcalcut = new TH2D("hxy_expect_hcalcut","HCal X Expect vs Y Expect, global cut+HCal cut;HCal Y Expect (m); HCal X Expect (m)", 250, -1.25, 1.25, 250, -3.0, 2.0 );
-  TH2D *hxy_expect_anticut = new TH2D("hxy_expect_anticut","HCal X Expect vs Y Expect, global cut+!HCal cut;HCal Y Expect (m); HCal X Expect (m)", 250, -1.25, 1.25, 250, -3.0, 2.0 );
+  TH2D *hxy_expect_all = new TH2D("hxy_expect_all","HCal X Expect vs Y Expect, global cut;HCal Y Expect (m); HCal X Expect (m)", 67, -1.25, 1.25, 147, -3.5, 2.0 );
+  TH2D *hxy_expect_hcalcut = new TH2D("hxy_expect_hcalcut","HCal X Expect vs Y Expect, global cut+HCal cut;HCal Y Expect (m); HCal X Expect (m)", 67, -1.25, 1.25, 147, -3.5, 2.0 );
+  TH2D *hxy_expect_anticut = new TH2D("hxy_expect_anticut","HCal X Expect vs Y Expect, global cut+!HCal cut;HCal Y Expect (m); HCal X Expect (m)", 67, -1.25, 1.25, 147, -3.5, 2.0 );
 
-  TH1D *hx_HCal_all = new TH1D("hx_HCal_all","HCal X observed, global cut; HCal X  (m)", 500, -3.0, 2.0 );
-  TH1D *hy_HCal_all = new TH1D("hy_HCal_all","HCal Y observed, global cut; HCal Y  (m)", 250, -1.25, 1.25 );
-  TH2D *hxy_HCal_all = new TH2D("hxy_HCal_all", "HCal X vs Y observed, global cut;HCal Y  (m),HCal X  (m)",250, -1.25, 1.25,500, -3.0, 2.0);
+  TH1D *hx_HCal_all = new TH1D("hx_HCal_all","HCal X observed, global cut; HCal X  (m)", 147, -3.5, 2.0 );
+  TH1D *hy_HCal_all = new TH1D("hy_HCal_all","HCal Y observed, global cut; HCal Y  (m)", 67, -1.25, 1.25 );
+  TH2D *hxy_HCal_all = new TH2D("hxy_HCal_all", "HCal X vs Y observed, global cut;HCal Y  (m),HCal X  (m)",67, -1.25, 1.25,147, -3.5, 2.0);
 
-  TH1D *hx_HCal_cut = new TH1D("hx_HCal_cut","HCal X observed, global cut+HCal cut; HCal X  (m)", 500, -3.0, 2.0 );
-  TH1D *hy_HCal_cut = new TH1D("hy_HCal_cut","HCal Y observed, global cut+HCal cut; HCal Y  (m)", 250, -1.25, 1.25 );
-  TH2D *hxy_HCal_cut = new TH2D("hxy_HCal_cut", "HCal X vs Y observed, global cut+HCal cut;HCal Y  (m),HCal X  (m)",250, -1.25, 1.25,500, -3.0, 2.0);
+  TH1D *hx_HCal_cut = new TH1D("hx_HCal_cut","HCal X observed, global cut+HCal cut; HCal X  (m)", 147, -3.5, 2.0 );
+  TH1D *hy_HCal_cut = new TH1D("hy_HCal_cut","HCal Y observed, global cut+HCal cut; HCal Y  (m)", 67, -1.25, 1.25 );
+  TH2D *hxy_HCal_cut = new TH2D("hxy_HCal_cut", "HCal X vs Y observed, global cut+HCal cut;HCal Y  (m),HCal X  (m)",67, -1.25, 1.25,147, -3.5, 2.0);
 
-  TH1D *hx_HCal_anticut = new TH1D("hx_HCal_anticut","HCal X observed, global cut+!HCal cut; HCal X  (m)", 500, -3.0, 2.0 );
-  TH1D *hy_HCal_anticut = new TH1D("hy_HCal_anticut","HCal Y observed, global cut+!HCal cut; HCal Y  (m)", 250, -1.25, 1.25 );
-  TH2D *hxy_HCal_anticut = new TH2D("hxy_HCal_anticut", "HCal X vs Y observed, global cut+!HCal cut;HCal Y  (m),HCal X  (m)",250, -1.25, 1.25,500, -3.0, 2.0);
+  TH1D *hx_HCal_anticut = new TH1D("hx_HCal_anticut","HCal X observed, global cut+!HCal cut; HCal X  (m)", 147, -3.5, 2.0 );
+  TH1D *hy_HCal_anticut = new TH1D("hy_HCal_anticut","HCal Y observed, global cut+!HCal cut; HCal Y  (m)", 67, -1.25, 1.25 );
+  TH2D *hxy_HCal_anticut = new TH2D("hxy_HCal_anticut", "HCal X vs Y observed, global cut+!HCal cut;HCal Y  (m),HCal X  (m)",67, -1.25, 1.25,147, -3.5, 2.0);
 
   //Disabling row column info for now. Not sure if essentially. Would need to implement info first in parser to enable here
-  /*
+  
   TH1D *hrowHCal_all = new TH1D("hrowHCal_all","HCal Row, global cut; HCal row",24,-0.5,23.5);
   TH1D *hcolHCal_all = new TH1D("hcolHCal_all","HCal Col, global cut; HCal col",12,-0.5,11.5);
   TH2D *hrowcolHCal_all = new TH2D("hrowcolHCal_all","HCal Row vs Col, global cut;HCal col;HCal row",12,-0.5,11.5,24,-0.5,23.5);
@@ -123,19 +129,18 @@ TH1::SetDefaultSumw2(kTRUE);
   TH1D *hrowHCal_anticut = new TH1D("hrowHCal_anticut","HCal Row, global+!HCal cut; HCal row",24,-0.5,23.5);
   TH1D *hcolHCal_anticut = new TH1D("hcolHCal_anticut","HCal Col, global+!HCAl cut; HCal col",12,-0.5,11.5);
   TH2D *hrowcolHCal_anticut = new TH2D("hrowcolHCal_anticut","HCal Row vs Col, global+!HCal cut;HCal col;HCal row",12,-0.5,11.5,24,-0.5,23.5);
-  */
 
-  TH1D *hdx_all = new TH1D("hdx_all","HCal dx, global cuts; dx (m)",250,-3,2);
-  TH1D *hdx_cut = new TH1D("hdx_cut","HCal dx, global+HCal cuts; dx (m)",250,-3,2);
-  TH1D *hdx_anticut = new TH1D("hdx_anticut","HCal dx, global+!HCal cuts; dx (m)",250,-3,2);
+  TH1D *hdx_all = new TH1D("hdx_all","HCal dx, global cuts; dx (m)",250,-3.5,2);
+  TH1D *hdx_cut = new TH1D("hdx_cut","HCal dx, global+HCal cuts; dx (m)",250,-3.5,2);
+  TH1D *hdx_anticut = new TH1D("hdx_anticut","HCal dx, global+!HCal cuts; dx (m)",250,-3.5,2);
 
   TH1D *hdy_all = new TH1D("hdy_all","HCal dy, global cuts; dy (m)",250,-1.25,1.25);
   TH1D *hdy_cut = new TH1D("hdy_cut","HCal dy, global+HCal cuts; dy (m)",250,-1.25,1.25);
   TH1D *hdy_anticut = new TH1D("hdy_anticut","HCal dy, global+!HCal cuts; dy (m)",250,-1.25,1.25);
 
-  TH2D *hdxdy_all = new TH2D("hdxdy_all","HCal dx vs dy, global cuts; dy (m); dx (m)",250,-1.25,1.25,250,-1.25,1.25);
-  TH2D *hdxdy_cut = new TH2D("hdxdy_cut","HCal dx vs dy, global+HCal cuts; dy (m); dx (m)",250,-1.25,1.25,250,-1.25,1.25);
-  TH2D *hdxdy_anticut = new TH2D("hdxdy_anticut","HCal dx vs dy, global+!HCal cuts; dy (m); dx (m)",250,-1.25,1.25,250,-1.25,1.25);
+  TH2D *hdxdy_all = new TH2D("hdxdy_all","HCal dx vs dy, global cuts; dy (m); dx (m)",250,-1.25,1.25,250,-2,1.25);
+  TH2D *hdxdy_cut = new TH2D("hdxdy_cut","HCal dx vs dy, global+HCal cuts; dy (m); dx (m)",250,-1.25,1.25,250,-2,1.25);
+  TH2D *hdxdy_anticut = new TH2D("hdxdy_anticut","HCal dx vs dy, global+!HCal cuts; dy (m); dx (m)",250,-1.25,1.25,250,-2,1.25);
 
   TH1D *hehcal_all = new TH1D("hehcal_all","E_{HCal}, global cuts; E_{HCal} (GeV)",500,0,2.5);
   TH1D *hehcal_cut = new TH1D("hehcal_cut","E_{HCal}, global+HCal cuts; E_{HCal} (GeV)",500,0,2.5);
@@ -146,7 +151,7 @@ TH1::SetDefaultSumw2(kTRUE);
   C->Add(Data_input_file_name.Data());
 
   //Branch variables
-  double ehcal, xhcal, yhcal, dx, dy, proton_deflection, xexp, yexp, W2, BBps_e, BBtr_vz, BBtr_p, BBgem_nhits;
+  double ehcal, xhcal, yhcal, dx, dy, proton_deflection, xexp, yexp, W2, BBps_e, BBtr_vz, BBtr_p, BBgem_nhits, rowblkHCAL, colblkHCAL, BBgem_chi2ndf;
   int BBsh_nclus;
 
   //Get the branches we need from Parse
@@ -164,6 +169,10 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchStatus("BBtr_vz",1);
   C->SetBranchStatus("BBgem_nhits",1);
   C->SetBranchStatus("BBsh_nclus",1);
+  C->SetBranchStatus("rowblkHCAL",1);
+  C->SetBranchStatus("colblkHCAL",1);
+  C->SetBranchStatus("BBgem_chi2ndf",1);
+
 
   C->SetBranchAddress("ehcal",&ehcal);
   C->SetBranchAddress("xhcal",&xhcal);
@@ -179,6 +188,9 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchAddress("BBtr_p",&BBtr_p);
   C->SetBranchAddress("BBgem_nhits",&BBgem_nhits);
   C->SetBranchAddress("BBsh_nclus",&BBsh_nclus);
+  C->SetBranchAddress("rowblkHCAL",&rowblkHCAL);
+  C->SetBranchAddress("colblkHCAL",&colblkHCAL);
+  C->SetBranchAddress("BBgem_chi2ndf",&BBgem_chi2ndf);
 
   //setup global cut formula
   TTreeFormula *GlobalCut = new TTreeFormula( "GlobalCut", globalcut, C );
@@ -236,18 +248,18 @@ TH1::SetDefaultSumw2(kTRUE);
 			//Fill histograms for the denominator
 			hx_expect_all->Fill(xexp - proton_deflection);
 			hx_HCal_all->Fill(xhcal);
-			//hrowHCal_all->Fill(rowblkHCAL[0]);
+			hrowHCal_all->Fill(rowblkHCAL);
 
 				//enforce the HCal cut now
 				//Fill histograms for numerator
 				if(pass_HCalCut){
 				hx_expect_hcalcut->Fill(xexp - proton_deflection);
                         	hx_HCal_cut->Fill(xhcal);
-                        	//hrowHCal_cut->Fill(rowblkHCAL[0]);
+                        	hrowHCal_cut->Fill(rowblkHCAL);
 				}else{
 				hx_expect_anticut->Fill(xexp - proton_deflection);
                                 hx_HCal_anticut->Fill(xhcal);
-                                //hrowHCal_anticut->Fill(rowblkHCAL[0]);
+                                hrowHCal_anticut->Fill(rowblkHCAL);
 				}	
 			}//end fidy cut
 
@@ -257,18 +269,18 @@ TH1::SetDefaultSumw2(kTRUE);
                         //Fill histograms for the denominator
                         hy_expect_all->Fill(yexp);
                         hy_HCal_all->Fill(yhcal);
-                        //hcolHCal_all->Fill(colblkHCAL[0]);
+                        hcolHCal_all->Fill(colblkHCAL);
 
                                 //enforce the HCal cut now
                                 //Fill histograms for numerator
                                 if(pass_HCalCut){
                                 hy_expect_hcalcut->Fill(yexp);
                                 hy_HCal_cut->Fill(yhcal);
-                                //hcolHCal_cut->Fill(colblkHCAL[0]);
+                                hcolHCal_cut->Fill(colblkHCAL);
                                 }else{
                                 hy_expect_anticut->Fill(yexp);
                                 hy_HCal_anticut->Fill(yhcal);
-                                //hcolHCal_anticut->Fill(colblkHCAL[0]);
+                                hcolHCal_anticut->Fill(colblkHCAL);
                                 }
                         }//end fidx cut
 
@@ -288,6 +300,8 @@ TH1::SetDefaultSumw2(kTRUE);
 				hdxdy_all->Fill(dy,dx);
 				hxy_HCal_all->Fill(yhcal,xhcal);
 				hehcal_all->Fill(ehcal);
+				hrowcolHCal_all->Fill(colblkHCAL,rowblkHCAL);
+
 
 				if(pass_HCalCut){
 					hdx_cut->Fill(dx);
@@ -295,12 +309,14 @@ TH1::SetDefaultSumw2(kTRUE);
                                 	hdxdy_cut->Fill(dy,dx);
                                 	hxy_HCal_cut->Fill(yhcal,xhcal);
                                 	hehcal_cut->Fill(ehcal);
+					hrowcolHCal_cut->Fill(colblkHCAL,rowblkHCAL);
 				}else{
 					hdx_anticut->Fill(dx);
                                         hdy_anticut->Fill(dy);
                                         hdxdy_anticut->Fill(dy,dx);
                                         hxy_HCal_anticut->Fill(yhcal,xhcal);
                                         hehcal_anticut->Fill(ehcal);
+					hrowcolHCal_anticut->Fill(colblkHCAL,rowblkHCAL);
 				}
 			}//end total fiducial conditional
 
@@ -365,18 +381,18 @@ TH1::SetDefaultSumw2(kTRUE);
   heff_vs_xy->SetName("heff_vs_xy" );
   heff_vs_xy->Divide( hxy_HCal_cut, hxy_HCal_all );
 
-  /*TH1D *heff_vs_row = new TH1D( *hrowHCAL_cut );
+  TH1D *heff_vs_row = new TH1D( *hrowHCal_cut );
   heff_vs_row->SetName("heff_vs_row");
-  heff_vs_row->Divide( hrowHCAL_cut, hrowHCAL_all );
+  heff_vs_row->Divide( hrowHCal_cut, hrowHCal_all );
 
-  TH1D *heff_vs_col = new TH1D( *hcolHCAL_cut );
+  TH1D *heff_vs_col = new TH1D( *hcolHCal_cut );
   heff_vs_col->SetName("heff_vs_col");
-  heff_vs_col->Divide( hcolHCAL_cut, hcolHCAL_all );
+  heff_vs_col->Divide( hcolHCal_cut, hcolHCal_all );
 
-  TH2D *heff_vs_rowcol = new TH2D( *hrowcolHCAL_cut );
+  TH2D *heff_vs_rowcol = new TH2D( *hrowcolHCal_cut );
   heff_vs_rowcol->SetName( "heff_vs_rowcol" );
-  heff_vs_rowcol->Divide( hrowcolHCAL_cut, hrowcolHCAL_all );
- */
+  heff_vs_rowcol->Divide( hrowcolHCal_cut, hrowcolHCal_all );
+
 
   TH1D *heff_vs_W2 = new TH1D( *h_W2_hcalcut );
   heff_vs_W2->SetName("heff_vs_W2");
@@ -388,9 +404,34 @@ TH1::SetDefaultSumw2(kTRUE);
     double err = sqrt(eff*(1.0-eff)/N);
     heff_vs_W2->SetBinError(i,err);
   }
+  
+  //Make the canvases which hold the fitted histogram
+  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_clone","heff_vs_xexpect_wfit",fitx_low,fitx_high);
+
+  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_clone","heff_vs_yexpect_wfit",fity_low,fity_high);
+  
+  TCanvas* c3 = plots::plot_Comp(hx_expect_all,hx_expect_hcalcut,"c3","hx_expect_all_clone","hx_expect_cut_clone");
+  
+  TCanvas* c4 = plots::plot_Comp(hy_expect_all,hy_expect_hcalcut,"c4","hy_expect_all_clone","hy_expect_cut_clone");
+
+  TCanvas* c5 = plots::plot_Comp(h_W2_globcut,h_W2_hcalcut,"c5","hW2_globcut_clone","hW2_hcalcut_clone");
 
   //Write the info to file
   fout->Write();
+
+  //Write stuff to a pdf
+  TString plotname = outfile;
+  plotname.ReplaceAll(".root",".pdf");
+  TString start = Form("%s%s",plotname.Data(),"(");
+  //middle is the same as the name
+  TString end = Form("%s%s",plotname.Data(),")");
+
+  c0->Print(start.Data(),"pdf");
+  c2->Print(plotname.Data(),"pdf");
+  c3->Print(plotname.Data(),"pdf");
+  c4->Print(plotname.Data(),"pdf");
+  c5->Print(end.Data(),"pdf");
+
 
   // Send time efficiency report to console
   cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;

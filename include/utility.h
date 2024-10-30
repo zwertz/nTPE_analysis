@@ -37,7 +37,7 @@ namespace utility{
   TString makeOutputFileNameParse(TString exp, TString pass, TString Kin, int SBS_field,TString target);
 
   //Helper function to make output file name for parse mc root file
-  TString makeOutputFileName_MCParse(TString exp, TString Kin, int SBS_field);
+  TString makeOutputFileName_MCParse(TString exp, TString Kin, int SBS_field,TString target);
 
   //Helper function to make output file name for data and mc comparison 
   TString makeOutputFileName_DataMCComp(TString exp, TString pass, TString Kin, int SBS_field,TString target);  
@@ -71,6 +71,12 @@ namespace utility{
  
   //Helper function to make output file name for HCal Efficiency from MC
   TString makeOutputFileName_HCalEffMC(TString exp, TString Kin);
+
+  //Helper function to make output file name for HCal Efficiency for uniformity
+  TString makeOutputFileNameHCalEffUniformity(TString exp,TString pass, TString Kin, int SBS_field,TString target);
+
+  //Helper function to make output file name for HCal Efficiency map analysis
+  TString makeOutputFileName_HCalEffMap(TString exp,TString pass, TString Kin,TString target);
 
   //Helper function to find MC histogram files. Right now this only supports John Boyd simulation files. But in future might support others.
   vector<string> findHistFiles(TString replay_type,TString histDirectory,TString partialName);

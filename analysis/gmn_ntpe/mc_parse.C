@@ -98,6 +98,8 @@ double hcaldist = myKin.getHCalDist();
 double sbsdist = myKin.getSBSDist();
 double bbtheta = myKin.getBBAngle_Rad();
 double hcaltheta = myKin.getHCalAngle_Rad();
+double p_nuc_centr = myKin.getNucleonP();
+
 
 //setup hcal physical bounds that match database
 vector<double> hcalpos = cuts::hcal_Position_MC();
@@ -108,8 +110,13 @@ vector<double> hcalaa = cuts::hcal_ActiveArea_MC(1,1);
 //setup fiducial region based on dx and dy spot information
 vector<double> hcalfid = cuts::hcalfid(dxsig_p,dxsig_n,dysig_p,hcalaa,dxsig_p_fac,dysig_p_fac);
 
+//print out the information for the fid region
+  for(int k=0; k<hcalfid.size();k++){
+  cout <<"HCal Fid "<< k << " :" << hcalfid[k] << endl;
+  }
+
 //setup output file
-TString outfile = utility::makeOutputFileName_MCParse(exp,kin,sbs_field); 
+TString outfile = utility::makeOutputFileName_MCParse(exp,kin,sbs_field,target); 
 TFile *fout = new TFile(outfile,"RECREATE");
 
 //need to find the MC root and hist files 
@@ -127,65 +134,112 @@ vector<pair<string,vector<float>>> metadata_p;
 //metadata neutron
 vector<pair<string,vector<float>>> metadata_n;
 
-	if(replay_type == "jboyd"){
-	//find hist file first for proton
-	histFileNames_p = utility::findHistFiles(replay_type,histfile_dir,partial_name_p);
-	//This function is a bit tricky as it will modify both the root file and hist file vectors. Not my favorite way to do that
-	//In the end we should have a set of matching hist files and root files
-	utility::matchMCFiles(replay_type,histFileNames_p,rootFileNames_p,rootfile_dir);
-	//find hist file first for neutron
-	histFileNames_n = utility::findHistFiles(replay_type,histfile_dir,partial_name_n);
-	//Match hist and root files
-	utility::matchMCFiles(replay_type,histFileNames_n,rootFileNames_n,rootfile_dir);
-		//check to make number the number of hist and root files matches for protons and neutrons
-		if(rootFileNames_p.size() != histFileNames_p.size() || rootFileNames_n.size() != histFileNames_n.size()){
-        	cerr << "Error: File Matching failure, vector size mismatch!" << endl;
-        	}
-	}else if(replay_type == "jlab-HPC"){
-	//find information from CSV file and root file paths from generic sim replay output supported by jlab-HPC
-	//for proton
-	utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_p,rootFileNames_p,metadata_p);
-	//for neutron
-	utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_n,rootFileNames_n,metadata_n);
-	}else{
-	cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
+//Need to allow the MC parser to handle both LD2 and LH2 for MC file handling
+
+	if(target == "LD2"){
+		//Handle the LD2 MC files for the various types
+		if(replay_type == "jboyd"){
+		//find hist file first for proton
+		histFileNames_p = utility::findHistFiles(replay_type,histfile_dir,partial_name_p);
+		//This function is a bit tricky as it will modify both the root file and hist file vectors. Not my favorite way to do that
+		//In the end we should have a set of matching hist files and root files
+		utility::matchMCFiles(replay_type,histFileNames_p,rootFileNames_p,rootfile_dir);
+		//find hist file first for neutron
+		histFileNames_n = utility::findHistFiles(replay_type,histfile_dir,partial_name_n);
+		//Match hist and root files
+		utility::matchMCFiles(replay_type,histFileNames_n,rootFileNames_n,rootfile_dir);
+			//check to make number the number of hist and root files matches for protons and neutrons
+			if(rootFileNames_p.size() != histFileNames_p.size() || rootFileNames_n.size() != histFileNames_n.size()){
+        		cerr << "Error: File Matching failure, vector size mismatch!" << endl;
+        		}
+		}else if(replay_type == "jlab-HPC"){
+		//find information from CSV file and root file paths from generic sim replay output supported by jlab-HPC
+		//for proton
+		utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_p,rootFileNames_p,metadata_p);
+		//for neutron
+		utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_n,rootFileNames_n,metadata_n);
+		}else{
+		cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
+		}
+	}else if(target == "LH2"){
+		//Handle the LD2 MC files for the various types
+		if(replay_type == "jboyd"){
+                //find hist file first for proton
+		histFileNames_p = utility::findHistFiles(replay_type,histfile_dir,partial_name_p);
+		//This function is a bit tricky as it will modify both the root file and hist file vectors. Not my favorite way to do that
+                //In the end we should have a set of matching hist files and root files
+                utility::matchMCFiles(replay_type,histFileNames_p,rootFileNames_p,rootfile_dir);
+			//check to make number the number of hist and root files matches for protons
+                        if(rootFileNames_p.size() != histFileNames_p.size()){
+                        cerr << "Error: File Matching failure, vector size mismatch!" << endl;
+                        }
+		}else if(replay_type == "jlab-HPC"){
+		//find information from CSV file and root file paths from generic sim replay output supported by jlab-HPC
+                //for proton
+                utility::SyncFilesCSV(histfile_dir,rootfile_dir,partial_name_p,rootFileNames_p,metadata_p);
+		}else{
+                cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
+                }
+	}else {
+	cout << "Error: During MC file import. The target type: " << target << " is not supported. Resolve issue!" << endl;
 	}
 //double check that we have the same number of files again
 int pFiles = 0;
 int nFiles = 0;
 
-	//Continuing to make sure there exist both protons and neutrons. Make sure the job has a both a proton and neutron file. If not get rid of it
-	if(sync_jobs){
-		 //Function that searchs, finds, and then removes any files that are not in both proton and neutron vectors
-		if(replay_type == "jboyd"){
-		utility::syncJobNumbers(rootFileNames_p,rootFileNames_n);
-		pFiles = rootFileNames_p.size();
-		nFiles = rootFileNames_n.size();
+//Need to allow the MC parser to handle both LD2 and LH2 for MC file handling
 
-		}else if(replay_type == "jlab-HPC"){
-		//cout << metadata_p.size() << " " << metadata_n.size() << endl;
-		utility::syncJobNumbers(metadata_p,metadata_n);
-		pFiles = metadata_p.size();
-		nFiles = metadata_n.size();
-		}else{
-		  cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
-		}
-
-	}	
-   
-	cout << endl << "Number of proton files " << pFiles << " , Number of neutron files " << nFiles << endl;
-	if(pFiles != nFiles){
-	cout << endl << "Warning: Number proton and neutron root files loaded does not match. Investigate!" << endl << endl;
+	if(target == "LD2"){
+		//Continuing to make sure there exist both protons and neutrons. Make sure the job has a both a proton and neutron file. If not get rid of it
 		if(sync_jobs){
-		return;
+			 //Function that searchs, finds, and then removes any files that are not in both proton and neutron vectors
+			if(replay_type == "jboyd"){
+			utility::syncJobNumbers(rootFileNames_p,rootFileNames_n);
+			pFiles = rootFileNames_p.size();
+			nFiles = rootFileNames_n.size();
+			}else if(replay_type == "jlab-HPC"){
+			//cout << metadata_p.size() << " " << metadata_n.size() << endl;
+			utility::syncJobNumbers(metadata_p,metadata_n);
+			pFiles = metadata_p.size();
+			nFiles = metadata_n.size();
+			}else{
+		  	cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
+			}
+
+		}	
+   
+		cout << endl << "Number of proton files " << pFiles << " , Number of neutron files " << nFiles << endl;
+		if(pFiles != nFiles){
+		cout << endl << "Warning: Number proton and neutron root files loaded does not match. Investigate!" << endl << endl;
+			if(sync_jobs){
+			return;
+			}
 		}
-	}	
+	}else if(target == "LH2"){
+		//Don't need to sync jobs. But do need to make sure the different replay types populate the number of files
+			if(replay_type == "jboyd"){
+                        pFiles = rootFileNames_p.size();
+                        }else if(replay_type == "jlab-HPC"){
+                        pFiles = metadata_p.size();
+                        }else{
+                        cout << "Error: MC file type not supported during. Replay Type: " << replay_type << " This needs fixing!" << endl;
+                        }
+
+	}else {
+        cout << "Error: During MC file import. The target type: " << target << " is not supported. Resolve issue!" << endl;
+        }
+
+double dx_pn = mainConfig.get_dxpn();
+
 //Histograms///////	
 
 //global cuts
   TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
   TH1D *h_ntracks_globcut = new TH1D("ntracks_globcut","Number of Tracks,global cut;", 150, 0, 5);
   TH1D *h_ntracks_cut = new TH1D("ntracks_cut","Number of Tracks, cuts;", 150, 0, 5);
+  TH1D *h_track_chi2ndf_nocut = new TH1D("track_chi2ndf_nocut","Track Chi^2/NDF, no cuts;",200,0,20);
+  TH1D *h_track_chi2ndf_globcut = new TH1D("track_chi2ndf_globcut","Track Chi^2/NDF, global cuts;",200,0,20);
+  TH1D *h_track_chi2ndf_cut = new TH1D("track_chi2ndf_cut","Track Chi^2/NDF, all cuts;",200,0,20);
   TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2);
   TH1D *h_PS_E_globcut = new TH1D("h_ps_e_globcut"," PS Cluster Energy (GeV),global cut;",250,0.0,2.2);
   TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), Cuts;",250,0.0,2.2);
@@ -212,8 +266,21 @@ int nFiles = 0;
   TH1D *h_bbtrp_nocut = new TH1D("bbtrp_nocut","BigBite Track Momentum (GeV), no cut;",300, 0.0, 4.0);
   TH1D *h_bbtrp_globcut = new TH1D("bbtrp_globcut","BigBite Track Momentum (GeV), global cut;",300, 0.0, 4.0);
   TH1D *h_bbtrp_cut = new TH1D("bbtrp_cut","BigBite Track Momentum (GeV), cuts;",300, 0.0, 4.0);
+  TH1D *h_bbEoverp_nocut = new TH1D("bbEoverp_nocut","BigBite E over p, no cut;",100, 0.0, 2.0);
   TH1D *h_bbEoverp_globcut = new TH1D("bbEoverp_globcut","BigBite E over p, global cut;",100, 0.0, 2.0);
   TH1D *h_bbEoverp_cut = new TH1D("bbEoverp_cut","BigBite E over p, cuts;",100, 0.0, 2.0);
+  TH1D *h_optics_xdir_globcut = new TH1D("h_optics_xdir_globcut", "BigBite optics validity, track x-dir;",200,-0.6,0.6);
+  TH1D *h_optics_ydir_globcut = new TH1D("h_optics_ydir_globcut", "BigBite optics validity, track y-dir;",200,-0.2,0.2);
+  TH2D *h_W2_optics_xdir_globcut = new TH2D("h_W2_optics_xdir_globcut", "W2 vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,binfac*W2fitmax, 0.0, W2fitmax );
+  TH2D *h_W2_optics_ydir_globcut = new TH2D("h_W2_optics_ydir_globcut", "W2 vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_optics_xdir_cut = new TH1D("h_optics_xdir_cut", "BigBite optics validity, track x-dir;",200,-0.6,0.6);
+  TH1D *h_optics_ydir_cut = new TH1D("h_optics_ydir_cut", "BigBite optics validity, track y-dir;",200,-0.2,0.2);
+  TH2D *h_W2_optics_xdir_cut = new TH2D("h_W2_optics_xdir_cut", "W2 vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,binfac*W2fitmax, 0.0, W2fitmax );
+  TH2D *h_W2_optics_ydir_cut = new TH2D("h_W2_optics_ydir_cut", "W2 vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,binfac*W2fitmax, 0.0, W2fitmax );
+  TH1D *h_optics_xdir_nocut = new TH1D("h_optics_xdir_nocut", "BigBite optics validity, track x-dir;",200,-0.6,0.6);
+  TH1D *h_optics_ydir_nocut = new TH1D("h_optics_ydir_nocut", "BigBite optics validity, track y-dir;",200,-0.2,0.2);
+  TH2D *h_W2_optics_xdir_nocut = new TH2D("h_W2_optics_xdir_nocut", "W2 vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,binfac*W2fitmax, 0.0, W2fitmax );
+  TH2D *h_W2_optics_ydir_nocut = new TH2D("h_W2_optics_ydir_nocut", "W2 vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,binfac*W2fitmax, 0.0, W2fitmax );
 
 //basic H-arm
   TH2D *hxy_globcut = new TH2D("hxy_globcut","HCal X  vs Y, global cut;HCal Y  (m); HCal X  (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
@@ -277,6 +344,12 @@ int nFiles = 0;
   TH1D *hcoin_pclus_cut = new TH1D( "hcoin_pclus_cut", "HCal ADCt - BBCal ADCt,pclus, cuts; ns", 400, -100, 100 );
 
   TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0002 );
+  TH2D *hdx_xhcal = new TH2D("hdx_xhcal","dx vs xhcal; xhcal; x_{HCAL}-x_{expect} (m)",600,-3.0,3.0,hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high);
+  TH2D *hdx_pN = new TH2D("hdx_pN", "dx vs nucleon momentum p_{N};p_{N} (GeV);x_{HCAL}-x_{expect} (m)",300,0.88*p_nuc_centr,1.12*p_nuc_centr,hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high);
+  TH2D *hdx_prodef_pN = new TH2D("hdx_prodef_pN", "dx + proton deflection vs nucleon momentum p_{N};p_{N} (GeV);x_{HCAL}-x_{expect} + proton deflection (m)",300,0.88*p_nuc_centr,1.12*p_nuc_centr,hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high);
+  TH1D *hdx_prodef = new TH1D( "dx_prodef","HCal dx + proton deflection; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hdx_defcut = new TH1D( "dx_defcut","HCal dx ; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hprodef = new TH1D( "hprodef","proton deflection; (m)", 300, 0.85*dx_pn, 1.3*dx_pn );
 
   //Added for cut stability studies
   TH1D* h_nsigx_fid = new TH1D("h_nsigx_fid", "nsigx_fid",200,-20,20);
@@ -358,6 +431,14 @@ int nFiles = 0;
   int is_proton_out;
   int is_neutron_out;
 
+  double hcal_sh_atime_diff_out;
+  double proton_deflection_out;
+  double p_N_out;
+  double p_central_out;
+  double rowblkHCAL_out;
+  double colblkHCAL_out;
+  double nblkHCAL_out;
+
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
   Parse->Branch("dy", &dy_out, "dy/D");
@@ -416,6 +497,11 @@ int nFiles = 0;
   Parse->Branch("W2low", &W2low_out, "W2low/D");
   Parse->Branch("W2high", &W2high_out, "W2high/D");
   Parse->Branch("Final_MC_weight", &final_mc_weight_out, "final_MC_weight/D");
+  Parse->Branch("hcal_sh_atime_diff", &hcal_sh_atime_diff_out, "hcal_sh_atime_diff/D");
+  Parse->Branch("proton_deflection", &proton_deflection_out, "proton_deflection/D");
+  Parse->Branch("p_N", &p_N_out, "p_N/D");
+  Parse->Branch("p_central", &p_central_out, "p_centrial/D");
+
 
   Parse->Branch("num_hcal_clusid", &num_hcal_clusid_out, "num_hcal_clusid/I");
   Parse->Branch("hcal_clus_blk", &hcal_clus_blk_out, "hcal_clus_blk/I");
@@ -431,16 +517,29 @@ int nFiles = 0;
   Parse->Branch("is_proton", &is_proton_out, "is_proton/I");
   Parse->Branch("is_neutron", &is_neutron_out, "is_neutron/I");
 
+  Parse->Branch( "nblkHCAL", &nblkHCAL_out, "nblkHCAL/D" );
+  Parse->Branch( "rowblkHCAL",&rowblkHCAL_out, "rowblkHCAL/D" );
+  Parse->Branch( "colblkHCAL", &colblkHCAL_out, "colblkHCAL/D" );
+
+
   //logistical information
   TString nuc = "none"; 
-  int num_nuc = 2; //always assume there are max 2 nucleons
+  int num_nuc = 0; 
   int num_files = 0;
   int is_proton = 0; //false
   int is_neutron = 0; //false
 
-  TChain *C = nullptr;
+  	//Conditional to handle the num_nuc depending on target
+  	if(target == "LD2"){
+	num_nuc = 2;	
+	}else if(target == "LH2"){
+	num_nuc = 1;
+	}else{
+	//stays default zero
+	cout << "Error: During event loop setup. The target type: " << target << " is not supported. Resolve issue!" << endl;	
+	}
 
-  double dx_pn = mainConfig.get_dxpn();
+  TChain *C = nullptr;
 
   //Main loop over nucleons (r==0 proton, r==1 neutron)
   for(int r=0; r<num_nuc; r++){
@@ -551,14 +650,16 @@ int nFiles = 0;
 		C->SetBranchStatus("*",0);
 
 		//HCal general branches
-		double x_hcal,y_hcal,e_hcal,nclus_hcal,idx_hcal;
+		double x_hcal,y_hcal,e_hcal,nclus_hcal,idx_hcal, nblkHCAL;
 
+		C->SetBranchStatus("sbs.hcal.nblk",1);
   		C->SetBranchStatus("sbs.hcal.x",1);
   		C->SetBranchStatus("sbs.hcal.y",1);
   		C->SetBranchStatus("sbs.hcal.e",1);
   		C->SetBranchStatus("sbs.hcal.nclus",1);
   		C->SetBranchStatus("sbs.hcal.index",1);
 
+		C->SetBranchAddress("sbs.hcal.nblk",&nblkHCAL);
   		C->SetBranchAddress("sbs.hcal.x", &x_hcal);
   		C->SetBranchAddress("sbs.hcal.y", &y_hcal);
   		C->SetBranchAddress("sbs.hcal.e", &e_hcal);
@@ -566,7 +667,7 @@ int nFiles = 0;
   		C->SetBranchAddress("sbs.hcal.index", &idx_hcal);
 
 		//HCal cluster branches
-		double hcal_clus_atime[exp_constants::maxclus], hcal_clus_e[exp_constants::maxclus], hcal_clus_x[exp_constants::maxclus], hcal_clus_y[exp_constants::maxclus],hcal_clus_nblk[exp_constants::maxclus];
+		double hcal_clus_atime[exp_constants::maxclus], hcal_clus_e[exp_constants::maxclus], hcal_clus_x[exp_constants::maxclus], hcal_clus_y[exp_constants::maxclus],hcal_clus_nblk[exp_constants::maxclus], rowblkHCAL[exp_constants::maxclus], colblkHCAL[exp_constants::maxclus];
   		int num_hcal_clusid;
 
   		C->SetBranchStatus("sbs.hcal.clus.atime",1);
@@ -576,6 +677,8 @@ int nFiles = 0;
   		C->SetBranchStatus("sbs.hcal.clus.e",1);
   		C->SetBranchStatus("Ndata.sbs.hcal.clus.id", 1);
   		C->SetBranchStatus("sbs.hcal.clus.nblk", 1);
+		C->SetBranchStatus("sbs.hcal.clus_blk.row", 1);
+  		C->SetBranchStatus("sbs.hcal.clus_blk.col", 1);
 
   		C->SetBranchAddress("sbs.hcal.clus.atime", &hcal_clus_atime);
   		C->SetBranchAddress("sbs.hcal.clus.e", &hcal_clus_e);
@@ -583,6 +686,10 @@ int nFiles = 0;
   		C->SetBranchAddress("sbs.hcal.clus.y", &hcal_clus_y);
   		C->SetBranchAddress("Ndata.sbs.hcal.clus.id", &num_hcal_clusid);
   		C->SetBranchAddress("sbs.hcal.clus.nblk", &hcal_clus_nblk);
+		
+		C->SetBranchAddress("sbs.hcal.clus_blk.row",&rowblkHCAL);
+  		C->SetBranchAddress("sbs.hcal.clus_blk.col",&colblkHCAL);
+
 
 		//Monteo Carlo Variables
 		double mc_weight;
@@ -694,7 +801,6 @@ int nFiles = 0;
 
 		//define HCal origin
 		TVector3 hcal_origin = physics::getHCal_origin(hcaldist,hcal_offset,hcal_xaxis,hcal_zaxis);
-  		double BdL = physics::getBdL(sbs_field);
 
 		//mean energy loss of the beam before scattering
 		double Eloss_outgoing = physics::getEloss_outgoing(bbtheta,target);
@@ -723,6 +829,10 @@ int nFiles = 0;
 
 			///////////
 			//Electron-arm physics calculations
+
+			//BB E/p calculated. Should be the same as the tree variable. But it does not cause seg faults
+        		double BB_E_over_p = (e_sh+e_ps)/tr_p[0];
+
 			//use the ebeam from the MC file if possible, if not will default to value from kinematic info
 			if((ebeam/1000) != -1 ){
 			Ebeam = ebeam/1000;
@@ -864,6 +974,10 @@ int nFiles = 0;
 				//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
 				double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
 
+				//Calculate expected proton deflection with a somewhat crude module
+        			double BdL = physics::getBdL(sbs_field,kin);
+        			double proton_deflection = physics::get_protonDeflection(BdL,p_N.Vect().Mag(),hcaldist,sbsdist);
+
 				//supposedly the MC does timing poorly. So implementing an intime clustering algorithm for MC is not the best idea. Just do a highest energy cluster search to be sure.
 				int energy_idx = physics::cluster_HighEnergy(num_hcal_clusid,hcal_clus_e);
 
@@ -989,6 +1103,14 @@ int nFiles = 0;
 				final_mc_weight_out = final_mc_weight;
 				is_proton_out = is_proton;
 				is_neutron_out = is_neutron;
+				hcal_sh_atime_diff_out = coin_bestclus;
+        			proton_deflection_out = proton_deflection;
+      				p_N_out = p_N.Vect().Mag();
+        			p_central_out = pcentral;
+        			nblkHCAL_out = nblkHCAL;
+        			rowblkHCAL_out = rowblkHCAL[clus_idx_best];
+        			colblkHCAL_out = colblkHCAL[clus_idx_best];
+
 
 				//Fill histograms of global cut parameters here without any restrictions
 				h_ntracks->Fill(ntrack,final_mc_weight);
@@ -1000,6 +1122,12 @@ int nFiles = 0;
         			h_nhits->Fill(gem_hits[0],final_mc_weight);
         			h_bbtrp_nocut->Fill(tr_p[0],final_mc_weight);
         			h_SH_nclus->Fill(nclus_sh,final_mc_weight);
+				h_bbEoverp_nocut->Fill(BB_E_over_p,final_mc_weight);
+        			h_optics_xdir_nocut->Fill(tr_r_x[0]-0.9*tr_r_th[0],final_mc_weight);
+       				h_W2_optics_xdir_nocut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,final_mc_weight);
+        			h_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],final_mc_weight);
+        			h_W2_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,final_mc_weight);
+				h_track_chi2ndf_nocut->Fill(gem_ChiSqr[0],final_mc_weight);
 
         			hdx_nocut->Fill(dx_bestclus,final_mc_weight);
         			hcoin_nocut->Fill(coin_bestclus,final_mc_weight);
@@ -1019,6 +1147,11 @@ int nFiles = 0;
         			h_SH_nclus_globcut->Fill(nclus_sh,final_mc_weight);
         			h_TPS_SH_globcut->Fill(e_ps+e_sh,final_mc_weight);
         			h_bbEoverp_globcut->Fill(BB_E_over_p,final_mc_weight);
+				h_optics_xdir_globcut->Fill(tr_r_x[0]-0.9*tr_r_th[0],final_mc_weight);
+        			h_W2_optics_xdir_globcut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,final_mc_weight);
+        			h_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],final_mc_weight);
+       				h_W2_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,final_mc_weight);
+				h_track_chi2ndf_globcut->Fill(gem_ChiSqr[0],final_mc_weight);
 
 				//physics quantities
 				hxy_globcut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
@@ -1058,6 +1191,16 @@ int nFiles = 0;
 				//Now let's add in our first major hadron arm cut along with all the cuts from before.
 				if(!failglobal && goodW2 && hcalaa_ON){
         			hxy_acceptancecut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
+        			}
+				
+				//related checks for proton deflection
+        			if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && good_dy){
+        			hdx_xhcal->Fill(xhcal_bestclus,dx_bestclus,final_mc_weight);
+        			hdx_pN->Fill(p_N.Vect().Mag(),dx_bestclus,final_mc_weight);
+        			hdx_prodef_pN->Fill(p_N.Vect().Mag(),dx_bestclus+proton_deflection,final_mc_weight);
+        			hdx_prodef->Fill(dx_bestclus+proton_deflection,final_mc_weight);
+        			hdx_defcut->Fill(dx_bestclus,final_mc_weight);
+        			hprodef->Fill(proton_deflection,final_mc_weight);
         			}
 
 				//e-arm and h-arm cuts, except fiducial
@@ -1107,6 +1250,11 @@ int nFiles = 0;
         			hcoin_cut->Fill(coin_bestclus,final_mc_weight);
         			hcoin_pclus_cut->Fill(coin_pclus,final_mc_weight);
         			hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+				h_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],final_mc_weight);
+        			h_W2_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,final_mc_weight);
+        			h_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],final_mc_weight);
+        			h_W2_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,final_mc_weight);
+				h_track_chi2ndf_cut->Fill(gem_ChiSqr[0],final_mc_weight);
 
         			hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn),final_mc_weight);
         			hdxvE->Fill(hcal_e_bestclus,dx_bestclus,final_mc_weight);

@@ -32,8 +32,10 @@ namespace exp_constants{
 	double maxsbsfield = 0.0; //Tesla
 	if(Kin == "SBS4"){
 	maxsbsfield = 1.71;
-	}else if(Kin == "SBS8" || Kin == "SBS9" || Kin == "SBS7"|| Kin == "SBS11"|| Kin == "SBS14"){
-	maxsbsfield = 1.26;
+	}else if(Kin == "SBS8"){
+	maxsbsfield = 1.23;
+	}else if(Kin == "SBS9" || Kin == "SBS7"|| Kin == "SBS11"|| Kin == "SBS14"){
+        maxsbsfield = 1.26;
 	}else{
 	//We should never get here, cause then we have kinematic for data we dont have
 	cout << "Error: No sbs max field for this kinematic: " << Kin << "Figure out what you did!" << endl;

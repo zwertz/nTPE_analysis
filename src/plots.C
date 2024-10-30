@@ -1030,4 +1030,81 @@ zeroLine->Draw("same");
 return myTotCan;
 }
 
+
+//Function to plot the fit over the HCal position dependent efficiency histogram. Should work for both x and y directions
+TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high){
+
+	//Create a canvas we will use to store information
+	TCanvas *myTotCan = new TCanvas(can_name,Form("HCal Efficiency: %s",fitName),1600,1200);
+
+	//Make clones of the efficiency histograms so we can fit them and evaluate the average relative efficiency
+	TH1D *heff_plot_clone = (TH1D*) (h_eff_plot->Clone(name));
+	heff_plot_clone->GetYaxis()->SetTitle("Efficiency");
+
+
+	//Make the fits for the histogram
+	TF1 *eff_fit = new TF1(fitName,"pol0",fit_low,fit_high);
+	eff_fit->SetNpx(1000);
+
+	//Fit the histo
+	heff_plot_clone->Fit(eff_fit,"QR");
+	
+	//Draw the histogram and fit
+	heff_plot_clone->SetMarkerStyle(20);
+	heff_plot_clone->Draw("E");
+	eff_fit->Draw("same");
+	//Make a legend to hold all the information we care about
+	TLegend* legend = new TLegend(0.25, 0.2, 0.5, 0.3);	
+	legend->AddEntry((TObject*)0,Form("p0: %0.4f #pm %0.4f",eff_fit->GetParameter(0),eff_fit->GetParError(0)),"");
+	legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",eff_fit->GetChisquare(),eff_fit->GetNDF()),"");
+	legend->SetFillStyle(0);
+	legend->Draw("same");
+
+	return myTotCan;
+}
+
+//A function to compare a histogram under different sets of cuts on the same scale.
+TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut){
+
+	//Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("Plot Comparison: %s and %s",plot_nocut->GetName(),plot_cut->GetName()),1600,1200);
+
+	//Make clones of the histograms
+	TH1D* plot_nocut_clone = (TH1D*) (plot_nocut->Clone(name_nocut));
+	TH1D* plot_cut_clone = (TH1D*) (plot_cut->Clone(name_cut));
+	plot_nocut_clone->SetMarkerStyle(20);
+	plot_cut_clone->SetMarkerStyle(20);
+	plot_nocut_clone->SetLineColor(kBlack);
+	plot_nocut_clone->SetMarkerColor(kBlack);
+	plot_cut_clone->SetLineColor(kRed);
+	plot_cut_clone->SetMarkerColor(kRed);
+	
+	plot_nocut_clone->Draw("P");
+	plot_cut_clone->Draw("same");
+
+	//Make a legend to hold all the information we care about
+	TLegend* legend = new TLegend(0.35, 0.35, 0.55, 0.45);
+	legend->AddEntry(plot_nocut_clone,"Only E-arm cuts","f l");
+	legend->AddEntry(plot_cut_clone," E-arm + H-arm cuts","f l");
+	legend->SetFillStyle(0);
+	legend->Draw("same");
+
+	return myTotCan;
+}
+
+//A function to plot the 2D efficiency map on a canvas
+TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name){
+
+	//Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("%s",name),1600,1200);
+
+	//Make a clone of the 2D efficiency histogram to be able to manipulate it
+	TH2D* eff_map_clone = (TH2D*) (eff_map->Clone(name));
+	gStyle->SetPalette(55);
+	eff_map_clone->SetStats(0);
+	eff_map_clone->Draw("colz");
+
+	return myTotCan;
+}
+
 }//end namespace
