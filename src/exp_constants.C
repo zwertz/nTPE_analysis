@@ -28,13 +28,15 @@ namespace exp_constants{
   }//end function
 
   //maximum value of the field of the sbs magnet in Tesla. It is kinematic dependent because of magnet collision.
-  const double getMaxSBSField(TString Kin){
+  const double getMaxSBSField(TString Kin, TString pass){
 	double maxsbsfield = 0.0; //Tesla
-	if(Kin == "SBS4"){
+	if(Kin == "SBS4" && (pass == "pass2" || pass == "mc")){
 	maxsbsfield = 1.71;
-	}else if(Kin == "SBS8"){
+	}else if(Kin == "SBS8" && pass == "pass2"){
 	maxsbsfield = 1.23;
-	}else if(Kin == "SBS9" || Kin == "SBS7"|| Kin == "SBS11"|| Kin == "SBS14"){
+	}else if(Kin == "SBS8" && pass == "mc"){
+	maxsbsfield = 1.2;
+	}else if((Kin == "SBS9" || Kin == "SBS7"|| Kin == "SBS11"|| Kin == "SBS14") && (pass == "pass2" || pass == "mc")){
         maxsbsfield = 1.26;
 	}else{
 	//We should never get here, cause then we have kinematic for data we dont have

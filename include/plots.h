@@ -58,5 +58,8 @@ TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const 
 //A function to plot the 2D efficiency map on a canvas
 TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name);
 
+//A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
+TCanvas* plot_HCalEffMap_overlay(TH2D* eff_map,const char *can_name, const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_Fid);
+
 }//end namespace
 #endif

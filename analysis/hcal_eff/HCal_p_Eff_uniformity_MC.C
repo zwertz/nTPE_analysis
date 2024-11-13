@@ -40,8 +40,6 @@ TH1::SetDefaultSumw2(kTRUE);
   TStopwatch *watch = new TStopwatch();
   watch->Start( kTRUE );
 
-  //gStyle->SetErrorX(0);
-
   //parse object to get in the information that The One Config file has and is manipulated
   parse_config mainConfig(setup_file_name);
   //Need to update print statement for like HCal Efficiency. Revisit once script mostly determined
@@ -74,10 +72,24 @@ TH1::SetDefaultSumw2(kTRUE);
   double fitx_high = mainConfig.get_fitxhigh();
   double fity_low = mainConfig.get_fitylow();
   double fity_high = mainConfig.get_fityhigh();
+  double dxsig_n_fac = mainConfig.get_dxSignFac();
+  double dxsig_p_fac = mainConfig.get_dxSigpFac();
+  double dysig_n_fac = mainConfig.get_dySignFac();
+  double dysig_p_fac = mainConfig.get_dySigpFac();
+  double dxsig_fid_n = mainConfig.get_dxsigfidn();
+  double dysig_fid_n = mainConfig.get_dysigfidn();
+  double dxsig_fid_p = mainConfig.get_dxsigfidp();
+  double dysig_fid_p = mainConfig.get_dysigfidp();
 
 
-  //setup hcal active area with bounds that match database depending on pass
-  vector<double> hcalaa = cuts::hcal_Position_MC();
+  //setup hcal physical bounds that match database
+  vector<double> hcalpos = cuts::hcal_Position_MC();
+
+  //setup hcal active area with bounds that match database
+  vector<double> hcalaa = cuts::hcal_ActiveArea_MC(1,1);
+
+  //setup fiducial region based on dx and dy spot information
+  vector<double> hcalfid = cuts::hcalfid(dxsig_fid_p,dxsig_fid_n,dysig_fid_p,hcalaa,dxsig_p_fac,dysig_p_fac);
 
   TFile *mc_file = new TFile(MC_input_file_name.Data());
 
@@ -215,7 +227,7 @@ TH1::SetDefaultSumw2(kTRUE);
 	bool passHCalE = cuts::passHCalE(ehcal,ehcal_min);
 	bool hcalaa_ON = cuts::hcalaa_ON(xhcal,yhcal,hcalaa);
 	bool HCal_spot = cuts::passHCal_Spot(dx,dy,dxO_p,dyO_p,dxsig_p,dysig_p,spot_sig);
-	bool pass_HCalCut = passHCalE && hcalaa_ON && HCal_spot;
+	bool pass_HCalCut = /*passHCalE && hcalaa_ON &&*/ HCal_spot;
 
 	//Fiducial region, we want to separate the direction so not using the standard function calls
 	bool fidx_cut = (xexp - proton_deflection) >= fidx_min && (xexp - proton_deflection) <= fidx_max;
@@ -415,6 +427,24 @@ TH1::SetDefaultSumw2(kTRUE);
 
   TCanvas* c5 = plots::plot_Comp(h_W2_globcut,h_W2_hcalcut,"c5","hW2_globcut_clone","hW2_hcalcut_clone");
 
+  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect");
+
+  //make lines for physical HCal position
+  vector<TLine*> Lines_pos = plots::setupLines(hcalpos,4,kBlack);
+
+  //make lines for fiducial region
+  vector<TLine*> Lines_Fid = plots::setupLines(hcalfid,4,kMagenta);
+
+  TCanvas* c7 = plots::plot_HCalEffMap_overlay(heff_vs_xyexpect,"c7","heff_vs_xyexpect_overlay",Lines_pos,Lines_Fid);
+
+  TCanvas* c8 = plots::plot_HCalEffMap(hxy_expect_hcalcut,"c8","h_xy_expect_num");
+
+  TCanvas* c9 = plots::plot_HCalEffMap(hxy_expect_all,"c9","h_xy_expect_denom");
+
+  TCanvas* c10 = plots::plot_HCalEffMap(hxy_expect_anticut,"c10","h_xy_expect_fail");
+
+  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol");
+
   //Write the info to file
   fout->Write();
 
@@ -428,7 +458,14 @@ TH1::SetDefaultSumw2(kTRUE);
   c0->Print(start.Data(),"pdf");
   c2->Print(plotname.Data(),"pdf");
   c3->Print(plotname.Data(),"pdf");
-  c4->Print(end.Data(),"pdf");
+  c4->Print(plotname.Data(),"pdf");
+  c5->Print(plotname.Data(),"pdf");
+  c6->Print(plotname.Data(),"pdf");
+  c7->Print(plotname.Data(),"pdf");
+  c8->Print(plotname.Data(),"pdf");
+  c9->Print(plotname.Data(),"pdf");
+  c10->Print(plotname.Data(),"pdf");
+  c11->Print(end.Data(),"pdf");
 
   // Send time efficiency report to console
   cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;

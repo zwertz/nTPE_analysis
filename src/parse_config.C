@@ -150,6 +150,9 @@
 			}else if (key == "isNeutronCut"){
                         isNeutronCut = val;
                         //cout << "isNeutronCut: " << isNeutronCut << endl;
+			}else if(key == "HCal_Eff_map_file"){
+			HCal_Eff_map_file = val;
+			//cout << "HCal_Eff_map_file: " << HCal_Eff_map_file << endl;
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
@@ -182,7 +185,11 @@
                         }else if(key == "dysig_n"){
                         dysig_n = val.Atof();
                         //cout << "y sigma of neutron spot " << dysig_n << endl;
-                        }else if(key == "dxO_p"){
+			}else if(key == "dxsig_fid_n"){
+			dxsig_fid_n = val.Atof();
+			}else if(key == "dysig_fid_n"){
+                        dysig_fid_n = val.Atof();
+			}else if(key == "dxO_p"){
                         dxO_p = val.Atof();
                         //cout << "x-position of proton spot " << dxO_p << endl;
                         }else if(key == "dyO_p"){
@@ -194,7 +201,11 @@
                         }else if(key == "dysig_p"){
                         dysig_p = val.Atof();
                         //cout << "y sigma of proton spot " << dysig_p << endl;
-                        }else if(key == "dx_pn"){
+                        }else if(key == "dxsig_fid_p"){
+                        dxsig_fid_p = val.Atof();
+                        }else if(key == "dysig_fid_p"){
+                        dysig_fid_p = val.Atof();
+			}else if(key == "dx_pn"){
                         dx_pn = val.Atof();
                         //cout << "max x difference between peaks " << dx_pn << endl;
                         }else if(key == "useAlshield"){
@@ -317,6 +328,8 @@
 			luminosity_override = val.Atof();
 			}else if(key == "genvol_override"){
 			genvol_override = val.Atof();
+			}else if(key == "HCal_accep_avg_eff"){
+			HCal_accep_avg_eff = val.Atof();
 			}else if(key == "sync_jobs"){
                         	if(val == "true"){
 				sync_jobs = true;
@@ -334,6 +347,15 @@
 				}else{
                                 cout << "Error: mc_override cannot be assigned, not boolean value!" << endl;
                                 }
+			}else if(key == "HCal_Eff_map"){
+				if(val == "true"){
+				HCal_Eff_map = true;
+				}else if(val == "false"){
+				HCal_Eff_map = false;
+				}else{
+				cout << "Error: HCal_Eff_map cannot be assigned, not boolean value!" << endl;
+				}
+
 			}else{
 			//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
 			cout << "Error:Found a key that this script can't handle. Fix that! "<< key << endl;
@@ -425,6 +447,8 @@
 
   TString parse_config::getisNeutronCut(){return isNeutronCut;}
  
+  TString parse_config::get_HCalEffMapFile(){return HCal_Eff_map_file;}
+
   int parse_config::getSBSField(){ return SBS_field; }
 
   int parse_config::getAlshield(){ return useAlshield; }
@@ -443,6 +467,10 @@
 
   double parse_config::get_dysign(){ return dysig_n; }
 
+  double parse_config::get_dxsigfidn(){return dxsig_fid_n;}
+
+  double parse_config::get_dysigfidn(){return dysig_fid_n;}
+
   double parse_config::get_dxOp(){ return dxO_p; }
 
   double parse_config::get_dyOp(){ return dyO_p; }
@@ -450,6 +478,10 @@
   double parse_config::get_dxsigp(){ return dxsig_p; }
 
   double parse_config::get_dysigp(){ return dysig_p; }
+
+  double parse_config::get_dxsigfidp(){return dxsig_fid_p;}
+
+  double parse_config::get_dysigfidp(){return dysig_fid_p;}
 
   double parse_config::get_dxpn(){ return dx_pn; }
 
@@ -519,6 +551,8 @@
 
   double parse_config::getVolOverride(){return genvol_override;}
 
+  double parse_config::get_HCalAccepAvgEff(){return HCal_accep_avg_eff;}
+
   double parse_config::get_fidxmin(){return fidx_min;}
 
   double parse_config::get_fidxmax(){return fidx_max;}
@@ -540,6 +574,8 @@
   bool parse_config::get_MCOverride(){return mc_override;}
 
   bool parse_config::get_syncJobs(){ return sync_jobs; }
+
+  bool parse_config::get_HCalEffMap(){return HCal_Eff_map;}
 
   TCut parse_config::getGlobalCut(){ return globalcut; }
 

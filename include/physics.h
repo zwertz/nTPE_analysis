@@ -22,7 +22,7 @@ namespace physics{
  TVector3 getHCal_origin(double hcaldist, double hcal_offset, TVector3 hcal_xaxis, TVector3 hcal_zxaxis);
 
  //Try to calculate the effects of the SBS magnetic field
- double getBdL(int sbs_field,TString Kin);
+ double getBdL(int sbs_field,TString Kin,TString pass);
 
  //Get expected proton deflection, somewhat crude model
  //thetabend = 0.3*BdL/p
@@ -139,6 +139,9 @@ namespace physics{
 
  //calculate polarization of the virtual photon, epsilon
  double get_epsilon(double tau, double etheta);
+
+ //calculate the relative efficiency correction factor based on the given TH2D efficiency map and the position info from MC truth info
+ double get_HCalEffCorr(TH2D* effMap, double x_mctrue, double y_mctrue, double accep_avg_eff,double pro_def, int fnucl);
 
 }//end namespace
 

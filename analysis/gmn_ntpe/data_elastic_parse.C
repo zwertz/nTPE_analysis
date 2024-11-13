@@ -746,7 +746,7 @@ void data_elastic_parse(const char *setup_file_name){
         double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
 	
 	//Calculate expected proton deflection with a somewhat crude module
-	double BdL = physics::getBdL(sbs_field,kin);
+	double BdL = physics::getBdL(sbs_field,kin,pass);
 	double proton_deflection = physics::get_protonDeflection(BdL,p_N.Vect().Mag(),hcaldist,sbsdist);
 
 	//////////////////////

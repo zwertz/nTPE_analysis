@@ -12,11 +12,12 @@ class parse_config{
   private:
   
   //common data analysis
-  TString Exp,kin,data_file_name,kinematic_file_name,targ,pass,Data_file,fitopt;
+  TString Exp,kin,data_file_name,kinematic_file_name,targ,pass,Data_file,fitopt,HCal_Eff_map_file;
   int SBS_field,useAlshield,MAXNTRACKS, e_method,hcalnclusmin;  
-  double dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dx_pn,W2_low,W2_high,dx_low,dx_high,dy_low,dy_high,dxsig_n_fac,dxsig_p_fac,dysig_n_fac,dysig_p_fac,coin_mean,coin_sigma,coin_sig_fac,coin_profile_sig,dysig_cut_fac;
+  double dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dx_pn,W2_low,W2_high,dx_low,dx_high,dy_low,dy_high,dxsig_n_fac,dxsig_p_fac,dysig_n_fac,dysig_p_fac,coin_mean,coin_sigma,coin_sig_fac,coin_profile_sig,dysig_cut_fac,HCal_accep_avg_eff;
   TCut globalcut;
   vector<int> runnums;
+  bool HCal_Eff_map;
 
 
   //common MC data analsyis
@@ -28,7 +29,7 @@ class parse_config{
   double hcalemin,proton_thresh_fac, neutron_thresh_fac,num_bin, pmin, pmax, Emin, Emax;
 
   //For data HCal Efficiency analysis
-  double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac,fidx_min,fidx_max,fidy_min,fidy_max,spot_sig,fitx_low,fitx_high,fity_low,fity_high;
+  double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac,fidx_min,fidx_max,fidy_min,fidy_max,spot_sig,fitx_low,fitx_high,fity_low,fity_high,dxsig_fid_n,dxsig_fid_p,dysig_fid_n,dysig_fid_p;
 
   //For stability studies
   TString EnergyCut, TrackQualityCut, TargetVertexCut, W2Cut, FidXCut, FidYCut, dyCut, eOverpCut, HCal_Shower_atime_Cut, HCal_Energy_Cut, OpticsCut, ProtonSpotCut, NeutronSpotCut, isProtonCut, isNeutronCut;
@@ -107,6 +108,8 @@ public:
 
   TString getisNeutronCut();
 
+  TString get_HCalEffMapFile();
+
   int getSBSField();
 
   int getAlshield();
@@ -125,6 +128,10 @@ public:
 
   double get_dysign();
 
+  double get_dxsigfidn();
+
+  double get_dysigfidn();
+
   double get_dxOp();
 
   double get_dyOp();
@@ -132,6 +139,10 @@ public:
   double get_dxsigp();
 
   double get_dysigp();
+
+  double get_dxsigfidp();
+
+  double get_dysigfidp();
 
   double getW2Low();
 
@@ -219,9 +230,13 @@ public:
 
   double get_fityhigh();
 
+  double get_HCalAccepAvgEff();
+
   bool get_syncJobs();
 
   bool get_MCOverride();
+
+  bool get_HCalEffMap();
 
   TCut getGlobalCut();
 

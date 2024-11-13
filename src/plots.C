@@ -1101,8 +1101,43 @@ TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name){
 	//Make a clone of the 2D efficiency histogram to be able to manipulate it
 	TH2D* eff_map_clone = (TH2D*) (eff_map->Clone(name));
 	gStyle->SetPalette(55);
+	gStyle->SetNumberContours(256);
 	eff_map_clone->SetStats(0);
 	eff_map_clone->Draw("colz");
+
+	return myTotCan;
+}
+
+//A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
+TCanvas* plot_HCalEffMap_overlay(TH2D* eff_map,const char *can_name, const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_Fid){
+
+        //Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("%s",name),1600,1200);
+
+        //Make a clone of the 2D efficiency histogram to be able to manipulate it
+        TH2D* eff_map_clone = (TH2D*) (eff_map->Clone(name));
+        gStyle->SetPalette(55);
+        gStyle->SetNumberContours(256);
+        
+	eff_map_clone->SetStats(0);
+        eff_map_clone->Draw("colz");
+        
+	Lines_pos[0]->Draw("same");
+	Lines_pos[1]->Draw("same");
+	Lines_pos[2]->Draw("same");
+	Lines_pos[3]->Draw("same");
+
+	Lines_Fid[0]->Draw("same");
+	Lines_Fid[1]->Draw("same");
+	Lines_Fid[2]->Draw("same");
+	Lines_Fid[3]->Draw("same");
+
+	//make legend
+	auto legend1 = new TLegend(0.1,0.8,0.3,0.9);
+	legend1->SetTextSize(0.03);
+	legend1->AddEntry(Lines_pos[0],"HCal Boundary","l");
+	legend1->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+	legend1->Draw();
 
 	return myTotCan;
 }

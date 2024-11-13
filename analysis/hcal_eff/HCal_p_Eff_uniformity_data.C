@@ -59,6 +59,12 @@ TH1::SetDefaultSumw2(kTRUE);
   TString Data_input_file_name = mainConfig.getDataFile();
   //TString MC_input_file_name = mainConfig.getMCFileName();
   double ehcal_min = mainConfig.getHCaleMin(); 
+  double dxsig_n = mainConfig.get_dxsign();
+  double dysig_n = mainConfig.get_dysign();
+  double dxsig_n_fac = mainConfig.get_dxSignFac();
+  double dxsig_p_fac = mainConfig.get_dxSigpFac();
+  double dysig_n_fac = mainConfig.get_dySignFac();
+  double dysig_p_fac = mainConfig.get_dySigpFac();
   double dxO_p = mainConfig.get_dxOp();
   double dyO_p = mainConfig.get_dyOp();
   double dxsig_p = mainConfig.get_dxsigp();
@@ -76,10 +82,19 @@ TH1::SetDefaultSumw2(kTRUE);
   double fitx_high = mainConfig.get_fitxhigh();
   double fity_low = mainConfig.get_fitylow();
   double fity_high = mainConfig.get_fityhigh();
+  double dxsig_fid_n = mainConfig.get_dxsigfidn();
+  double dysig_fid_n = mainConfig.get_dysigfidn();
+  double dxsig_fid_p = mainConfig.get_dxsigfidp();
+  double dysig_fid_p = mainConfig.get_dysigfidp();
 
+  //setup hcal physical bounds that match database for each pass
+  vector<double> hcalpos = cuts::hcal_Position_data(pass);
 
   //setup hcal active area with bounds that match database depending on pass
   vector<double> hcalaa = cuts::hcal_ActiveArea_data(1,1,pass);
+
+  //setup fiducial region based on dx and dy spot information
+  vector<double> hcalfid = cuts::hcalfid(dxsig_fid_p,dxsig_fid_n,dysig_fid_p,hcalaa,dxsig_p_fac,dysig_p_fac);
 
   TFile *data_file = new TFile(Data_input_file_name.Data());
 
@@ -116,8 +131,6 @@ TH1::SetDefaultSumw2(kTRUE);
   TH1D *hy_HCal_anticut = new TH1D("hy_HCal_anticut","HCal Y observed, global cut+!HCal cut; HCal Y  (m)", 67, -1.25, 1.25 );
   TH2D *hxy_HCal_anticut = new TH2D("hxy_HCal_anticut", "HCal X vs Y observed, global cut+!HCal cut;HCal Y  (m),HCal X  (m)",67, -1.25, 1.25,147, -3.5, 2.0);
 
-  //Disabling row column info for now. Not sure if essentially. Would need to implement info first in parser to enable here
-  
   TH1D *hrowHCal_all = new TH1D("hrowHCal_all","HCal Row, global cut; HCal row",24,-0.5,23.5);
   TH1D *hcolHCal_all = new TH1D("hcolHCal_all","HCal Col, global cut; HCal col",12,-0.5,11.5);
   TH2D *hrowcolHCal_all = new TH2D("hrowcolHCal_all","HCal Row vs Col, global cut;HCal col;HCal row",12,-0.5,11.5,24,-0.5,23.5);
@@ -416,6 +429,25 @@ TH1::SetDefaultSumw2(kTRUE);
 
   TCanvas* c5 = plots::plot_Comp(h_W2_globcut,h_W2_hcalcut,"c5","hW2_globcut_clone","hW2_hcalcut_clone");
 
+  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect");
+
+  //make lines for physical HCal position
+  vector<TLine*> Lines_pos = plots::setupLines(hcalpos,4,kBlack);
+
+  //make lines for fiducial region
+  vector<TLine*> Lines_Fid = plots::setupLines(hcalfid,4,kMagenta);
+
+  TCanvas* c7 = plots::plot_HCalEffMap_overlay(heff_vs_xyexpect,"c7","heff_vs_xyexpect_overlay",Lines_pos,Lines_Fid);
+
+  TCanvas* c8 = plots::plot_HCalEffMap(hxy_expect_hcalcut,"c8","h_xy_expect_num");
+
+  TCanvas* c9 = plots::plot_HCalEffMap(hxy_expect_all,"c9","h_xy_expect_denom");
+
+  TCanvas* c10 = plots::plot_HCalEffMap(hxy_expect_anticut,"c10","h_xy_expect_fail");
+
+  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol");
+  
+
   //Write the info to file
   fout->Write();
 
@@ -430,7 +462,13 @@ TH1::SetDefaultSumw2(kTRUE);
   c2->Print(plotname.Data(),"pdf");
   c3->Print(plotname.Data(),"pdf");
   c4->Print(plotname.Data(),"pdf");
-  c5->Print(end.Data(),"pdf");
+  c5->Print(plotname.Data(),"pdf");
+  c6->Print(plotname.Data(),"pdf");
+  c7->Print(plotname.Data(),"pdf");
+  c8->Print(plotname.Data(),"pdf");
+  c9->Print(plotname.Data(),"pdf");
+  c10->Print(plotname.Data(),"pdf");
+  c11->Print(end.Data(),"pdf");
 
 
   // Send time efficiency report to console

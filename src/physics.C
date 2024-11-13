@@ -38,8 +38,8 @@ namespace physics{
  }
 
  //Try to calculate the effects of the SBS magnetic field.
- double getBdL(int sbs_field,TString Kin){
- double BdL = (exp_constants::getMaxSBSField(Kin))*(exp_constants::sbsdipolegap)*(sbs_field/100.0);
+ double getBdL(int sbs_field,TString Kin,TString pass){
+ double BdL = (exp_constants::getMaxSBSField(Kin,pass))*(exp_constants::sbsdipolegap)*(sbs_field/100.0);
  //cout << BdL << " " << exp_constants::getMaxSBSField(Kin) << " " << exp_constants::sbsdipolegap << " " << sbs_field << endl;
  return BdL;
  }
@@ -163,6 +163,9 @@ namespace physics{
  //Phi for scattered electron using reconstructed track momentum
  double get_ephi(TLorentzVector p_eprime){
  double ephi = atan2(p_eprime.Py(),p_eprime.Px());
+ /*cout << p_eprime.Py() << endl;
+ cout << p_eprime.Px() << endl;
+ cout << ephi << endl;*/
  return ephi;
  }
 
@@ -441,5 +444,46 @@ namespace physics{
  double epsilon = 1.0 / (1.0 + 2.0 * (1.0 + tau) * pow(tan(etheta/2.0),2));
  return epsilon;
  }
+
+ //calculate the relative efficiency correction factor based on the given TH2D efficiency map and the position info from MC truth info
+ double get_HCalEffCorr(TH2D* effMap, double x_mctrue, double y_mctrue, double accep_avg_eff,double pro_def, int fnucl){
+
+ double x;
+
+ //Get the bin content of the efficiency map at the given x and y from the MC truth info. That's the numerator
+ //protons
+ if(fnucl == 1){
+ //account for the proton deflection
+ x = x_mctrue - pro_def;
+ //neutrons
+ }else if(fnucl == 0){
+ x = x_mctrue;
+ }else{
+ //we should never get here
+ cout << "HCal Eff corr, we should never get here!" << endl;
+ }
+
+ //Convert the position info to bins
+ 
+ int HCalxbin = effMap->GetYaxis()->FindBin(x);
+ int HCalybin = effMap->GetXaxis()->FindBin(y_mctrue);
+
+ //cout << "xbin: " << HCalxbin << " ybin: " << HCalybin << endl;
+
+ int HCalxbin_cent = effMap->GetYaxis()->GetBinCenter(HCalxbin);
+ int HCalybin_cent = effMap->GetXaxis()->GetBinCenter(HCalybin);
+
+ double numerator = effMap->GetBinContent(HCalybin,HCalxbin);
+ double denominator = accep_avg_eff;
+ 
+ //cout << "xbin: " << HCalxbin_cent << " ybin: " << HCalybin_cent << " Numerator: " << numerator << endl;
+
+ double c = numerator/denominator;
+
+
+
+ return c;
+ }
+
 
 }//end namepspace

@@ -85,6 +85,10 @@ double dysig_cut_fac = mainConfig.get_dySigCutFac();
 int hcalnclusmin = mainConfig.get_HCalNclusMin();
 double hcal_offset = exp_constants::getHCalOffset(pass);
 
+//config info for efficiency map
+bool HCal_Eff_map_flag = mainConfig.get_HCalEffMap();
+double HCal_accep_avg_eff = mainConfig.get_HCalAccepAvgEff();
+TString HCal_Eff_map_file = mainConfig.get_HCalEffMapFile();
 
 double hcalfit_low = exp_constants::hcalposXi_mc; //lower fit/bin limit for hcal dx plots. 
 double hcalfit_high = exp_constants::hcalposXf_mc; //higher fit/bin limit for hcal dx plots.
@@ -114,6 +118,12 @@ vector<double> hcalfid = cuts::hcalfid(dxsig_p,dxsig_n,dysig_p,hcalaa,dxsig_p_fa
   for(int k=0; k<hcalfid.size();k++){
   cout <<"HCal Fid "<< k << " :" << hcalfid[k] << endl;
   }
+
+//setup input file for the efficiency map
+TFile *eff_map_file = new TFile(HCal_Eff_map_file.Data());
+//Get the efficiency map TH2D and keep a clone of it
+TH2D *xy_expect_eff_map = dynamic_cast<TH2D*>(eff_map_file->Get("heff_vs_xyexpect_total"));
+TH2D *xy_expect_eff_map_clone = (TH2D*)(xy_expect_eff_map->Clone("xy_expect_eff_map"));
 
 //setup output file
 TString outfile = utility::makeOutputFileName_MCParse(exp,kin,sbs_field,target); 
@@ -355,6 +365,16 @@ double dx_pn = mainConfig.get_dxpn();
   TH1D* h_nsigx_fid = new TH1D("h_nsigx_fid", "nsigx_fid",200,-20,20);
   TH1D* h_nsigy_fid = new TH1D("h_nsigy_fid", "nsigy_fid",200,-20,20);
 
+  //Sanity check the MC truth information
+  TH2D *hxy_mctruen_globcut = new TH2D("hxy_mctruen_globcut","HCal X vs Y from MC Truth Info, global cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_mctruen_glob_W2_cut = new TH2D("hxy_mctruen_glob_W2_cut","HCal X vs Y from MC Truth Info, global & W2 cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_mctruen_n = new TH2D("hxy_mctruen_n","HCal X vs Y from MC Truth Info, elastic cuts neutron;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_mctruen_p = new TH2D("hxy_mctruen_p","HCal X vs Y from MC Truth Info, elastic cuts proton;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_mctruen_fidcutp = new TH2D("hxy_mctruen_fidcutp","HCal X vs Y from MC Truth Info, proton passed fiducial;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+ TH2D *hxy_mctruen_fidcutn = new TH2D("hxy_mctruen_fidcutn","HCal X vs Y from MC Truth Info, neutron passed fiducial;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_mctruen_failedfid = new TH2D("hxy_mctruen_failedfid","HCal X vs Y from MC Truth Info, failed fiducial cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_mctruen_cut = new TH2D("hxy_mctruen_cut","HCal X vs Y from MC Truth Info, all cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+
   //create output tree
   TTree *Parse = new TTree("Parse","Analysis Tree");
 
@@ -412,6 +432,27 @@ double dx_pn = mainConfig.get_dxpn();
   double W2low_out;
   double W2high_out;
   double final_mc_weight_out;
+  double x_mctrue_n_out;
+  double y_mctrue_n_out;
+  double p_mctrue_n_out;
+  double q_mctrue_n_out;
+  double theta_mctrue_n_out;
+  double phi_mctrue_n_out;
+  double pcentral_mctrue_n_out;
+  double phi_N_exp_out;
+  double Q2_mctrue_n_out;
+  double nu_mctrue_n_out;
+  double theta_N_exp_out;
+  double p_Nhat_mctrue_n_out;
+  double p_N_mctrue_n_out;
+  double W2_mctrue_n_out;
+  double p_Nhat_out;
+  double tau_mctrue_n_out;
+  double epsilon_mctrue_n_out;
+  double hcal_intersect_out;
+  double hcal_intersect_mctrue_n_out;
+  double dx_mctrue_n_out;
+  double dy_mctrue_n_out;
 
   int num_hcal_clusid_out;
   int nclus_hcal_out;
@@ -438,6 +479,9 @@ double dx_pn = mainConfig.get_dxpn();
   double rowblkHCAL_out;
   double colblkHCAL_out;
   double nblkHCAL_out;
+  double MC_p_n_out;
+  double MC_p_e_out;
+  double MC_vz_out;
 
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
@@ -520,7 +564,32 @@ double dx_pn = mainConfig.get_dxpn();
   Parse->Branch( "nblkHCAL", &nblkHCAL_out, "nblkHCAL/D" );
   Parse->Branch( "rowblkHCAL",&rowblkHCAL_out, "rowblkHCAL/D" );
   Parse->Branch( "colblkHCAL", &colblkHCAL_out, "colblkHCAL/D" );
+  Parse->Branch( "MC_p_n", &MC_p_n_out, "MC_p_n/D");
+  Parse->Branch( "MC_p_e", &MC_p_e_out, "MC_p_e/D");
+  Parse->Branch( "MC_vz", &MC_vz_out, "MC_vz/D");
 
+  Parse->Branch("x_mctrue_n", &x_mctrue_n_out, "x_mctrue_n/D");
+  Parse->Branch("y_mctrue_n", &y_mctrue_n_out, "y_mctrue_n/D");
+  Parse->Branch("p_mctrue_n", &p_mctrue_n_out, "p_mctrue_n/D");
+  Parse->Branch("q_mctrue_n", &q_mctrue_n_out, "q_mctrue_n/D");
+  Parse->Branch("theta_mctrue_n", &theta_mctrue_n_out, "theta_mctrue_n/D");
+  Parse->Branch("phi_mctrue_n", &phi_mctrue_n_out, "phi_mctrue_n/D");
+  Parse->Branch("pcentral_mctrue_n", &pcentral_mctrue_n_out, "pcentral_mctrue_n/D");
+  Parse->Branch("phi_N_exp", &phi_N_exp_out, "phi_N_exp/D");
+  Parse->Branch("Q2_mctrue_n", &Q2_mctrue_n_out, "Q2_mctrue_n/D");
+  Parse->Branch("nu_mctrue_n", &nu_mctrue_n_out, "nu_mctrue_n/D");
+  Parse->Branch("theta_N_exp", &theta_N_exp_out, "theta_N_exp/D");
+  Parse->Branch("p_Nhat_mctrue_n", &p_Nhat_mctrue_n_out, "p_Nhat_mctrue_n/D");
+  Parse->Branch("p_N_mctrue_n", &p_N_mctrue_n_out, "p_N_mctrue_n/D");
+  Parse->Branch("W2_mctrue_n", &W2_mctrue_n_out, "W2_mctrue_n/D");
+  Parse->Branch("p_Nhat", &p_Nhat_out, "p_Nhat/D");
+  Parse->Branch("tau_mctrue_n", &tau_mctrue_n_out, "tau_mctrue_n/D");
+  Parse->Branch("epsilon_mctrue_n", &epsilon_mctrue_n_out, "epsilon_mctrue_n/D");
+  Parse->Branch("hcal_intersect", &hcal_intersect_out, "hcal_intersect/D");
+  Parse->Branch("hcal_intersect_mctrue_n", &hcal_intersect_mctrue_n_out, "hcal_intersect_mctrue_n/D");
+  Parse->Branch("dx_mctrue_n", &dx_mctrue_n_out, "dx_mctrue_n/D");
+  Parse->Branch("dy_mctrue_n", &dy_mctrue_n_out, "dy_mctrue_n/D");
+  
 
   //logistical information
   TString nuc = "none"; 
@@ -791,6 +860,34 @@ double dx_pn = mainConfig.get_dxpn();
   		C->SetBranchAddress("e.kine.q_y", &ekine_qy);
   		C->SetBranchAddress("e.kine.q_z", &ekine_qz);
 
+		//Branches for MC truth info related to Efficiency map
+		double MC_true_p_n, MC_true_px_n, MC_true_py_n, MC_true_pz_n,MC_true_p_e, MC_true_px_e, MC_true_py_e, MC_true_pz_e,MC_true_vz, MC_true_Ebeam;
+	        double mc_fnucl; //1 = proton, 0 = neutron
+		C->SetBranchStatus("MC.simc_p_n",1);
+		C->SetBranchStatus("MC.simc_px_n",1);
+		C->SetBranchStatus("MC.simc_py_n",1);
+		C->SetBranchStatus("MC.simc_pz_n",1);
+		C->SetBranchStatus("MC.mc_fnucl",1);
+		C->SetBranchStatus("MC.simc_p_e",1);
+                C->SetBranchStatus("MC.simc_px_e",1);
+                C->SetBranchStatus("MC.simc_py_e",1);
+                C->SetBranchStatus("MC.simc_pz_e",1);
+		C->SetBranchStatus("MC.simc_vz",1);
+		C->SetBranchStatus("MC.simc_Ebeam",1);
+
+		C->SetBranchAddress("MC.simc_p_n",&MC_true_p_n);
+		C->SetBranchAddress("MC.simc_px_n",&MC_true_px_n);
+		C->SetBranchAddress("MC.simc_py_n",&MC_true_py_n);
+		C->SetBranchAddress("MC.simc_pz_n",&MC_true_pz_n);
+		C->SetBranchAddress("MC.mc_fnucl",&mc_fnucl);
+		C->SetBranchAddress("MC.simc_p_e",&MC_true_p_e);
+                C->SetBranchAddress("MC.simc_px_e",&MC_true_px_e);
+                C->SetBranchAddress("MC.simc_py_e",&MC_true_py_e);
+                C->SetBranchAddress("MC.simc_pz_e",&MC_true_pz_e);
+		C->SetBranchAddress("MC.simc_vz",&MC_true_vz);
+		C->SetBranchAddress("MC.simc_Ebeam",&MC_true_Ebeam);
+
+
 		//setup global cut formula
 		TTreeFormula *GlobalCut = new TTreeFormula( "GlobalCut", globalcut, C );
 		
@@ -847,6 +944,9 @@ double dx_pn = mainConfig.get_dxpn();
 			//make the vertex, assuming only beam direction
 			TVector3 vertex = physics::getVertex(tr_vz[0]);
 			//reconstructed momentum from track momentum information, corrected for mean energy loss. Still need to include losses from Al shielding or target windows later
+			//Vertex but for the MC true info
+			TVector3 vertex_mctrue_n = physics::getVertex(MC_true_vz);
+			
 			double pcorr = physics::getp_recon_corr(tr_p[0],Eloss_outgoing);
 
 			//four momentum vector for electron beam with correted Energy value
@@ -855,6 +955,9 @@ double dx_pn = mainConfig.get_dxpn();
 			//four momentum for scattered electron based on reconstruction
 			TLorentzVector p_eprime = physics::getp_eprime(tr_px[0],tr_py[0],tr_pz[0],tr_p[0],pcorr);
 
+			//four momentum for efficiency correction from MC truth info
+			TLorentzVector p_mctrue_n = physics::getp_eprime(MC_true_px_n,MC_true_py_n,MC_true_pz_n,MC_true_p_n,MC_true_p_n);
+
 			//four vector for target
 			TLorentzVector p_targ = physics::getp_targ(nuc);
 
@@ -862,14 +965,27 @@ double dx_pn = mainConfig.get_dxpn();
 			TLorentzVector q = physics::getq(pbeam,p_eprime);
         		TVector3 q_vec = q.Vect();
 
+			//q vector associated with the four momentum transfer for the MC truth info
+			TLorentzVector q_mctrue_n = physics::getq(pbeam, p_mctrue_n);
+			TVector3 q_mctrue_n_vec = q_mctrue_n.Vect(); 
+
 			//Theta for scattered electron using reconstructed track momentum
 			double etheta = physics::get_etheta(p_eprime);
 
 			//Phi for scattered electron using reconstructed track momentum
 			double ephi = physics::get_ephi(p_eprime);
 
+			//Determine the theta and phi associated with the MC truth info of the nucleon. Use these directly instead of the projected values
+			double theta_mctrue_n = physics::get_etheta(p_mctrue_n);
+			double phi_mctrue_n = physics::get_ephi(p_mctrue_n);
+			//Because of coordinate system
+			phi_mctrue_n = physics_constants::PI/2.0 - phi_mctrue_n;
+
 			//central momentum reconstructed from track angles and beam energy
 			double pcentral = physics::get_pcentral(pbeam,etheta,nuc);
+
+			//central momentum using the MC true info for the nucleon
+			double pcentral_mctrue_n = physics::get_pcentral(pbeam,theta_mctrue_n,nuc);
 
 			//assume coplanarity, get the expected phi for the nucleon
 			double phi_N_exp = physics::get_phinucleon(ephi,physics_constants::PI);
@@ -908,6 +1024,18 @@ double dx_pn = mainConfig.get_dxpn();
 			//polarization of the virtual photon
 			double epsilon;
 
+			//The same directly above variables, just implemented using the MC truth info for nucleon instead, part of efficiency correction. Here we are going to assume we are using the angles method which is method 3.
+			//enable the same calculation but for the MC truth info, part of efficiency correction calculation
+			double Q2_mctrue_n = physics::getQ2(pbeam,p_mctrue_n,theta_mctrue_n);
+                        double nu_mctrue_n = physics::getnu(pbeam,pcentral_mctrue_n);
+                        double p_N_exp_mctrue_n = physics::get_pNexp(nu_mctrue_n,target);
+                        TVector3 p_Nhat_mctrue_n = physics::get_pNhat(theta_mctrue_n,phi_mctrue_n);
+                        TLorentzVector p_N_mctrue_n = physics::get_pN(p_N_exp_mctrue_n,p_Nhat_mctrue_n,nu_mctrue_n,p_targ);
+                        double W2_mctrue_n = physics::getW2(pbeam,p_mctrue_n,Q2_mctrue_n,target);
+                        double tau_mctrue_n = physics::get_tau(Q2_mctrue_n,target);
+                        double epsilon_mctrue_n = physics::get_epsilon(tau_mctrue_n,theta_mctrue_n);
+			
+	
 				//conditional to determine remaining e-arm related calculations.
 				if(e_method == 1){
 				//v1
@@ -918,6 +1046,7 @@ double dx_pn = mainConfig.get_dxpn();
                 		W2 = physics::getW2(p_N);
                 		tau = physics::get_tau(Q2,target);
                 		epsilon = physics::get_epsilon(tau,etheta);
+			
 				}else if(e_method == 2){
 				//v2
 				Q2 = physics::getQ2(ekine_Q2);
@@ -928,7 +1057,8 @@ double dx_pn = mainConfig.get_dxpn();
                 		p_Nhat = physics::get_pNhat(theta_N_exp,phi_N_exp);
                 		p_N = physics::get_pN(p_N_exp,p_Nhat,nu,p_targ);
                 		tau = physics::get_tau(Q2,target);
-               			 epsilon = physics::get_epsilon(tau,etheta);
+               			epsilon = physics::get_epsilon(tau,etheta);
+				
 				}else if(e_method == 3){
 				//v3
 				Q2 = physics::getQ2(pbeam,p_eprime,etheta);
@@ -940,6 +1070,7 @@ double dx_pn = mainConfig.get_dxpn();
                 		W2 = physics::getW2(pbeam,p_eprime,Q2,target);
                 		tau = physics::get_tau(Q2,target);
                 		epsilon = physics::get_epsilon(tau,etheta);
+
 				}else if(e_method == 4){
 				//v4
 				Q2 = physics::getQ2(pbeam,p_eprime,etheta);
@@ -951,6 +1082,7 @@ double dx_pn = mainConfig.get_dxpn();
                 		W2 = physics::getW2(pbeam,p_eprime,Q2,target);
                 		tau = physics::get_tau(Q2,target);
                 		epsilon = physics::get_epsilon(tau,etheta);
+
 				}else{
 				//Error handling, default version 3
 				cout << "Warning: Method for calculating e-arm physics was not included. Defaulting to method 3." << endl;
@@ -963,19 +1095,30 @@ double dx_pn = mainConfig.get_dxpn();
                 		W2 = physics::getW2(pbeam,p_eprime,Q2,target);
                 		tau = physics::get_tau(Q2,target);
                 		epsilon = physics::get_epsilon(tau,etheta);
+
 				}
 
 				// ray from Hall origin onto the face of hcal where the nucleon hit
 				TVector3 hcal_intersect = physics::get_hcalintersect(vertex,hcal_origin,hcal_zaxis,p_Nhat );
 
+				//HCal intersect but from quantities derived from MC truth information
+				TVector3 hcal_intersect_mctrue_n = physics::get_hcalintersect(vertex_mctrue_n,hcal_origin,hcal_zaxis,p_Nhat_mctrue_n);
+				
 				//gets expected location of scattered nucleon assuming straight line projections from BB track, x-direction
 				double xhcal_expect = physics::get_xhcalexpect(hcal_intersect,hcal_origin,hcal_xaxis);
 
 				//gets expected location of scattered nucleon assuming straight line projections from BB track, y-direction
 				double yhcal_expect = physics::get_yhcalexpect(hcal_intersect,hcal_origin,hcal_yaxis);
 
+				//Now calculate x_expect and y_expect with the MC derived truth info
+				double xhcal_mctrue_n = physics::get_xhcalexpect(hcal_intersect_mctrue_n,hcal_origin,hcal_xaxis);
+				//Because of coordinate system difference
+				xhcal_mctrue_n = -xhcal_mctrue_n;
+				double yhcal_mctrue_n = physics::get_yhcalexpect(hcal_intersect_mctrue_n,hcal_origin,hcal_yaxis);
+				
+
 				//Calculate expected proton deflection with a somewhat crude module
-        			double BdL = physics::getBdL(sbs_field,kin);
+        			double BdL = physics::getBdL(sbs_field,kin,pass);
         			double proton_deflection = physics::get_protonDeflection(BdL,p_N.Vect().Mag(),hcaldist,sbsdist);
 
 				//supposedly the MC does timing poorly. So implementing an intime clustering algorithm for MC is not the best idea. Just do a highest energy cluster search to be sure.
@@ -996,10 +1139,14 @@ double dx_pn = mainConfig.get_dxpn();
         			double hcal_e_bestclus = hcal_clus_e[clus_idx_best];
 				int hcal_nblk_bestclus = (int) hcal_clus_nblk[clus_idx_best];
 
+				//Check on the MC truth info by calculating dx and dy
+				double dx_mctrue_n = physics::get_dx(xhcal_bestclus,xhcal_mctrue_n);
+                                double dy_mctrue_n = physics::get_dy(yhcal_bestclus,yhcal_mctrue_n);
+
 				//calculate the number of sigma away from fiducial boundaries. Store info for later
         			double nsigx_fid = cuts::calculate_nsigma_fid_x(xhcal_expect,dxsig_p,dxsig_n,dx_pn,hcalaa);
         			double nsigy_fid = cuts::calculate_nsigma_fid_y(yhcal_expect,dysig_p,hcalaa);
-
+				
 				//setup booleans for cuts later. Save boolean values to tree
 
 				//HCal active area
@@ -1033,6 +1180,15 @@ double dx_pn = mainConfig.get_dxpn();
 				final_mc_weight = physics::getMCWeight(max_weight,luminosity,genvol,Ntried);
 				}else{
 				final_mc_weight = physics::getMCWeight(mc_weight,luminosity,genvol,Ntried);
+				}
+				
+				//If a efficiency map correction is involved apply it to the final_mc_weight
+				
+				if(HCal_Eff_map_flag){
+				
+				double corr_fac = physics::get_HCalEffCorr(xy_expect_eff_map_clone,xhcal_mctrue_n,yhcal_mctrue_n,HCal_accep_avg_eff,proton_deflection,mc_fnucl);
+				final_mc_weight = final_mc_weight * corr_fac;
+				//cout << final_mc_weight << " " << corr_fac << endl;
 				}
 
 				//Fill analysis tree variables before making cuts
@@ -1110,7 +1266,32 @@ double dx_pn = mainConfig.get_dxpn();
         			nblkHCAL_out = nblkHCAL;
         			rowblkHCAL_out = rowblkHCAL[clus_idx_best];
         			colblkHCAL_out = colblkHCAL[clus_idx_best];
+				MC_p_n_out = MC_true_p_n;
+				MC_p_e_out = MC_true_p_e;
+				MC_vz_out = MC_true_vz;
 
+				x_mctrue_n_out = xhcal_mctrue_n;
+				y_mctrue_n_out = yhcal_mctrue_n;
+				p_mctrue_n_out = p_mctrue_n.Vect().Mag();
+				q_mctrue_n_out = q_mctrue_n.Vect().Mag();
+				theta_mctrue_n_out = theta_mctrue_n;
+				phi_N_exp_out = phi_N_exp;
+				phi_mctrue_n_out = phi_mctrue_n;
+				pcentral_mctrue_n_out = pcentral_mctrue_n;
+				Q2_mctrue_n_out = Q2_mctrue_n;
+				nu_mctrue_n_out = nu_mctrue_n;
+				theta_N_exp_out = theta_N_exp;
+				p_Nhat_mctrue_n_out = p_Nhat_mctrue_n.Mag2();
+				p_N_mctrue_n_out = p_N_mctrue_n.Vect().Mag();
+				W2_mctrue_n_out = W2_mctrue_n;
+				p_Nhat_out = p_Nhat.Mag2();
+				tau_mctrue_n_out = tau_mctrue_n;
+				epsilon_mctrue_n_out = epsilon_mctrue_n;
+				hcal_intersect_out = hcal_intersect.Mag2();
+				hcal_intersect_mctrue_n_out = hcal_intersect_mctrue_n.Mag2();
+				
+				dx_mctrue_n_out = dx_mctrue_n;
+				dy_mctrue_n_out = dy_mctrue_n;
 
 				//Fill histograms of global cut parameters here without any restrictions
 				h_ntracks->Fill(ntrack,final_mc_weight);
@@ -1158,7 +1339,8 @@ double dx_pn = mainConfig.get_dxpn();
         			h_W2_globcut->Fill(W2,final_mc_weight);
         			h_Q2_globcut->Fill(Q2,final_mc_weight);
         			hxy_expect_globcut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			hdxdy_globcut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+        			//hxy_mctruen_globcut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
+				hdxdy_globcut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
         			hdx_globcut->Fill(dx_bestclus,final_mc_weight);
         			hdy_globcut->Fill(dy_bestclus,final_mc_weight);
         			
@@ -1178,13 +1360,17 @@ double dx_pn = mainConfig.get_dxpn();
         			hxy_glob_W2_cut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
         			h_W2_glob_W2_cut->Fill(W2,final_mc_weight);
         			hxy_expect_glob_W2_cut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			hdxdy_glob_W2_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+        			//hxy_mctruen_glob_W2_cut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
+				hdxdy_glob_W2_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
         			hdx_glob_W2_cut->Fill(dx_bestclus,final_mc_weight);
         			hdy_glob_W2_cut->Fill(dy_bestclus,final_mc_weight);
         			hcoin_glob_W2_cut->Fill(coin_bestclus,final_mc_weight);
         			hcoin_pclus_glob_W2_cut->Fill(coin_pclus,final_mc_weight);
         			hxy_expect_n->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+				//hxy_mctruen_n->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
         			hxy_expect_p->Fill(yhcal_expect,(xhcal_expect-dx_pn),final_mc_weight);
+				//hxy_mctruen_p->Fill(yhcal_mctrue_n,(xhcal_mctrue_n-dx_pn),final_mc_weight);
+
         			hMott_cs->Fill(Mott_CS,final_mc_weight);
        				}
 				
@@ -1244,12 +1430,14 @@ double dx_pn = mainConfig.get_dxpn();
         			h_W2_cut->Fill(W2,final_mc_weight);
         			h_Q2_cut->Fill(Q2,final_mc_weight);
         			hxy_expect_cut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			hdxdy_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
+        			//hxy_mctruen_cut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
+				hdxdy_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
         			hdx_cut->Fill(dx_bestclus,final_mc_weight);
         			hdy_cut->Fill(dy_bestclus,final_mc_weight);
         			hcoin_cut->Fill(coin_bestclus,final_mc_weight);
         			hcoin_pclus_cut->Fill(coin_pclus,final_mc_weight);
         			hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
+				//hxy_mctruen_fidcutn->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
 				h_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],final_mc_weight);
         			h_W2_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,final_mc_weight);
         			h_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],final_mc_weight);
@@ -1257,7 +1445,8 @@ double dx_pn = mainConfig.get_dxpn();
 				h_track_chi2ndf_cut->Fill(gem_ChiSqr[0],final_mc_weight);
 
         			hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn),final_mc_weight);
-        			hdxvE->Fill(hcal_e_bestclus,dx_bestclus,final_mc_weight);
+        			//hxy_mctruen_fidcutp->Fill(yhcal_mctrue_n,(xhcal_mctrue_n-dx_pn),final_mc_weight);
+				hdxvE->Fill(hcal_e_bestclus,dx_bestclus,final_mc_weight);
         			hdxvW2->Fill(W2,dx_bestclus,final_mc_weight);
         			
 					if(nuc == "p"){
@@ -1272,7 +1461,8 @@ double dx_pn = mainConfig.get_dxpn();
 		
 				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON  && good_dy && !passFid){
         			hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			}
+        			 //hxy_mctruen_failedfid->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
+				}
 		
 				//For cut stability
         			h_nsigx_fid ->Fill(nsigx_fid,final_mc_weight);
@@ -1280,7 +1470,7 @@ double dx_pn = mainConfig.get_dxpn();
         			if(passNSigFid){
         			hdx_nsigfid->Fill(dx_bestclus,final_mc_weight);
         			}
-
+				
 				//Fill the analysis tree
 				Parse->Fill();
 		}//end event loop
@@ -1313,7 +1503,7 @@ double dx_pn = mainConfig.get_dxpn();
   c0->Print(start.Data(),"pdf");
   c1->Print(plotname.Data(),"pdf");
   c2->Print(end.Data(),"pdf");
-
+  
   //Write everything to output file
   fout->Write();
 

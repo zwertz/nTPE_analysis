@@ -89,7 +89,7 @@ namespace exp_constants{
   //Make functions to get hcal v offset. since it is pass dependent
   const double getHCalOffset( TString pass);
   
-  const double getMaxSBSField(TString Kin);
+  const double getMaxSBSField(TString Kin,TString pass);
 
 }
 #endif
