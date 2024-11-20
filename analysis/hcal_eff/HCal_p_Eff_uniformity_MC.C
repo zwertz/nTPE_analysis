@@ -161,11 +161,12 @@ TH1::SetDefaultSumw2(kTRUE);
   C->Add(MC_input_file_name.Data());
 
   //Branch variables
-  double ehcal, xhcal, yhcal, dx, dy, proton_deflection, xexp, yexp, W2, BBps_e, BBtr_vz, BBtr_p, BBgem_nhits, rowblkHCAL, colblkHCAL, final_mc_weight, BBgem_chi2ndf;
+  double ehcal, ehcal_tree, xhcal, yhcal, dx, dy, proton_deflection, xexp, yexp, W2, BBps_e, BBtr_vz, BBtr_p, BBgem_nhits, rowblkHCAL, colblkHCAL, uncorr_mc_weight, corr_mc_weight, BBgem_chi2ndf;
   int BBsh_nclus;
 
   //Get the branches we need from Parse
   C->SetBranchStatus("ehcal",1);
+  C->SetBranchStatus("ehcal_tree",1);  
   C->SetBranchStatus("xhcal",1);
   C->SetBranchStatus("yhcal",1);
   C->SetBranchStatus("xexp",1);
@@ -181,10 +182,12 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchStatus("BBsh_nclus",1);
   C->SetBranchStatus("rowblkHCAL",1);
   C->SetBranchStatus("colblkHCAL",1);
-  C->SetBranchStatus("Final_MC_weight",1);
+  C->SetBranchStatus("Uncorr_MC_weight",1);
+  C->SetBranchStatus("Corr_MC_weight",1);
   C->SetBranchStatus("BBgem_chi2ndf",1);
 
   C->SetBranchAddress("ehcal",&ehcal);
+  C->SetBranchAddress("ehcal_tree",&ehcal_tree);
   C->SetBranchAddress("xhcal",&xhcal);
   C->SetBranchAddress("yhcal",&yhcal);
   C->SetBranchAddress("xexp",&xexp);
@@ -200,7 +203,8 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchAddress("BBsh_nclus",&BBsh_nclus);
   C->SetBranchAddress("rowblkHCAL",&rowblkHCAL);
   C->SetBranchAddress("colblkHCAL",&colblkHCAL);
-  C->SetBranchAddress("Final_MC_weight",&final_mc_weight);
+  C->SetBranchAddress("Uncorr_MC_weight",&uncorr_mc_weight);
+  C->SetBranchAddress("Corr_MC_weight",&corr_mc_weight);
   C->SetBranchAddress("BBgem_chi2ndf",&BBgem_chi2ndf);
 
   //setup global cut formula
@@ -224,10 +228,10 @@ TH1::SetDefaultSumw2(kTRUE);
         //Is true if failed global cut
         bool failglobal = cuts::failedGlobal(GlobalCut);
 	//Establish HCal Cut
-	bool passHCalE = cuts::passHCalE(ehcal,ehcal_min);
+	bool passHCalE = cuts::passHCalE(ehcal_tree,ehcal_min);
 	bool hcalaa_ON = cuts::hcalaa_ON(xhcal,yhcal,hcalaa);
 	bool HCal_spot = cuts::passHCal_Spot(dx,dy,dxO_p,dyO_p,dxsig_p,dysig_p,spot_sig);
-	bool pass_HCalCut = /*passHCalE && hcalaa_ON &&*/ HCal_spot;
+	bool pass_HCalCut = passHCalE && hcalaa_ON && HCal_spot;
 
 	//Fiducial region, we want to separate the direction so not using the standard function calls
 	bool fidx_cut = (xexp - proton_deflection) >= fidx_min && (xexp - proton_deflection) <= fidx_max;
@@ -242,12 +246,12 @@ TH1::SetDefaultSumw2(kTRUE);
 		 //Check the W2 plot
 		//Make sure we pass the fiducial cut
 		if(fidx_cut && fidy_cut){
-		h_W2_globcut->Fill(W2,final_mc_weight);
+		h_W2_globcut->Fill(W2,uncorr_mc_weight);
 			//Check the HCal cut
 			if(pass_HCalCut){
-			h_W2_hcalcut->Fill(W2,final_mc_weight);
+			h_W2_hcalcut->Fill(W2,corr_mc_weight);
 			}else{
-			h_W2_anticut->Fill(W2,final_mc_weight);
+			h_W2_anticut->Fill(W2,corr_mc_weight);
 			}
 		}//end fiducial conditional for W2
 
@@ -257,20 +261,20 @@ TH1::SetDefaultSumw2(kTRUE);
 			//enforce fiducial cut in the y direction. Going to fill x direction plots
 			if(fidy_cut){
 			//Fill histograms for the denominator
-			hx_expect_all->Fill(xexp - proton_deflection,final_mc_weight);
-			hx_HCal_all->Fill(xhcal,final_mc_weight);
-			hrowHCal_all->Fill(rowblkHCAL,final_mc_weight);
+			hx_expect_all->Fill(xexp - proton_deflection,uncorr_mc_weight);
+			hx_HCal_all->Fill(xhcal,uncorr_mc_weight);
+			hrowHCal_all->Fill(rowblkHCAL,uncorr_mc_weight);
 
 				//enforce the HCal cut now
 				//Fill histograms for numerator
 				if(pass_HCalCut){
-				hx_expect_hcalcut->Fill(xexp - proton_deflection,final_mc_weight);
-                        	hx_HCal_cut->Fill(xhcal,final_mc_weight);
-                        	hrowHCal_cut->Fill(rowblkHCAL,final_mc_weight);
+				hx_expect_hcalcut->Fill(xexp - proton_deflection,corr_mc_weight);
+                        	hx_HCal_cut->Fill(xhcal,corr_mc_weight);
+                        	hrowHCal_cut->Fill(rowblkHCAL,corr_mc_weight);
 				}else{
-				hx_expect_anticut->Fill(xexp - proton_deflection,final_mc_weight);
-                                hx_HCal_anticut->Fill(xhcal,final_mc_weight);
-                                hrowHCal_anticut->Fill(rowblkHCAL,final_mc_weight);
+				hx_expect_anticut->Fill(xexp - proton_deflection,corr_mc_weight);
+                                hx_HCal_anticut->Fill(xhcal,corr_mc_weight);
+                                hrowHCal_anticut->Fill(rowblkHCAL,corr_mc_weight);
 				}	
 			}//end fidy cut
 
@@ -278,56 +282,56 @@ TH1::SetDefaultSumw2(kTRUE);
 			//enforce fiducial cut in the x direction. Going to fill y direction plots
                         if(fidx_cut){
                         //Fill histograms for the denominator
-                        hy_expect_all->Fill(yexp,final_mc_weight);
-                        hy_HCal_all->Fill(yhcal,final_mc_weight);
-                        hcolHCal_all->Fill(colblkHCAL,final_mc_weight);
+                        hy_expect_all->Fill(yexp,uncorr_mc_weight);
+                        hy_HCal_all->Fill(yhcal,uncorr_mc_weight);
+                        hcolHCal_all->Fill(colblkHCAL,uncorr_mc_weight);
 
                                 //enforce the HCal cut now
                                 //Fill histograms for numerator
                                 if(pass_HCalCut){
-                                hy_expect_hcalcut->Fill(yexp,final_mc_weight);
-                                hy_HCal_cut->Fill(yhcal,final_mc_weight);
-                                hcolHCal_cut->Fill(colblkHCAL,final_mc_weight);
+                                hy_expect_hcalcut->Fill(yexp,corr_mc_weight);
+                                hy_HCal_cut->Fill(yhcal,corr_mc_weight);
+                                hcolHCal_cut->Fill(colblkHCAL,corr_mc_weight);
                                 }else{
-                                hy_expect_anticut->Fill(yexp,final_mc_weight);
-                                hy_HCal_anticut->Fill(yhcal,final_mc_weight);
-                                hcolHCal_anticut->Fill(colblkHCAL,final_mc_weight);
+                                hy_expect_anticut->Fill(yexp,corr_mc_weight);
+                                hy_HCal_anticut->Fill(yhcal,corr_mc_weight);
+                                hcolHCal_anticut->Fill(colblkHCAL,corr_mc_weight);
                                 }
                         }//end fidx cut
 
 
 			//check the xy expect distribution under HCal cut but not fid
-			hxy_expect_all->Fill(yexp,xexp - proton_deflection,final_mc_weight);
+			hxy_expect_all->Fill(yexp,xexp - proton_deflection,uncorr_mc_weight);
 			if(pass_HCalCut){
-			hxy_expect_hcalcut->Fill(yexp,xexp - proton_deflection,final_mc_weight);
+			hxy_expect_hcalcut->Fill(yexp,xexp - proton_deflection,corr_mc_weight);
 			}else{
-			hxy_expect_anticut->Fill(yexp,xexp - proton_deflection,final_mc_weight);
+			hxy_expect_anticut->Fill(yexp,xexp - proton_deflection,corr_mc_weight);
 			}
 
 			//For pretty much everything else to fill enforce the fiducial cut and then check which ones are passing HCal cut
 			if(fidx_cut && fidy_cut){
-				hdx_all->Fill(dx,final_mc_weight);
-				hdy_all->Fill(dy,final_mc_weight);
-				hdxdy_all->Fill(dy,dx,final_mc_weight);
-				hxy_HCal_all->Fill(yhcal,xhcal,final_mc_weight);
-				hehcal_all->Fill(ehcal,final_mc_weight);
-				hrowcolHCal_all->Fill(colblkHCAL,rowblkHCAL,final_mc_weight);
+				hdx_all->Fill(dx,uncorr_mc_weight);
+				hdy_all->Fill(dy,uncorr_mc_weight);
+				hdxdy_all->Fill(dy,dx,uncorr_mc_weight);
+				hxy_HCal_all->Fill(yhcal,xhcal,uncorr_mc_weight);
+				hehcal_all->Fill(ehcal_tree,uncorr_mc_weight);
+				hrowcolHCal_all->Fill(colblkHCAL,rowblkHCAL,uncorr_mc_weight);
 
 
 				if(pass_HCalCut){
-					hdx_cut->Fill(dx,final_mc_weight);
-                               		hdy_cut->Fill(dy,final_mc_weight);
-                                	hdxdy_cut->Fill(dy,dx,final_mc_weight);
-                                	hxy_HCal_cut->Fill(yhcal,xhcal,final_mc_weight);
-                                	hehcal_cut->Fill(ehcal,final_mc_weight);
-					hrowcolHCal_cut->Fill(colblkHCAL,rowblkHCAL,final_mc_weight);
+					hdx_cut->Fill(dx,corr_mc_weight);
+                               		hdy_cut->Fill(dy,corr_mc_weight);
+                                	hdxdy_cut->Fill(dy,dx,corr_mc_weight);
+                                	hxy_HCal_cut->Fill(yhcal,xhcal,corr_mc_weight);
+                                	hehcal_cut->Fill(ehcal_tree,corr_mc_weight);
+					hrowcolHCal_cut->Fill(colblkHCAL,rowblkHCAL,corr_mc_weight);
 				}else{
-					hdx_anticut->Fill(dx,final_mc_weight);
-                                        hdy_anticut->Fill(dy,final_mc_weight);
-                                        hdxdy_anticut->Fill(dy,dx,final_mc_weight);
-                                        hxy_HCal_anticut->Fill(yhcal,xhcal,final_mc_weight);
-                                        hehcal_anticut->Fill(ehcal,final_mc_weight);
-					hrowcolHCal_anticut->Fill(colblkHCAL,rowblkHCAL,final_mc_weight);
+					hdx_anticut->Fill(dx,corr_mc_weight);
+                                        hdy_anticut->Fill(dy,corr_mc_weight);
+                                        hdxdy_anticut->Fill(dy,dx,corr_mc_weight);
+                                        hxy_HCal_anticut->Fill(yhcal,xhcal,corr_mc_weight);
+                                        hehcal_anticut->Fill(ehcal_tree,corr_mc_weight);
+					hrowcolHCal_anticut->Fill(colblkHCAL,rowblkHCAL,corr_mc_weight);
 				}
 			}//end total fiducial conditional
 

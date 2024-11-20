@@ -378,6 +378,11 @@ namespace physics{
                 energy_idx = c;
                 }//end conditional	
 	}//end loop
+
+	//if(energy_idx > 0){
+	//cout << "Index: " << energy_idx << " Value: " << maxE << endl;
+	//}
+
  return energy_idx;
  }
 
@@ -463,6 +468,7 @@ namespace physics{
  cout << "HCal Eff corr, we should never get here!" << endl;
  }
 
+ 
  //Convert the position info to bins
  
  int HCalxbin = effMap->GetYaxis()->FindBin(x);
@@ -473,15 +479,19 @@ namespace physics{
  int HCalxbin_cent = effMap->GetYaxis()->GetBinCenter(HCalxbin);
  int HCalybin_cent = effMap->GetXaxis()->GetBinCenter(HCalybin);
 
+ 
  double numerator = effMap->GetBinContent(HCalybin,HCalxbin);
  double denominator = accep_avg_eff;
  
- //cout << "xbin: " << HCalxbin_cent << " ybin: " << HCalybin_cent << " Numerator: " << numerator << endl;
-
  double c = numerator/denominator;
+ 
+ //Low efficiency or empty region in the efficiency map
+ if(c == 0.0){
+ c =1.0;
+ }
 
-
-
+ //cout << c << endl;
+ 
  return c;
  }
 

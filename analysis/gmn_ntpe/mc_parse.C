@@ -314,6 +314,9 @@ double dx_pn = mainConfig.get_dxpn();
   TH2D *hxy_expect_failedfid = new TH2D("hxy_expect_failedfid","HCal X Expect vs Y Expect, failed fiducial cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_cut = new TH2D("hxy_expect_cut","HCal X Expect vs Y Expect, all cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
 
+  TH1D *hx_expect_all = new TH1D("hx_expect_all","HCal X Expect, global cut;HCal X Expect (m)", 147, -3.5, 3.0 );
+  TH1D *hx_expect_cut = new TH1D("hx_expect_hcalcut","HCal X Expect, global+HCal cut;HCal X Expect (m)", 147, -3.5, 3.0 );
+
 //Both arms
   TH2D *hdxdy_globcut = new TH2D("dxdy_globcut","HCal dxdy, global cut ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",400,dy_low,dy_high,600,dx_low,dx_high);
   TH2D *hdxdy_glob_W2_cut = new TH2D("dxdy_glob_W2_cut","HCal dxdy, global & W2 cuts ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",400,dy_low,dy_high,600,dx_low,dx_high);
@@ -431,7 +434,8 @@ double dx_pn = mainConfig.get_dxpn();
   double nsigy_fid_out;
   double W2low_out;
   double W2high_out;
-  double final_mc_weight_out;
+  double uncorr_mc_weight_out;
+  double corr_mc_weight_out;
   double x_mctrue_n_out;
   double y_mctrue_n_out;
   double p_mctrue_n_out;
@@ -482,6 +486,9 @@ double dx_pn = mainConfig.get_dxpn();
   double MC_p_n_out;
   double MC_p_e_out;
   double MC_vz_out;
+  double ehcal_tree_out;
+
+  double corr_fac_out;
 
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
@@ -498,6 +505,7 @@ double dx_pn = mainConfig.get_dxpn();
   Parse->Branch("pcorr", &pcorr_out, "pcorr/D");
   Parse->Branch("mott", &mott_out, "mott/D");
   Parse->Branch("ehcal", &ehcal_out, "ehcal/D");
+  Parse->Branch("ehcal_tree", &ehcal_tree_out, "ehcal_tree/D");
   Parse->Branch("BBtot_e", &BBtot_e_out, "BBtot_e/D");
   Parse->Branch("BBsh_e", &BBsh_e_out, "BBsh_e/D");
   Parse->Branch("BBsh_nclus", &BBsh_nclus_out, "BBsh_nclus/I");
@@ -540,7 +548,8 @@ double dx_pn = mainConfig.get_dxpn();
   Parse->Branch("nsigy_fid", &nsigy_fid_out , "nsigy_fid/D");
   Parse->Branch("W2low", &W2low_out, "W2low/D");
   Parse->Branch("W2high", &W2high_out, "W2high/D");
-  Parse->Branch("Final_MC_weight", &final_mc_weight_out, "final_MC_weight/D");
+  Parse->Branch("Corr_MC_weight", &corr_mc_weight_out, "corr_MC_weight/D");
+  Parse->Branch("Uncorr_MC_weight", &uncorr_mc_weight_out, "uncorr_MC_weight/D");
   Parse->Branch("hcal_sh_atime_diff", &hcal_sh_atime_diff_out, "hcal_sh_atime_diff/D");
   Parse->Branch("proton_deflection", &proton_deflection_out, "proton_deflection/D");
   Parse->Branch("p_N", &p_N_out, "p_N/D");
@@ -589,7 +598,7 @@ double dx_pn = mainConfig.get_dxpn();
   Parse->Branch("hcal_intersect_mctrue_n", &hcal_intersect_mctrue_n_out, "hcal_intersect_mctrue_n/D");
   Parse->Branch("dx_mctrue_n", &dx_mctrue_n_out, "dx_mctrue_n/D");
   Parse->Branch("dy_mctrue_n", &dy_mctrue_n_out, "dy_mctrue_n/D");
-  
+  Parse->Branch("corr_fac", &corr_fac_out, "corr_fac/D");
 
   //logistical information
   TString nuc = "none"; 
@@ -1120,6 +1129,7 @@ double dx_pn = mainConfig.get_dxpn();
 				//Calculate expected proton deflection with a somewhat crude module
         			double BdL = physics::getBdL(sbs_field,kin,pass);
         			double proton_deflection = physics::get_protonDeflection(BdL,p_N.Vect().Mag(),hcaldist,sbsdist);
+				double proton_deflection_mctrue_n = physics::get_protonDeflection(BdL,p_N_mctrue_n.Vect().Mag(),hcaldist,sbsdist);
 
 				//supposedly the MC does timing poorly. So implementing an intime clustering algorithm for MC is not the best idea. Just do a highest energy cluster search to be sure.
 				int energy_idx = physics::cluster_HighEnergy(num_hcal_clusid,hcal_clus_e);
@@ -1175,20 +1185,24 @@ double dx_pn = mainConfig.get_dxpn();
 
 				//calculate the final corrected MC weight
 				//handles both cases of using rejection sampling and not 
-				double final_mc_weight;
+				double uncorr_mc_weight;
+				double corr_mc_weight;
 				if(using_rej_samp){
-				final_mc_weight = physics::getMCWeight(max_weight,luminosity,genvol,Ntried);
+				uncorr_mc_weight = physics::getMCWeight(max_weight,luminosity,genvol,Ntried);
 				}else{
-				final_mc_weight = physics::getMCWeight(mc_weight,luminosity,genvol,Ntried);
+				uncorr_mc_weight = physics::getMCWeight(mc_weight,luminosity,genvol,Ntried);
 				}
 				
 				//If a efficiency map correction is involved apply it to the final_mc_weight
 				
+				double corr_fac = 0.0;
+
 				if(HCal_Eff_map_flag){
 				
-				double corr_fac = physics::get_HCalEffCorr(xy_expect_eff_map_clone,xhcal_mctrue_n,yhcal_mctrue_n,HCal_accep_avg_eff,proton_deflection,mc_fnucl);
-				final_mc_weight = final_mc_weight * corr_fac;
-				//cout << final_mc_weight << " " << corr_fac << endl;
+				corr_fac = physics::get_HCalEffCorr(xy_expect_eff_map_clone,xhcal_mctrue_n,yhcal_mctrue_n,HCal_accep_avg_eff,proton_deflection_mctrue_n,mc_fnucl);
+				corr_mc_weight = uncorr_mc_weight * corr_fac;
+				}else{
+				corr_mc_weight = uncorr_mc_weight;
 				}
 
 				//Fill analysis tree variables before making cuts
@@ -1206,7 +1220,8 @@ double dx_pn = mainConfig.get_dxpn();
         			pcorr_out = pcorr;
 				mott_out = Mott_CS;
         			ehcal_out = hcal_e_bestclus;
-        			BBtot_e_out = e_sh+e_ps;
+				ehcal_tree_out = e_hcal;
+				BBtot_e_out = e_sh+e_ps;
         			BBsh_e_out = e_sh;
         			BBps_e_out = e_ps;
         			hcal_atime_out = hcal_atime_bestclus;
@@ -1256,7 +1271,8 @@ double dx_pn = mainConfig.get_dxpn();
         			passFid_out = (int) passFid;
         			file_out = f;
         			mag_out = sbs_field;
-				final_mc_weight_out = final_mc_weight;
+				uncorr_mc_weight_out = uncorr_mc_weight;
+				corr_mc_weight_out = corr_mc_weight;
 				is_proton_out = is_proton;
 				is_neutron_out = is_neutron;
 				hcal_sh_atime_diff_out = coin_bestclus;
@@ -1289,121 +1305,123 @@ double dx_pn = mainConfig.get_dxpn();
 				epsilon_mctrue_n_out = epsilon_mctrue_n;
 				hcal_intersect_out = hcal_intersect.Mag2();
 				hcal_intersect_mctrue_n_out = hcal_intersect_mctrue_n.Mag2();
-				
+				corr_fac_out = corr_fac;
+
 				dx_mctrue_n_out = dx_mctrue_n;
 				dy_mctrue_n_out = dy_mctrue_n;
 
 				//Fill histograms of global cut parameters here without any restrictions
-				h_ntracks->Fill(ntrack,final_mc_weight);
-        			h_PS_E->Fill(e_ps,final_mc_weight);
-        			h_vert_z->Fill(tr_vz[0],final_mc_weight);
-        			h_HCal_E->Fill(e_hcal,final_mc_weight);
-        			h_HCal_E_best->Fill(hcal_e_bestclus,final_mc_weight);
-        			h_HCal_nclus->Fill(nclus_hcal,final_mc_weight);
-        			h_nhits->Fill(gem_hits[0],final_mc_weight);
-        			h_bbtrp_nocut->Fill(tr_p[0],final_mc_weight);
-        			h_SH_nclus->Fill(nclus_sh,final_mc_weight);
-				h_bbEoverp_nocut->Fill(BB_E_over_p,final_mc_weight);
-        			h_optics_xdir_nocut->Fill(tr_r_x[0]-0.9*tr_r_th[0],final_mc_weight);
-       				h_W2_optics_xdir_nocut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,final_mc_weight);
-        			h_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],final_mc_weight);
-        			h_W2_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,final_mc_weight);
-				h_track_chi2ndf_nocut->Fill(gem_ChiSqr[0],final_mc_weight);
+				h_ntracks->Fill(ntrack,corr_mc_weight);
+        			h_PS_E->Fill(e_ps,corr_mc_weight);
+        			h_vert_z->Fill(tr_vz[0],corr_mc_weight);
+        			h_HCal_E->Fill(e_hcal,corr_mc_weight);
+        			h_HCal_E_best->Fill(hcal_e_bestclus,corr_mc_weight);
+        			h_HCal_nclus->Fill(nclus_hcal,corr_mc_weight);
+        			h_nhits->Fill(gem_hits[0],corr_mc_weight);
+        			h_bbtrp_nocut->Fill(tr_p[0],corr_mc_weight);
+        			h_SH_nclus->Fill(nclus_sh,corr_mc_weight);
+				h_bbEoverp_nocut->Fill(BB_E_over_p,corr_mc_weight);
+        			h_optics_xdir_nocut->Fill(tr_r_x[0]-0.9*tr_r_th[0],corr_mc_weight);
+       				h_W2_optics_xdir_nocut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,corr_mc_weight);
+        			h_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],corr_mc_weight);
+        			h_W2_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,corr_mc_weight);
+				h_track_chi2ndf_nocut->Fill(gem_ChiSqr[0],corr_mc_weight);
 
-        			hdx_nocut->Fill(dx_bestclus,final_mc_weight);
-        			hcoin_nocut->Fill(coin_bestclus,final_mc_weight);
-        			hdy_nocut->Fill(dy_bestclus,final_mc_weight);
+        			hdx_nocut->Fill(dx_bestclus,corr_mc_weight);
+        			hcoin_nocut->Fill(coin_bestclus,corr_mc_weight);
+        			hdy_nocut->Fill(dy_bestclus,corr_mc_weight);
 
 				//Fill some histograms here after basic global cuts
 				if(!failglobal){
 				//global parameter checks
-				h_ntracks_globcut->Fill(ntrack,final_mc_weight);
-        			h_PS_E_globcut->Fill(e_ps,final_mc_weight);
-        			h_vert_z_globcut->Fill(tr_vz[0],final_mc_weight);
-        			h_HCal_E_globcut->Fill(e_hcal,final_mc_weight);
-        			h_HCal_E_best_globcut->Fill(hcal_e_bestclus,final_mc_weight);
-        			h_HCal_nclus_globcut->Fill(nclus_hcal,final_mc_weight);
-        			h_nhits_globcut->Fill(gem_hits[0],final_mc_weight);
-        			h_bbtrp_globcut->Fill(tr_p[0],final_mc_weight);
-        			h_SH_nclus_globcut->Fill(nclus_sh,final_mc_weight);
-        			h_TPS_SH_globcut->Fill(e_ps+e_sh,final_mc_weight);
-        			h_bbEoverp_globcut->Fill(BB_E_over_p,final_mc_weight);
-				h_optics_xdir_globcut->Fill(tr_r_x[0]-0.9*tr_r_th[0],final_mc_weight);
-        			h_W2_optics_xdir_globcut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,final_mc_weight);
-        			h_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],final_mc_weight);
-       				h_W2_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,final_mc_weight);
-				h_track_chi2ndf_globcut->Fill(gem_ChiSqr[0],final_mc_weight);
+				h_ntracks_globcut->Fill(ntrack,corr_mc_weight);
+        			h_PS_E_globcut->Fill(e_ps,corr_mc_weight);
+        			h_vert_z_globcut->Fill(tr_vz[0],corr_mc_weight);
+        			h_HCal_E_globcut->Fill(e_hcal,corr_mc_weight);
+        			h_HCal_E_best_globcut->Fill(hcal_e_bestclus,corr_mc_weight);
+        			h_HCal_nclus_globcut->Fill(nclus_hcal,corr_mc_weight);
+        			h_nhits_globcut->Fill(gem_hits[0],corr_mc_weight);
+        			h_bbtrp_globcut->Fill(tr_p[0],corr_mc_weight);
+        			h_SH_nclus_globcut->Fill(nclus_sh,corr_mc_weight);
+        			h_TPS_SH_globcut->Fill(e_ps+e_sh,corr_mc_weight);
+        			h_bbEoverp_globcut->Fill(BB_E_over_p,corr_mc_weight);
+				h_optics_xdir_globcut->Fill(tr_r_x[0]-0.9*tr_r_th[0],corr_mc_weight);
+        			h_W2_optics_xdir_globcut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,corr_mc_weight);
+        			h_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],corr_mc_weight);
+       				h_W2_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,corr_mc_weight);
+				h_track_chi2ndf_globcut->Fill(gem_ChiSqr[0],corr_mc_weight);
 
 				//physics quantities
-				hxy_globcut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
-        			h_W2_globcut->Fill(W2,final_mc_weight);
-        			h_Q2_globcut->Fill(Q2,final_mc_weight);
-        			hxy_expect_globcut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			//hxy_mctruen_globcut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
-				hdxdy_globcut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-        			hdx_globcut->Fill(dx_bestclus,final_mc_weight);
-        			hdy_globcut->Fill(dy_bestclus,final_mc_weight);
+				hxy_globcut->Fill(yhcal_bestclus,xhcal_bestclus,corr_mc_weight);
+        			h_W2_globcut->Fill(W2,corr_mc_weight);
+        			h_Q2_globcut->Fill(Q2,corr_mc_weight);
+        			hxy_expect_globcut->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
+        			hxy_mctruen_globcut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,corr_mc_weight);
+				hdxdy_globcut->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+        			hdx_globcut->Fill(dx_bestclus,corr_mc_weight);
+        			hdy_globcut->Fill(dy_bestclus,corr_mc_weight);
         			
+				hx_expect_all->Fill(xhcal_expect,corr_mc_weight);
 					if(nuc == "p"){
-					hdxdy_globcut_p->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-					hdx_globcut_p->Fill(dx_bestclus,final_mc_weight);
+					hdxdy_globcut_p->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+					hdx_globcut_p->Fill(dx_bestclus,corr_mc_weight);
 					}				
 					if(nuc == "n"){
-                                        hdxdy_globcut_n->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-                                        hdx_globcut_n->Fill(dx_bestclus,final_mc_weight);
+                                        hdxdy_globcut_n->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+                                        hdx_globcut_n->Fill(dx_bestclus,corr_mc_weight);
                                         }
 
 				}
 
 				//Fill some histograms if pass global cut and W2 cut. Mostly just e-arm cuts
 				if(!failglobal && goodW2){
-        			hxy_glob_W2_cut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
-        			h_W2_glob_W2_cut->Fill(W2,final_mc_weight);
-        			hxy_expect_glob_W2_cut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			//hxy_mctruen_glob_W2_cut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
-				hdxdy_glob_W2_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-        			hdx_glob_W2_cut->Fill(dx_bestclus,final_mc_weight);
-        			hdy_glob_W2_cut->Fill(dy_bestclus,final_mc_weight);
-        			hcoin_glob_W2_cut->Fill(coin_bestclus,final_mc_weight);
-        			hcoin_pclus_glob_W2_cut->Fill(coin_pclus,final_mc_weight);
-        			hxy_expect_n->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-				//hxy_mctruen_n->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
-        			hxy_expect_p->Fill(yhcal_expect,(xhcal_expect-dx_pn),final_mc_weight);
-				//hxy_mctruen_p->Fill(yhcal_mctrue_n,(xhcal_mctrue_n-dx_pn),final_mc_weight);
 
-        			hMott_cs->Fill(Mott_CS,final_mc_weight);
+        			h_W2_glob_W2_cut->Fill(W2,corr_mc_weight);
+        			hxy_expect_glob_W2_cut->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
+        			hxy_mctruen_glob_W2_cut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,corr_mc_weight);
+				hdxdy_glob_W2_cut->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+        			hdx_glob_W2_cut->Fill(dx_bestclus,corr_mc_weight);
+        			hdy_glob_W2_cut->Fill(dy_bestclus,corr_mc_weight);
+        			hcoin_glob_W2_cut->Fill(coin_bestclus,corr_mc_weight);
+        			hcoin_pclus_glob_W2_cut->Fill(coin_pclus,corr_mc_weight);
+        			hxy_expect_n->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
+				hxy_mctruen_n->Fill(yhcal_mctrue_n,xhcal_mctrue_n,corr_mc_weight);
+        			hxy_expect_p->Fill(yhcal_expect,(xhcal_expect-dx_pn),corr_mc_weight);
+				hxy_mctruen_p->Fill(yhcal_mctrue_n,(xhcal_mctrue_n-dx_pn),corr_mc_weight);
+
+        			hMott_cs->Fill(Mott_CS,corr_mc_weight);
        				}
 				
 				//Now let's add in our first major hadron arm cut along with all the cuts from before.
 				if(!failglobal && goodW2 && hcalaa_ON){
-        			hxy_acceptancecut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
+        			hxy_acceptancecut->Fill(yhcal_bestclus,xhcal_bestclus,corr_mc_weight);
         			}
 				
 				//related checks for proton deflection
         			if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && good_dy){
-        			hdx_xhcal->Fill(xhcal_bestclus,dx_bestclus,final_mc_weight);
-        			hdx_pN->Fill(p_N.Vect().Mag(),dx_bestclus,final_mc_weight);
-        			hdx_prodef_pN->Fill(p_N.Vect().Mag(),dx_bestclus+proton_deflection,final_mc_weight);
-        			hdx_prodef->Fill(dx_bestclus+proton_deflection,final_mc_weight);
-        			hdx_defcut->Fill(dx_bestclus,final_mc_weight);
-        			hprodef->Fill(proton_deflection,final_mc_weight);
+        			hdx_xhcal->Fill(xhcal_bestclus,dx_bestclus,corr_mc_weight);
+        			hdx_pN->Fill(p_N.Vect().Mag(),dx_bestclus,corr_mc_weight);
+        			hdx_prodef_pN->Fill(p_N.Vect().Mag(),dx_bestclus+proton_deflection,corr_mc_weight);
+        			hdx_prodef->Fill(dx_bestclus+proton_deflection,corr_mc_weight);
+        			hdx_defcut->Fill(dx_bestclus,corr_mc_weight);
+        			hprodef->Fill(proton_deflection,corr_mc_weight);
         			}
 
 				//e-arm and h-arm cuts, except fiducial
 				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && good_dy ){
-       				hdxdy_nofid->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-        			hdx_cut_nofid->Fill(dx_bestclus,final_mc_weight);
-                		hdy_cut_nofid->Fill(dy_bestclus,final_mc_weight);
+       				hdxdy_nofid->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+        			hdx_cut_nofid->Fill(dx_bestclus,corr_mc_weight);
+                		hdy_cut_nofid->Fill(dy_bestclus,corr_mc_weight);
 				
 					if(nuc == "p"){
-                                        hdx_cut_nofid_p->Fill(dx_bestclus,final_mc_weight);
+                                        hdx_cut_nofid_p->Fill(dx_bestclus,corr_mc_weight);
                                         }
                                         if(nuc == "n"){
-                                        hdx_cut_nofid_n->Fill(dx_bestclus,final_mc_weight);
+                                        hdx_cut_nofid_n->Fill(dx_bestclus,corr_mc_weight);
                                         }
 
 					if(!passFid){
-                			hdx_cut_failfid->Fill(dx_bestclus,final_mc_weight);
+                			hdx_cut_failfid->Fill(dx_bestclus,corr_mc_weight);
         				}
 				}
 
@@ -1414,61 +1432,62 @@ double dx_pn = mainConfig.get_dxpn();
         			}
 				//all cuts
 				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON  && good_dy && passFid){
-        			h_ntracks_cut->Fill(ntrack,final_mc_weight);
-        			h_PS_E_cut->Fill(e_ps,final_mc_weight);
-        			h_vert_z_cut->Fill(tr_vz[0],final_mc_weight);
-        			h_HCal_E_cut->Fill(e_hcal,final_mc_weight);
-        			h_HCal_E_best_cut->Fill(hcal_e_bestclus,final_mc_weight);
-        			h_HCal_nclus_cut->Fill(nclus_hcal,final_mc_weight);
-        			h_nhits_cut->Fill(gem_hits[0],final_mc_weight);
-        			h_bbtrp_cut->Fill(tr_p[0],final_mc_weight);
-        			h_SH_nclus_cut->Fill(nclus_sh,final_mc_weight);
-        			h_TPS_SH_cut->Fill(e_ps+e_sh,final_mc_weight);
-        			h_bbEoverp_cut->Fill(BB_E_over_p,final_mc_weight);
+        			h_ntracks_cut->Fill(ntrack,corr_mc_weight);
+        			h_PS_E_cut->Fill(e_ps,corr_mc_weight);
+        			h_vert_z_cut->Fill(tr_vz[0],corr_mc_weight);
+        			h_HCal_E_cut->Fill(e_hcal,corr_mc_weight);
+        			h_HCal_E_best_cut->Fill(hcal_e_bestclus,corr_mc_weight);
+        			h_HCal_nclus_cut->Fill(nclus_hcal,corr_mc_weight);
+        			h_nhits_cut->Fill(gem_hits[0],corr_mc_weight);
+        			h_bbtrp_cut->Fill(tr_p[0],corr_mc_weight);
+        			h_SH_nclus_cut->Fill(nclus_sh,corr_mc_weight);
+        			h_TPS_SH_cut->Fill(e_ps+e_sh,corr_mc_weight);
+        			h_bbEoverp_cut->Fill(BB_E_over_p,corr_mc_weight);
 
-        			hxy_cut->Fill(yhcal_bestclus,xhcal_bestclus,final_mc_weight);
-        			h_W2_cut->Fill(W2,final_mc_weight);
-        			h_Q2_cut->Fill(Q2,final_mc_weight);
-        			hxy_expect_cut->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			//hxy_mctruen_cut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
-				hdxdy_cut->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-        			hdx_cut->Fill(dx_bestclus,final_mc_weight);
-        			hdy_cut->Fill(dy_bestclus,final_mc_weight);
-        			hcoin_cut->Fill(coin_bestclus,final_mc_weight);
-        			hcoin_pclus_cut->Fill(coin_pclus,final_mc_weight);
-        			hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-				//hxy_mctruen_fidcutn->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
-				h_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],final_mc_weight);
-        			h_W2_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,final_mc_weight);
-        			h_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],final_mc_weight);
-        			h_W2_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,final_mc_weight);
-				h_track_chi2ndf_cut->Fill(gem_ChiSqr[0],final_mc_weight);
+        			hxy_cut->Fill(yhcal_bestclus,xhcal_bestclus,corr_mc_weight);
+        			h_W2_cut->Fill(W2,corr_mc_weight);
+        			h_Q2_cut->Fill(Q2,corr_mc_weight);
+        			hxy_expect_cut->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
+        			hxy_mctruen_cut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,corr_mc_weight);
+				hdxdy_cut->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+        			hdx_cut->Fill(dx_bestclus,corr_mc_weight);
+        			hdy_cut->Fill(dy_bestclus,corr_mc_weight);
+        			hcoin_cut->Fill(coin_bestclus,corr_mc_weight);
+        			hcoin_pclus_cut->Fill(coin_pclus,corr_mc_weight);
+        			hxy_expect_fidcutn->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
+				hxy_mctruen_fidcutn->Fill(yhcal_mctrue_n,xhcal_mctrue_n,corr_mc_weight);
+				h_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],corr_mc_weight);
+        			h_W2_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],W2,corr_mc_weight);
+        			h_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],corr_mc_weight);
+        			h_W2_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,corr_mc_weight);
+				h_track_chi2ndf_cut->Fill(gem_ChiSqr[0],corr_mc_weight);
 
-        			hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn),final_mc_weight);
-        			//hxy_mctruen_fidcutp->Fill(yhcal_mctrue_n,(xhcal_mctrue_n-dx_pn),final_mc_weight);
-				hdxvE->Fill(hcal_e_bestclus,dx_bestclus,final_mc_weight);
-        			hdxvW2->Fill(W2,dx_bestclus,final_mc_weight);
-        			
+        			hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn),corr_mc_weight);
+        			hxy_mctruen_fidcutp->Fill(yhcal_mctrue_n,(xhcal_mctrue_n-dx_pn),corr_mc_weight);
+				hdxvE->Fill(hcal_e_bestclus,dx_bestclus,corr_mc_weight);
+        			hdxvW2->Fill(W2,dx_bestclus,corr_mc_weight);
+        			hx_expect_cut->Fill(xhcal_expect,corr_mc_weight);
+				
 					if(nuc == "p"){
-                                        hdxdy_cut_p->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-                                        hdx_cut_p->Fill(dx_bestclus,final_mc_weight);
+                                        hdxdy_cut_p->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+                                        hdx_cut_p->Fill(dx_bestclus,corr_mc_weight);
                                         }                               
                                         if(nuc == "n"){
-                                        hdxdy_cut_n->Fill(dy_bestclus, dx_bestclus,final_mc_weight);
-                                        hdx_cut_n->Fill(dx_bestclus,final_mc_weight);
+                                        hdxdy_cut_n->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
+                                        hdx_cut_n->Fill(dx_bestclus,corr_mc_weight);
                                         }
 				}
 		
 				if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON  && good_dy && !passFid){
-        			hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect,final_mc_weight);
-        			 //hxy_mctruen_failedfid->Fill(yhcal_mctrue_n,xhcal_mctrue_n,final_mc_weight);
+        			hxy_expect_failedfid->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
+        			hxy_mctruen_failedfid->Fill(yhcal_mctrue_n,xhcal_mctrue_n,corr_mc_weight);
 				}
 		
 				//For cut stability
-        			h_nsigx_fid ->Fill(nsigx_fid,final_mc_weight);
-        			h_nsigy_fid ->Fill(nsigy_fid,final_mc_weight);
+        			h_nsigx_fid ->Fill(nsigx_fid,corr_mc_weight);
+        			h_nsigy_fid ->Fill(nsigy_fid,corr_mc_weight);
         			if(passNSigFid){
-        			hdx_nsigfid->Fill(dx_bestclus,final_mc_weight);
+        			hdx_nsigfid->Fill(dx_bestclus,corr_mc_weight);
         			}
 				
 				//Fill the analysis tree

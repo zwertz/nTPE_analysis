@@ -324,6 +324,7 @@ void data_elastic_parse(const char *setup_file_name){
   double rowblkHCAL_out;
   double colblkHCAL_out;
   double nblkHCAL_out;
+  double ehcal_tree_out;
 
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
@@ -340,6 +341,7 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("pcorr", &pcorr_out, "pcorr/D");
   Parse->Branch("mott", &mott_out, "mott/D");
   Parse->Branch("ehcal", &ehcal_out, "ehcal/D");
+  Parse->Branch("ehcal_tree", &ehcal_tree_out, "ehcal_tree/D");
   Parse->Branch("BBtot_e", &BBtot_e_out, "BBtot_e/D");
   Parse->Branch("BBsh_e", &BBsh_e_out, "BBsh_e/D");
   Parse->Branch("BBsh_nclus", &BBsh_nclus_out, "BBsh_nclus/I");
@@ -818,7 +820,8 @@ void data_elastic_parse(const char *setup_file_name){
 	pcorr_out = pcorr;
 	mott_out = Mott_CS;
   	ehcal_out = hcal_e_bestclus;
-  	BBtot_e_out = e_sh+e_ps;
+  	ehcal_tree_out = e_hcal;
+	BBtot_e_out = e_sh+e_ps;
   	BBsh_e_out = e_sh;
   	BBps_e_out = e_ps;
   	hcal_atime_out = hcal_atime_bestclus;
