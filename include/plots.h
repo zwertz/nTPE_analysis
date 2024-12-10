@@ -55,11 +55,21 @@ TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, co
 //A function to compare a histogram under different sets of cuts on the same scale.
 TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut);
 
+TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut);
+
 //A function to plot the 2D efficiency map on a canvas
 TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name);
 
 //A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
 TCanvas* plot_HCalEffMap_overlay(TH2D* eff_map,const char *can_name, const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_Fid);
+
+//A function to plot the 2D efficiency map on a canvas
+TCanvas* plot_HCalEffMap_Comp(TH2D* eff_map,const char *can_name, const char *name);
+
+//A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
+TCanvas* plot_HCalEffMap_overlay_Comp(TH2D* eff_map,const char *can_name, const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_Fid);
+
+TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name,const char *label);
 
 }//end namespace
 #endif

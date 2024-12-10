@@ -75,6 +75,8 @@ namespace utility{
   //Helper function to make output file name for HCal Efficiency for uniformity
   TString makeOutputFileNameHCalEffUniformity(TString exp,TString pass, TString Kin, int SBS_field,TString target);
 
+  TString makeOutputFileNameHCalEffMapComp(TString exp,TString pass1, TString pass2, TString Kin1, TString Kin2, int SBS_field1, int SBS_field2,TString target1,TString target2);
+
   //Helper function to make output file name for HCal Efficiency map analysis
   TString makeOutputFileName_HCalEffMap(TString exp,TString pass, TString Kin,TString target);
 

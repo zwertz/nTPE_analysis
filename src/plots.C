@@ -634,7 +634,7 @@ legend->AddEntry(fit, "Total Fit","l");
 legend->AddEntry(bg,"Background","f l");
 legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","f l");
 legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","f l");
-//legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
+legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
 legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.6f #pm %0.6f",R_sf,R_sf_error),"");
 //legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
 //legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
@@ -642,15 +642,15 @@ legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.6f #pm %0.6f",R_s
 //legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
-//legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
-//legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
-//legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
-//legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
-//legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
-//legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
-//legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",n_shift,p_shift),"");
+legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
+legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
+legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
+legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
+legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
+legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
+legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",n_shift,p_shift),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
-//legend->SetTextSize(0.025);
+legend->SetTextSize(0.025);
 legend->Draw("same");
 
 //Make the residual plot
@@ -1092,6 +1092,36 @@ TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const 
 	return myTotCan;
 }
 
+
+TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut){
+//Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("Plot Comparison: %s and %s",plot_nocut->GetName(),plot_cut->GetName()),1600,1200);
+
+        //Make clones of the histograms
+        TH1D* plot_nocut_clone = (TH1D*) (plot_nocut->Clone(name_nocut));
+        TH1D* plot_cut_clone = (TH1D*) (plot_cut->Clone(name_cut));
+        plot_nocut_clone->SetMarkerStyle(20);
+        plot_cut_clone->SetMarkerStyle(20);
+        plot_nocut_clone->SetLineColor(kBlack);
+        plot_nocut_clone->SetMarkerColor(kBlack);
+        plot_cut_clone->SetLineColor(kRed);
+        plot_cut_clone->SetMarkerColor(kRed);
+
+        plot_nocut_clone->Draw("P");
+        plot_cut_clone->Draw("same");
+
+        //Make a legend to hold all the information we care about
+        TLegend* legend = new TLegend(0.35, 0.35, 0.55, 0.45);
+        legend->AddEntry(plot_nocut_clone,name_nocut,"f l");
+        legend->AddEntry(plot_cut_clone,name_cut,"f l");
+        legend->SetFillStyle(0);
+        legend->Draw("same");
+
+        return myTotCan;
+
+
+}
+
 //A function to plot the 2D efficiency map on a canvas
 TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name){
 
@@ -1106,6 +1136,44 @@ TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name){
 	eff_map_clone->Draw("colz");
 
 	return myTotCan;
+}
+
+TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name, const char *label){
+	//Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("%s",label),1600,1200);
+	//Make a clone of the 1D efficiency histogram to be able to manipulate it
+	TH1D* eff_vs_expect_clone = (TH1D*) (eff_vs_expect->Clone(name));
+	eff_vs_expect_clone->SetTitle(label);
+	eff_vs_expect_clone->SetStats(0);
+	eff_vs_expect_clone->GetYaxis()->SetRangeUser(0.0,2.0);
+	eff_vs_expect_clone->GetYaxis()->SetTitle("Efficiency Ratio");
+	eff_vs_expect_clone->Draw();
+
+	 //make legend
+        /*auto legend1 = new TLegend(0.1,0.8,0.3,0.9);
+        legend1->SetTextSize(0.03);
+        legend1->AddEntry((TObject*)0,label,"");
+	legend1->Draw();*/
+
+	return myTotCan;
+}
+
+//A function to plot the 2D efficiency map on a canvas
+TCanvas* plot_HCalEffMap_Comp(TH2D* eff_map,const char *can_name, const char *name){
+
+        //Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("%s",name),1600,1200);
+
+        //Make a clone of the 2D efficiency histogram to be able to manipulate it
+        TH2D* eff_map_clone = (TH2D*) (eff_map->Clone(name));
+        gStyle->SetPalette(55);
+        gStyle->SetNumberContours(256);
+	eff_map_clone->SetTitle(name);
+	eff_map_clone->SetStats(0);
+        eff_map_clone->GetZaxis()->SetRangeUser(0.0,2.0);
+	eff_map_clone->Draw("colz");
+
+        return myTotCan;
 }
 
 //A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
@@ -1140,6 +1208,41 @@ TCanvas* plot_HCalEffMap_overlay(TH2D* eff_map,const char *can_name, const char 
 	legend1->Draw();
 
 	return myTotCan;
+}
+
+//A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
+TCanvas* plot_HCalEffMap_overlay_Comp(TH2D* eff_map,const char *can_name, const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_Fid){
+
+        //Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("%s",name),1600,1200);
+
+        //Make a clone of the 2D efficiency histogram to be able to manipulate it
+        TH2D* eff_map_clone = (TH2D*) (eff_map->Clone(name));
+        gStyle->SetPalette(55);
+        gStyle->SetNumberContours(256);
+	eff_map_clone->SetTitle(name);
+        eff_map_clone->SetStats(0);
+        eff_map_clone->GetZaxis()->SetRangeUser(0.0,2.0);
+	eff_map_clone->Draw("colz");
+
+        Lines_pos[0]->Draw("same");
+        Lines_pos[1]->Draw("same");
+        Lines_pos[2]->Draw("same");
+        Lines_pos[3]->Draw("same");
+
+        Lines_Fid[0]->Draw("same");
+        Lines_Fid[1]->Draw("same");
+        Lines_Fid[2]->Draw("same");
+        Lines_Fid[3]->Draw("same");
+
+        //make legend
+        auto legend1 = new TLegend(0.1,0.8,0.3,0.9);
+        legend1->SetTextSize(0.03);
+        legend1->AddEntry(Lines_pos[0],"HCal Boundary","l");
+        legend1->AddEntry(Lines_Fid[0],"Fiducial Region","l");
+        legend1->Draw();
+
+        return myTotCan;
 }
 
 }//end namespace

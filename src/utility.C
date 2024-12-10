@@ -125,6 +125,18 @@ namespace utility{
   return outfile;
   }
 
+  TString makeOutputFileNameHCalEffMapComp(TString exp,TString pass1, TString pass2, TString Kin1, TString Kin2, int SBS_field1, int SBS_field2,TString target1,TString target2){
+  TString outfile;
+  
+  if(SBS_field1 < 0 || SBS_field2 < 0){
+  outfile = Form("%s/Zeke_HCalEff_map_Compare_%s_%s_%s_%s_%s_%s_%s.root",(getOutputDir()).Data(),exp.Data(),pass1.Data(),pass2.Data(),Kin1.Data(),Kin2.Data(),target1.Data(),target2.Data());
+  }else{
+  outfile = Form("%s/Zeke_HCalEff_map_Compare_%s_%s_%s_%s_%s_%s_%s_%i_%i.root",(getOutputDir()).Data(),exp.Data(),pass1.Data(),pass2.Data(),Kin1.Data(),Kin2.Data(),target1.Data(),target2.Data(),SBS_field1,SBS_field2);
+  }
+  //cout << outfile << endl;
+  return outfile;
+  }
+
   //Helper function to make output file name for HCal Efficiency map analysis
   TString makeOutputFileName_HCalEffMap(TString exp,TString pass, TString Kin,TString target){
   TString outfile = Form("%s/Zeke_HCalEff_map_%s_%s_%s_%s.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data());

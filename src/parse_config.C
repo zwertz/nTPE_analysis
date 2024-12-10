@@ -58,6 +58,10 @@
 				}else if(key == "replay_type"){
 				replay_type = val;
 				//cout << "Replay type" << replay_type << endl;
+				}else if(key == "Comp_file_1"){
+				Comp_file_1 = val;
+				}else if(key == "Comp_file_2"){
+				Comp_file_2 = val;
 				}else{
                         	//We somehow obtained a key that we were not expecting. Maybe the condition needs to be handled.
                         	cout << "Error:Found a key that this script can't handle. Fix that! "<< key << endl;
@@ -88,7 +92,11 @@
 			}else if(key == "kin"){
                         kin = val;
                         //cout << "Kinematic " << kin << endl;
-                        }else if(key == "data_map_name"){
+                        }else if(key == "kin_1"){
+			kin_1 = val;
+			}else if(key == "kin_2"){
+			kin_2 = val;
+			}else if(key == "data_map_name"){
                         data_file_name = val;
                         //cout << "Data File " << data_fiel_name << endl;
                         }else if(key == "kinematic_name"){
@@ -103,6 +111,10 @@
 			}else if(key == "pass"){
                         pass = val;
 			//cout << "Pass " << pass << endl;
+			}else if(key == "pass_1"){
+			pass_1 = val;
+			}else if(key == "pass_2"){
+			pass_2 = val;
 			}else if(key == "fitopt"){
 			fitopt = val;
 			}else if (key == "EnergyCut"){
@@ -156,7 +168,11 @@
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
-                        }else if(key == "hcalnclusmin"){
+			}else if(key == "SBS_field_1"){
+			SBS_field_1 = val.Atoi();
+			}else if(key == "SBS_field_2"){
+			SBS_field_2 = val.Atoi();
+			}else if(key == "hcalnclusmin"){
 			hcalnclusmin = val.Atoi();
 			}else if(key == "e_method"){
 			e_method = val.Atoi();
@@ -170,7 +186,11 @@
                         }else if(key == "targ"){
                         targ = val;
                         //cout << "Target " << targ << endl;
-                        } else if(key == "MAXNTRACKS"){
+			}else if(key == "targ_1"){
+			targ_1 = val;
+			}else if(key == "targ_2"){
+			targ_2 = val;
+			} else if(key == "MAXNTRACKS"){
                         MAXNTRACKS = val.Atoi();
                         //cout << "Max Number of Tracks per event " << MAXNTRACKS << endl;
                         }else if(key == "dxO_n"){
@@ -371,7 +391,7 @@
     		}//end conditinal
     	}//end conditional
     }//end while
-    if(runnums.empty() && (proton_root_file.Length() == 0) &&  (neutron_root_file.Length() ==0) && (rootfile_dir.Length() == 0) && (histfile_dir.Length() == 0) && (replay_type.Length() == 0) && (MC_file.Length() == 0) && (Data_file.Length() == 0) ){
+    if(runnums.empty() && (proton_root_file.Length() == 0) &&  (neutron_root_file.Length() ==0) && (rootfile_dir.Length() == 0) && (histfile_dir.Length() == 0) && (replay_type.Length() == 0) && (MC_file.Length() == 0) && (Data_file.Length() == 0) && (Comp_file_1.Length() == 0) && (Comp_file_2.Length() == 0)){
     // if there are data or MC files we should return true and therefore throw an error
     cout << "Error: No data files in the config file, I can't do anything if I don't know where the data lives!" << endl;
         return;
@@ -449,6 +469,22 @@
  
   TString parse_config::get_HCalEffMapFile(){return HCal_Eff_map_file;}
 
+  TString parse_config::get_Comp_file_1(){return Comp_file_1;}
+
+  TString parse_config::get_Comp_file_2(){return Comp_file_2;}
+  
+  TString parse_config::get_kin_1(){return kin_1;}
+
+  TString parse_config::get_kin_2(){return kin_2;}
+  
+  TString parse_config::get_targ_1(){return targ_1;}
+
+  TString parse_config::get_targ_2(){return targ_2;}
+  
+  TString parse_config::get_pass_1(){return pass_1;}
+
+  TString parse_config::get_pass_2(){return pass_2;}
+
   int parse_config::getSBSField(){ return SBS_field; }
 
   int parse_config::getAlshield(){ return useAlshield; }
@@ -458,6 +494,10 @@
   int parse_config::get_emethod(){ return e_method; }
 
   int parse_config::get_HCalNclusMin(){return hcalnclusmin; }
+
+  int parse_config::getSBS_field_1(){return SBS_field_1;}
+
+  int parse_config::getSBS_field_2(){return SBS_field_2;}
 
   double parse_config::get_dxOn(){ return dxO_n; }
 
