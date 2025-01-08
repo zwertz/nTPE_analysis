@@ -52,6 +52,16 @@ myLine->SetLineStyle(style);
 return myLine;
 }
 
+//vertical line at Y from Xi to Xf
+TLine* setupLine_Vert(double Xi, double Xf, double Y, Width_t wide,Color_t datCol,Style_t style){
+TLine *myLine = new TLine(Y,Xi,Y,Xf);
+myLine->SetLineWidth(wide);
+myLine->SetLineColor(datCol);
+myLine->SetLineStyle(style);
+
+return myLine;
+}
+
 //make the canvas to put acceptance region check on
 TCanvas* plotAcceptance_Check(const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_aa,vector<TLine*> Lines_Fid,TH2D *hxy_globcut,TH2D* hxy_acceptancecut){
 
@@ -1032,7 +1042,7 @@ return myTotCan;
 
 
 //Function to plot the fit over the HCal position dependent efficiency histogram. Should work for both x and y directions
-TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high){
+TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high, vector<TLine*> Lines_Fid){
 
 	//Create a canvas we will use to store information
 	TCanvas *myTotCan = new TCanvas(can_name,Form("HCal Efficiency: %s",fitName),1600,1200);
@@ -1053,6 +1063,20 @@ TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, co
 	heff_plot_clone->SetMarkerStyle(20);
 	heff_plot_clone->Draw("E");
 	eff_fit->Draw("same");
+
+	 string mystring(name);
+        if(mystring.find("xexpect") != string::npos ){
+        Lines_Fid[0]->Draw("same");
+        Lines_Fid[1]->Draw("same");
+
+        }else if(mystring.find("yexpect") != string::npos){
+        Lines_Fid[2]->Draw("same");
+        Lines_Fid[3]->Draw("same");
+
+        }else{
+        cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+        }
+
 	//Make a legend to hold all the information we care about
 	TLegend* legend = new TLegend(0.25, 0.2, 0.5, 0.3);	
 	legend->AddEntry((TObject*)0,Form("p0: %0.4f #pm %0.4f",eff_fit->GetParameter(0),eff_fit->GetParError(0)),"");
@@ -1093,7 +1117,7 @@ TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const 
 }
 
 
-TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut){
+TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid){
 //Create a canvas we will use to store information
         TCanvas *myTotCan = new TCanvas(can_name,Form("Plot Comparison: %s and %s",plot_nocut->GetName(),plot_cut->GetName()),1600,1200);
 
@@ -1109,6 +1133,19 @@ TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, 
 
         plot_nocut_clone->Draw("P");
         plot_cut_clone->Draw("same");
+
+	string mystring(other_name);
+        if(mystring.find("xexpect") != string::npos ){
+        Lines_Fid[0]->Draw("same");
+        Lines_Fid[1]->Draw("same");
+
+        }else if(mystring.find("yexpect") != string::npos){
+        Lines_Fid[2]->Draw("same");
+        Lines_Fid[3]->Draw("same");
+
+        }else{
+        cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+        }
 
         //Make a legend to hold all the information we care about
         TLegend* legend = new TLegend(0.35, 0.35, 0.55, 0.45);
@@ -1138,7 +1175,7 @@ TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name){
 	return myTotCan;
 }
 
-TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name, const char *label){
+TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name, const char *label,vector<TLine*> Lines_Fid){
 	//Create a canvas we will use to store information
         TCanvas *myTotCan = new TCanvas(can_name,Form("%s",label),1600,1200);
 	//Make a clone of the 1D efficiency histogram to be able to manipulate it
@@ -1149,11 +1186,18 @@ TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char
 	eff_vs_expect_clone->GetYaxis()->SetTitle("Efficiency Ratio");
 	eff_vs_expect_clone->Draw();
 
-	 //make legend
-        /*auto legend1 = new TLegend(0.1,0.8,0.3,0.9);
-        legend1->SetTextSize(0.03);
-        legend1->AddEntry((TObject*)0,label,"");
-	legend1->Draw();*/
+	string mystring(name);
+	if(mystring.find("xexpect") != string::npos ){
+	Lines_Fid[0]->Draw("same");
+        Lines_Fid[1]->Draw("same");
+	
+	}else if(mystring.find("yexpect") != string::npos){
+	Lines_Fid[2]->Draw("same");
+        Lines_Fid[3]->Draw("same");
+
+	}else{
+	cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+	}
 
 	return myTotCan;
 }

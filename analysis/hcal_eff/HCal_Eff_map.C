@@ -56,6 +56,10 @@ double dxsig_n_fac = mainConfig.get_dxSignFac();
 double dxsig_p_fac = mainConfig.get_dxSigpFac();
 double dysig_n_fac = mainConfig.get_dySignFac();
 double dysig_p_fac = mainConfig.get_dySigpFac();
+double fidx_min = mainConfig.get_fidxmin();
+double fidx_max = mainConfig.get_fidxmax();
+double fidy_min = mainConfig.get_fidymin();
+double fidy_max = mainConfig.get_fidymax();
 
 vector<double> hcalpos;
 vector<double> hcalaa;
@@ -371,10 +375,22 @@ for( int i=1; i<=heff_vs_xexpect->GetNbinsX(); i++ ){
   heff_vs_rowcol->SetName( "heff_vs_rowcol_total" );
   heff_vs_rowcol->Divide( h_rowcol_hcal_num_total, h_rowcol_hcal_denom_total );
 
-  //Make the canvases which hold the fitted histogram
-  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_total","heff_vs_xexpect_total_wfit",fitx_low,fitx_high);
+  //diff lines for the fiduical region on 1D histos
+  TLine *LineL_FidX = plots::setupLine_Vert(0.0,1.0,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX = plots::setupLine_Vert(0.0,1.0,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY = plots::setupLine_Vert(0.0,1.0,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY = plots::setupLine_Vert(0.0,1.0,fidy_max,2,kMagenta,2);
 
-  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_total","heff_vs_yexpect_total_wfit",fity_low,fity_high);
+  vector<TLine*> Lines_Fid_diff;
+  Lines_Fid_diff.push_back(LineL_FidX);
+  Lines_Fid_diff.push_back(LineR_FidX);
+  Lines_Fid_diff.push_back(LineL_FidY);
+  Lines_Fid_diff.push_back(LineR_FidY);
+
+  //Make the canvases which hold the fitted histogram
+  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_total","heff_vs_xexpect_total_wfit",fitx_low,fitx_high,Lines_Fid_diff);
+
+  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_total","heff_vs_yexpect_total_wfit",fity_low,fity_high,Lines_Fid_diff);
 
   TCanvas* c3 = plots::plot_Comp(h_x_expect_denom_total,h_x_expect_num_total,"c3","h_x_expect_denom_total","h_x_expect_num_total");
 

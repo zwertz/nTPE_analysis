@@ -36,7 +36,11 @@ namespace exp_constants{
 	maxsbsfield = 1.23;
 	}else if(Kin == "SBS8" && pass == "mc"){
 	maxsbsfield = 1.2;
-	}else if((Kin == "SBS9" || Kin == "SBS7"|| Kin == "SBS11"|| Kin == "SBS14") && (pass == "pass2" || pass == "mc")){
+	}else if(Kin == "SBS9" && pass == "pass2"){
+	maxsbsfield = 1.27;	
+	}else if(Kin == "SBS9" && pass == "mc"){
+	maxsbsfield = 1.24;
+	}else if(( Kin == "SBS7"|| Kin == "SBS11"|| Kin == "SBS14") && (pass == "pass2" || pass == "mc")){
         maxsbsfield = 1.26;
 	}else{
 	//We should never get here, cause then we have kinematic for data we dont have

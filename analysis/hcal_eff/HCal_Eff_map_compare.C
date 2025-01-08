@@ -59,6 +59,10 @@ double dxsig_n_fac = mainConfig.get_dxSignFac();
 double dxsig_p_fac = mainConfig.get_dxSigpFac();
 double dysig_n_fac = mainConfig.get_dySignFac();
 double dysig_p_fac = mainConfig.get_dySigpFac();
+double fidx_min = mainConfig.get_fidxmin();
+double fidx_max = mainConfig.get_fidxmax();
+double fidy_min = mainConfig.get_fidymin();
+double fidy_max = mainConfig.get_fidymax();
 
 //setup input file info
 TString Comp_file_1_name = mainConfig.get_Comp_file_1();
@@ -198,18 +202,45 @@ heff_vs_xyexpect_comp->Divide(heff_vs_xyexpect_1_clone,heff_vs_xyexpect_2_clone)
   //make lines for fiducial region
   vector<TLine*> Lines_Fid = plots::setupLines(hcalfid,4,kMagenta);
 
+
+  //diff lines for the fiduical region on 1D histos
+  TLine *LineL_FidX = plots::setupLine_Vert(0.0,1.9,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX = plots::setupLine_Vert(0.0,1.9,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY = plots::setupLine_Vert(0.0,1.9,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY = plots::setupLine_Vert(0.0,1.9,fidy_max,2,kMagenta,2);
+
+  vector<TLine*> Lines_Fid_diff;
+  Lines_Fid_diff.push_back(LineL_FidX);
+  Lines_Fid_diff.push_back(LineR_FidX);
+  Lines_Fid_diff.push_back(LineL_FidY);
+  Lines_Fid_diff.push_back(LineR_FidY);
+  
+  //diff lines for the fiduical region on 1D histos
+  TLine *LineL_FidX_2 = plots::setupLine_Vert(0.0,1.0,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX_2 = plots::setupLine_Vert(0.0,1.0,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY_2 = plots::setupLine_Vert(0.0,1.0,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY_2 = plots::setupLine_Vert(0.0,1.0,fidy_max,2,kMagenta,2);
+
+  vector<TLine*> Lines_Fid_diff_2;
+  Lines_Fid_diff_2.push_back(LineL_FidX_2);
+  Lines_Fid_diff_2.push_back(LineR_FidX_2);
+  Lines_Fid_diff_2.push_back(LineL_FidY_2);
+  Lines_Fid_diff_2.push_back(LineR_FidY_2);
+
+
+
 TString label_1 = Form("%s_%s_%s_%i",pass_1.Data(),kin_1.Data(),target_1.Data(),sbs_field_1);
 TString label_2 = Form("%s_%s_%s_%i",pass_2.Data(),kin_2.Data(),target_2.Data(),sbs_field_2);
 
 
-TCanvas* c0 = plots::plot_HCalEffMap_1D(heff_vs_xexpect_comp,"c0",Form("%s_%s_compare",eff_xexpect_name_1_new.Data(),eff_xexpect_name_2_new.Data()),Form("xexpect_%s_divide_%s",label_1.Data(),label_2.Data()));
-TCanvas* c2 = plots::plot_HCalEffMap_1D(heff_vs_yexpect_comp,"c2",Form("%s_%s_compare",eff_yexpect_name_1_new.Data(),eff_yexpect_name_2_new.Data()),Form("yexpect_%s_divide_%s",label_1.Data(),label_2.Data()));
+TCanvas* c0 = plots::plot_HCalEffMap_1D(heff_vs_xexpect_comp,"c0",Form("%s_%s_compare",eff_xexpect_name_1_new.Data(),eff_xexpect_name_2_new.Data()),Form("xexpect_%s_divide_%s",label_1.Data(),label_2.Data()),Lines_Fid_diff);
+TCanvas* c2 = plots::plot_HCalEffMap_1D(heff_vs_yexpect_comp,"c2",Form("%s_%s_compare",eff_yexpect_name_1_new.Data(),eff_yexpect_name_2_new.Data()),Form("yexpect_%s_divide_%s",label_1.Data(),label_2.Data()),Lines_Fid_diff);
 
 TCanvas* c3 = plots::plot_HCalEffMap_Comp(heff_vs_xyexpect_comp,"c3",Form("%s_%s_xycompare",label_1.Data(),label_2.Data()));
 TCanvas* c4 = plots::plot_HCalEffMap_overlay_Comp(heff_vs_xyexpect_comp,"c4",Form("%s_%s_xycompare",label_1.Data(),label_2.Data()),Lines_pos,Lines_Fid);
 
-TCanvas* c5 = plots::plot_Comp_1DEff(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c5",label_1,label_2);
-TCanvas* c6 = plots::plot_Comp_1DEff(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c6",label_1,label_2);
+TCanvas* c5 = plots::plot_Comp_1DEff(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c5",label_1,label_2,eff_xexpect_name_1_new,Lines_Fid_diff_2);
+TCanvas* c6 = plots::plot_Comp_1DEff(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c6",label_1,label_2,eff_yexpect_name_1_new,Lines_Fid_diff_2);
 
 
 

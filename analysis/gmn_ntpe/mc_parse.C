@@ -1198,8 +1198,8 @@ double dx_pn = mainConfig.get_dxpn();
 				double corr_fac = 0.0;
 
 				//Temp change to check what happens if we only altered just the proton files
-				if(HCal_Eff_map_flag){
-				//if(HCal_Eff_map_flag && r==0){
+				//if(HCal_Eff_map_flag){
+				if(HCal_Eff_map_flag && r==0){
 
 				corr_fac = physics::get_HCalEffCorr(xy_expect_eff_map_clone,xhcal_mctrue_n,yhcal_mctrue_n,HCal_accep_avg_eff,proton_deflection_mctrue_n,mc_fnucl);
 				corr_mc_weight = uncorr_mc_weight * corr_fac;

@@ -419,11 +419,23 @@ TH1::SetDefaultSumw2(kTRUE);
     double err = sqrt(eff*(1.0-eff)/N);
     heff_vs_W2->SetBinError(i,err);
   }
-  
-  //Make the canvases which hold the fitted histogram
-  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_clone","heff_vs_xexpect_wfit",fitx_low,fitx_high);
 
-  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_clone","heff_vs_yexpect_wfit",fity_low,fity_high);
+  //diff lines for the fiduical region on 1D histos
+  TLine *LineL_FidX = plots::setupLine_Vert(0.0,1.0,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX = plots::setupLine_Vert(0.0,1.0,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY = plots::setupLine_Vert(0.0,1.0,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY = plots::setupLine_Vert(0.0,1.0,fidy_max,2,kMagenta,2);
+
+  vector<TLine*> Lines_Fid_diff;
+  Lines_Fid_diff.push_back(LineL_FidX);
+  Lines_Fid_diff.push_back(LineR_FidX);
+  Lines_Fid_diff.push_back(LineL_FidY);
+  Lines_Fid_diff.push_back(LineR_FidY);
+
+  //Make the canvases which hold the fitted histogram
+  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_clone","heff_vs_xexpect_wfit",fitx_low,fitx_high,Lines_Fid_diff);
+
+  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_clone","heff_vs_yexpect_wfit",fity_low,fity_high,Lines_Fid_diff);
   
   TCanvas* c3 = plots::plot_Comp(hx_expect_all,hx_expect_hcalcut,"c3","hx_expect_all_clone","hx_expect_cut_clone");
   

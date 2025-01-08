@@ -16,6 +16,9 @@ vector<TLine*> setupLines(vector<double> hcal_info, Width_t wide,Color_t datCol)
 //horizontal line at X from Yi to Yf
 TLine* setupLine_Horz(double Yi, double Yf, double X, Width_t wide,Color_t datCol,Style_t style);
 
+//vertical line at Y from Xi to Xf
+TLine* setupLine_Vert(double Xi, double Xf, double Y, Width_t wide,Color_t datCol,Style_t style);
+
 //make the canvas to put acceptance region check on
 TCanvas* plotAcceptance_Check(const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_aa,vector<TLine*> Lines_Fid,TH2D *hxy_globcut,TH2D *hxy_acceptancecut);
 
@@ -50,12 +53,12 @@ TCanvas* plotDataMCFitsResiduals_NoBG(fit_histogram* myFitHisto,const char *name
 TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params,double hcalfit_low, double hcalfit_high,bool shiftfit);
 
 //Function to plot the fit over the HCal position dependent efficiency histogram. Should work for both x and y directions
-TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high);
+TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high,vector<TLine*> Lines_Fid);
 
 //A function to compare a histogram under different sets of cuts on the same scale.
 TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut);
 
-TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut);
+TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid);
 
 //A function to plot the 2D efficiency map on a canvas
 TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name);
@@ -69,7 +72,7 @@ TCanvas* plot_HCalEffMap_Comp(TH2D* eff_map,const char *can_name, const char *na
 //A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
 TCanvas* plot_HCalEffMap_overlay_Comp(TH2D* eff_map,const char *can_name, const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_Fid);
 
-TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name,const char *label);
+TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name,const char *label,vector<TLine*> Lines_Fid);
 
 }//end namespace
 #endif
