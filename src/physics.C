@@ -483,10 +483,16 @@ namespace physics{
  double numerator = effMap->GetBinContent(HCalybin,HCalxbin);
  double denominator = accep_avg_eff;
  
+ //cout << effMap->GetBinContent(HCalybin,HCalxbin) << endl;
+ //cout << effMap->GetBinError(HCalybin,HCalxbin) << endl;
+
  double c = numerator/denominator;
  
+ double bin_err = effMap->GetBinError(HCalybin,HCalxbin);
+
  //Low efficiency or empty region in the efficiency map
- if(c == 0.0){
+ //if(c == 0.0 || bin_err > 0.18){
+ if(c == 0.0 ){
  c =1.0;
  }
 
