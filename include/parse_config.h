@@ -12,7 +12,7 @@ class parse_config{
   private:
   
   //common data analysis
-  TString Exp,kin,data_file_name,kinematic_file_name,targ,pass,Data_file,fitopt,HCal_Eff_map_file,Comp_file_1,Comp_file_2,kin_1,kin_2,targ_1,targ_2,pass_1,pass_2;
+  TString Exp,kin,data_file_name,kinematic_file_name,targ,pass,Data_file,fitopt,HCal_Eff_map_file,Comp_file_1,Comp_file_2,kin_1,kin_2,targ_1,targ_2,pass_1,pass_2,spot_choice;
   int SBS_field,useAlshield,MAXNTRACKS, e_method,hcalnclusmin,SBS_field_1,SBS_field_2;  
   double dxO_n,dyO_n,dxsig_n,dysig_n,dxO_p,dyO_p,dxsig_p,dysig_p,dx_pn,W2_low,W2_high,dx_low,dx_high,dy_low,dy_high,dxsig_n_fac,dxsig_p_fac,dysig_n_fac,dysig_p_fac,coin_mean,coin_sigma,coin_sig_fac,coin_profile_sig,dysig_cut_fac,HCal_accep_avg_eff;
   TCut globalcut;
@@ -125,6 +125,8 @@ public:
   TString get_pass_1();
 
   TString get_pass_2();
+
+  TString get_spot_choice();
 
   int getSBSField();
 

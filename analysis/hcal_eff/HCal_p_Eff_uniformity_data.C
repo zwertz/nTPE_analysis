@@ -87,6 +87,8 @@ TH1::SetDefaultSumw2(kTRUE);
   double dxsig_fid_p = mainConfig.get_dxsigfidp();
   double dysig_fid_p = mainConfig.get_dysigfidp();
 
+  TString spot_choice = mainConfig.get_spot_choice();
+
   //setup hcal physical bounds that match database for each pass
   vector<double> hcalpos = cuts::hcal_Position_data(pass);
 
@@ -164,11 +166,12 @@ TH1::SetDefaultSumw2(kTRUE);
   C->Add(Data_input_file_name.Data());
 
   //Branch variables
-  double ehcal, xhcal, yhcal, dx, dy, proton_deflection, xexp, yexp, W2, BBps_e, BBtr_vz, BBtr_p, BBgem_nhits, rowblkHCAL, colblkHCAL, BBgem_chi2ndf;
-  int BBsh_nclus;
+  double ehcal,ehcal_tree, xhcal, yhcal, dx, dy, proton_deflection, xexp, yexp, W2, BBps_e, BBtr_vz, BBtr_p, BBgem_nhits, rowblkHCAL, colblkHCAL, BBgem_chi2ndf;
+  int BBsh_nclus,hcal_clus_blk;
 
   //Get the branches we need from Parse
   C->SetBranchStatus("ehcal",1);
+  C->SetBranchStatus("ehcal_tree",1);
   C->SetBranchStatus("xhcal",1);
   C->SetBranchStatus("yhcal",1);
   C->SetBranchStatus("xexp",1);
@@ -185,9 +188,11 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchStatus("rowblkHCAL",1);
   C->SetBranchStatus("colblkHCAL",1);
   C->SetBranchStatus("BBgem_chi2ndf",1);
+  C->SetBranchStatus("hcal_clus_blk",1);
 
 
   C->SetBranchAddress("ehcal",&ehcal);
+  C->SetBranchAddress("ehcal_tree",&ehcal_tree);
   C->SetBranchAddress("xhcal",&xhcal);
   C->SetBranchAddress("yhcal",&yhcal);
   C->SetBranchAddress("xexp",&xexp);
@@ -204,6 +209,7 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchAddress("rowblkHCAL",&rowblkHCAL);
   C->SetBranchAddress("colblkHCAL",&colblkHCAL);
   C->SetBranchAddress("BBgem_chi2ndf",&BBgem_chi2ndf);
+  C->SetBranchAddress("hcal_clus_blk",&hcal_clus_blk);
 
   //setup global cut formula
   TTreeFormula *GlobalCut = new TTreeFormula( "GlobalCut", globalcut, C );
@@ -229,10 +235,28 @@ TH1::SetDefaultSumw2(kTRUE);
 	bool passHCalE = cuts::passHCalE(ehcal,ehcal_min);
 	bool hcalaa_ON = cuts::hcalaa_ON(xhcal,yhcal,hcalaa);
 	bool HCal_spot = cuts::passHCal_Spot(dx,dy,dxO_p,dyO_p,dxsig_p,dysig_p,spot_sig);
-	bool pass_HCalCut = passHCalE && hcalaa_ON && HCal_spot;
+	bool HCal_clus = cuts::passHCal_NClus(hcal_clus_blk,0);
+	bool pass_HCalCut = passHCalE && hcalaa_ON && HCal_clus&& HCal_spot;
+
+	double xexp_pro = xexp - proton_deflection;
+	double xexp_neu = xexp;
+
+        double my_xexp = 0.0;
+
+	//proton spot case
+	if(spot_choice == "proton"){
+	my_xexp = xexp_pro;
+	//neutron spot case
+	}else if(spot_choice == "neutron"){
+        my_xexp = xexp;
+	}else{
+	//catch all, defaults to zero
+	cout << "You have given me a spot choice of " << spot_choice << ", this is not implemented properly! Figure it out!" << endl;
+	return;
+	}
 
 	//Fiducial region, we want to separate the direction so not using the standard function calls
-	bool fidx_cut = (xexp - proton_deflection) >= fidx_min && (xexp - proton_deflection) <= fidx_max;
+	bool fidx_cut = (my_xexp) >= fidx_min && (my_xexp) <= fidx_max;
 	bool fidy_cut = yexp >= fidy_min && yexp <= fidy_max;
 
 	//W2 cut
@@ -259,18 +283,19 @@ TH1::SetDefaultSumw2(kTRUE);
 			//enforce fiducial cut in the y direction. Going to fill x direction plots
 			if(fidy_cut){
 			//Fill histograms for the denominator
-			hx_expect_all->Fill(xexp - proton_deflection);
+			hx_expect_all->Fill(my_xexp);
 			hx_HCal_all->Fill(xhcal);
 			hrowHCal_all->Fill(rowblkHCAL);
 
 				//enforce the HCal cut now
 				//Fill histograms for numerator
 				if(pass_HCalCut){
-				hx_expect_hcalcut->Fill(xexp - proton_deflection);
-                        	hx_HCal_cut->Fill(xhcal);
+				//proton case
+				hx_expect_hcalcut->Fill(my_xexp);
+				hx_HCal_cut->Fill(xhcal);
                         	hrowHCal_cut->Fill(rowblkHCAL);
 				}else{
-				hx_expect_anticut->Fill(xexp - proton_deflection);
+				hx_expect_anticut->Fill(my_xexp);
                                 hx_HCal_anticut->Fill(xhcal);
                                 hrowHCal_anticut->Fill(rowblkHCAL);
 				}	
@@ -299,11 +324,11 @@ TH1::SetDefaultSumw2(kTRUE);
 
 
 			//check the xy expect distribution under HCal cut but not fid
-			hxy_expect_all->Fill(yexp,xexp - proton_deflection );
+			hxy_expect_all->Fill(yexp,my_xexp);
 			if(pass_HCalCut){
-			hxy_expect_hcalcut->Fill(yexp,xexp - proton_deflection );
+			hxy_expect_hcalcut->Fill(yexp,my_xexp);
 			}else{
-			hxy_expect_anticut->Fill(yexp,xexp - proton_deflection );
+			hxy_expect_anticut->Fill(yexp,my_xexp);
 			}
 
 			//For pretty much everything else to fill enforce the fiducial cut and then check which ones are passing HCal cut
@@ -312,7 +337,7 @@ TH1::SetDefaultSumw2(kTRUE);
 				hdy_all->Fill(dy);
 				hdxdy_all->Fill(dy,dx);
 				hxy_HCal_all->Fill(yhcal,xhcal);
-				hehcal_all->Fill(ehcal);
+				hehcal_all->Fill(ehcal_tree);
 				hrowcolHCal_all->Fill(colblkHCAL,rowblkHCAL);
 
 
@@ -321,14 +346,14 @@ TH1::SetDefaultSumw2(kTRUE);
                                		hdy_cut->Fill(dy);
                                 	hdxdy_cut->Fill(dy,dx);
                                 	hxy_HCal_cut->Fill(yhcal,xhcal);
-                                	hehcal_cut->Fill(ehcal);
+                                	hehcal_cut->Fill(ehcal_tree);
 					hrowcolHCal_cut->Fill(colblkHCAL,rowblkHCAL);
 				}else{
 					hdx_anticut->Fill(dx);
                                         hdy_anticut->Fill(dy);
                                         hdxdy_anticut->Fill(dy,dx);
                                         hxy_HCal_anticut->Fill(yhcal,xhcal);
-                                        hehcal_anticut->Fill(ehcal);
+                                        hehcal_anticut->Fill(ehcal_tree);
 					hrowcolHCal_anticut->Fill(colblkHCAL,rowblkHCAL);
 				}
 			}//end total fiducial conditional

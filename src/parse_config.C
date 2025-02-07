@@ -190,6 +190,8 @@
 			targ_1 = val;
 			}else if(key == "targ_2"){
 			targ_2 = val;
+			}else if(key == "spot_choice"){
+			spot_choice = val;
 			} else if(key == "MAXNTRACKS"){
                         MAXNTRACKS = val.Atoi();
                         //cout << "Max Number of Tracks per event " << MAXNTRACKS << endl;
@@ -485,6 +487,8 @@
 
   TString parse_config::get_pass_2(){return pass_2;}
 
+  TString parse_config::get_spot_choice(){return spot_choice;}
+  
   int parse_config::getSBSField(){ return SBS_field; }
 
   int parse_config::getAlshield(){ return useAlshield; }

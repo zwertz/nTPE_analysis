@@ -203,11 +203,17 @@ heff_vs_xyexpect_comp->Divide(heff_vs_xyexpect_1_clone,heff_vs_xyexpect_2_clone)
   vector<TLine*> Lines_Fid = plots::setupLines(hcalfid,4,kMagenta);
 
 
+  double xexpect_max = heff_vs_xexpect_comp->GetMaximum();
+  double yexpect_max = heff_vs_yexpect_comp->GetMaximum();
+
+  double fidx_val_max = 1.05*xexpect_max;
+  double fidy_val_max = 0.92*yexpect_max;
+
   //diff lines for the fiduical region on 1D histos
-  TLine *LineL_FidX = plots::setupLine_Vert(0.0,1.9,fidx_min,2,kMagenta,2);
-  TLine *LineR_FidX = plots::setupLine_Vert(0.0,1.9,fidx_max,2,kMagenta,2);
-  TLine *LineL_FidY = plots::setupLine_Vert(0.0,1.9,fidy_min,2,kMagenta,2);
-  TLine *LineR_FidY = plots::setupLine_Vert(0.0,1.9,fidy_max,2,kMagenta,2);
+  TLine *LineL_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_max,2,kMagenta,2);
 
   vector<TLine*> Lines_Fid_diff;
   Lines_Fid_diff.push_back(LineL_FidX);
@@ -215,11 +221,17 @@ heff_vs_xyexpect_comp->Divide(heff_vs_xyexpect_1_clone,heff_vs_xyexpect_2_clone)
   Lines_Fid_diff.push_back(LineL_FidY);
   Lines_Fid_diff.push_back(LineR_FidY);
   
+  double xexpect_max_2 = heff_vs_xexpect_1_clone->GetMaximum();
+  double yexpect_max_2 = heff_vs_yexpect_1_clone->GetMaximum();
+
+  double fidx_val_max_2 = 1.05*xexpect_max_2;
+  double fidy_val_max_2 = 1.05*yexpect_max_2;
+
   //diff lines for the fiduical region on 1D histos
-  TLine *LineL_FidX_2 = plots::setupLine_Vert(0.0,1.0,fidx_min,2,kMagenta,2);
-  TLine *LineR_FidX_2 = plots::setupLine_Vert(0.0,1.0,fidx_max,2,kMagenta,2);
-  TLine *LineL_FidY_2 = plots::setupLine_Vert(0.0,1.0,fidy_min,2,kMagenta,2);
-  TLine *LineR_FidY_2 = plots::setupLine_Vert(0.0,1.0,fidy_max,2,kMagenta,2);
+  TLine *LineL_FidX_2 = plots::setupLine_Vert(0.0,fidx_val_max_2,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX_2 = plots::setupLine_Vert(0.0,fidx_val_max_2,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY_2 = plots::setupLine_Vert(0.0,fidy_val_max_2,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY_2 = plots::setupLine_Vert(0.0,fidy_val_max_2,fidy_max,2,kMagenta,2);
 
   vector<TLine*> Lines_Fid_diff_2;
   Lines_Fid_diff_2.push_back(LineL_FidX_2);
@@ -232,7 +244,6 @@ heff_vs_xyexpect_comp->Divide(heff_vs_xyexpect_1_clone,heff_vs_xyexpect_2_clone)
 TString label_1 = Form("%s_%s_%s_%i",pass_1.Data(),kin_1.Data(),target_1.Data(),sbs_field_1);
 TString label_2 = Form("%s_%s_%s_%i",pass_2.Data(),kin_2.Data(),target_2.Data(),sbs_field_2);
 
-
 TCanvas* c0 = plots::plot_HCalEffMap_1D(heff_vs_xexpect_comp,"c0",Form("%s_%s_compare",eff_xexpect_name_1_new.Data(),eff_xexpect_name_2_new.Data()),Form("xexpect_%s_divide_%s",label_1.Data(),label_2.Data()),Lines_Fid_diff);
 TCanvas* c2 = plots::plot_HCalEffMap_1D(heff_vs_yexpect_comp,"c2",Form("%s_%s_compare",eff_yexpect_name_1_new.Data(),eff_yexpect_name_2_new.Data()),Form("yexpect_%s_divide_%s",label_1.Data(),label_2.Data()),Lines_Fid_diff);
 
@@ -242,7 +253,8 @@ TCanvas* c4 = plots::plot_HCalEffMap_overlay_Comp(heff_vs_xyexpect_comp,"c4",For
 TCanvas* c5 = plots::plot_Comp_1DEff(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c5",label_1,label_2,eff_xexpect_name_1_new,Lines_Fid_diff_2);
 TCanvas* c6 = plots::plot_Comp_1DEff(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c6",label_1,label_2,eff_yexpect_name_1_new,Lines_Fid_diff_2);
 
-
+TCanvas* c7 = plots::plot_Comp_1DEff_Scale(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c7",label_1,label_2,eff_xexpect_name_1_new,Lines_Fid_diff_2);
+TCanvas* c8 = plots::plot_Comp_1DEff_Scale(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c8",label_1,label_2,eff_yexpect_name_1_new,Lines_Fid_diff_2);
 
 //Write stuff to a pdf
   TString plotname = outfile;
@@ -256,7 +268,9 @@ TCanvas* c6 = plots::plot_Comp_1DEff(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_c
  c3->Print(plotname.Data(),"pdf");
  c4->Print(plotname.Data(),"pdf");
  c5->Print(plotname.Data(),"pdf");
- c6->Print(end.Data(),"pdf");
+ c6->Print(plotname.Data(),"pdf");
+ c7->Print(plotname.Data(),"pdf");
+ c8->Print(end.Data(),"pdf");
 
 
 //Write the info to file

@@ -491,8 +491,9 @@ namespace physics{
  double bin_err = effMap->GetBinError(HCalybin,HCalxbin);
 
  //Low efficiency or empty region in the efficiency map
- //if(c == 0.0 || bin_err > 0.18){
- if(c == 0.0 ){
+ //This decision is sort of empircial and limiting the bin_err essentially is a way to not apply a correction to bins with low statistics. Instead of directly cutting on the bin value which is the relative efficiency
+ if(c == 0.0 || bin_err > 0.075){
+ //if(c == 0.0 ){
  c =1.0;
  }
 

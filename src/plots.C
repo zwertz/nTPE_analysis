@@ -1044,13 +1044,25 @@ return myTotCan;
 //Function to plot the fit over the HCal position dependent efficiency histogram. Should work for both x and y directions
 TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high, vector<TLine*> Lines_Fid){
 
+	gStyle->SetGridStyle(1);
 	//Create a canvas we will use to store information
 	TCanvas *myTotCan = new TCanvas(can_name,Form("HCal Efficiency: %s",fitName),1600,1200);
 
 	//Make clones of the efficiency histograms so we can fit them and evaluate the average relative efficiency
 	TH1D *heff_plot_clone = (TH1D*) (h_eff_plot->Clone(name));
-	heff_plot_clone->GetYaxis()->SetTitle("Efficiency");
+	heff_plot_clone->GetYaxis()->SetTitle("Relative Rate");
+	//sets grid divisions
+	string mystring(name);
 
+	if(mystring.find("xexpect") != string::npos ){
+	 heff_plot_clone->GetXaxis()->SetNdivisions(25);
+        heff_plot_clone->GetYaxis()->SetNdivisions(10);
+	}else if(mystring.find("yexpect") != string::npos){
+	 heff_plot_clone->GetXaxis()->SetNdivisions(12);
+        heff_plot_clone->GetYaxis()->SetNdivisions(10);
+	}else{
+        cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+        }
 
 	//Make the fits for the histogram
 	TF1 *eff_fit = new TF1(fitName,"pol0",fit_low,fit_high);
@@ -1060,11 +1072,13 @@ TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, co
 	heff_plot_clone->Fit(eff_fit,"QR");
 	
 	//Draw the histogram and fit
-	heff_plot_clone->SetMarkerStyle(20);
+        heff_plot_clone->SetMarkerStyle(20);
+	//enables grid
+	myTotCan->SetGrid();
 	heff_plot_clone->Draw("E");
 	eff_fit->Draw("same");
-
-	 string mystring(name);
+	
+	
         if(mystring.find("xexpect") != string::npos ){
         Lines_Fid[0]->Draw("same");
         Lines_Fid[1]->Draw("same");
@@ -1078,11 +1092,12 @@ TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, co
         }
 
 	//Make a legend to hold all the information we care about
-	TLegend* legend = new TLegend(0.25, 0.2, 0.5, 0.3);	
+	TLegend* legend = new TLegend(0.65, 0.2, 0.9, 0.3);	
 	legend->AddEntry((TObject*)0,Form("p0: %0.4f #pm %0.4f",eff_fit->GetParameter(0),eff_fit->GetParError(0)),"");
 	legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",eff_fit->GetChisquare(),eff_fit->GetNDF()),"");
 	legend->SetFillStyle(0);
 	legend->Draw("same");
+	
 
 	return myTotCan;
 }
@@ -1118,8 +1133,9 @@ TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const 
 
 
 TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid){
-//Create a canvas we will use to store information
-        TCanvas *myTotCan = new TCanvas(can_name,Form("Plot Comparison: %s and %s",plot_nocut->GetName(),plot_cut->GetName()),1600,1200);
+	gStyle->SetGridStyle(1);
+	//Create a canvas we will use to store information
+	TCanvas *myTotCan = new TCanvas(can_name,Form("Plot Comparison: %s and %s",plot_nocut->GetName(),plot_cut->GetName()),1600,1200);
 
         //Make clones of the histograms
         TH1D* plot_nocut_clone = (TH1D*) (plot_nocut->Clone(name_nocut));
@@ -1130,11 +1146,24 @@ TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, 
         plot_nocut_clone->SetMarkerColor(kBlack);
         plot_cut_clone->SetLineColor(kRed);
         plot_cut_clone->SetMarkerColor(kRed);
+	//sets grid divisions
+        string mystring(other_name);
 
+        if(mystring.find("xexpect") != string::npos ){
+        plot_nocut_clone->GetXaxis()->SetNdivisions(25);
+        plot_nocut_clone->GetYaxis()->SetNdivisions(10);
+        }else if(mystring.find("yexpect") != string::npos){
+        plot_nocut_clone->GetXaxis()->SetNdivisions(12);
+        plot_nocut_clone->GetYaxis()->SetNdivisions(10);
+        }else{
+        cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+        }
+
+	//enables grid
+        myTotCan->SetGrid();
         plot_nocut_clone->Draw("P");
         plot_cut_clone->Draw("same");
 
-	string mystring(other_name);
         if(mystring.find("xexpect") != string::npos ){
         Lines_Fid[0]->Draw("same");
         Lines_Fid[1]->Draw("same");
@@ -1148,7 +1177,7 @@ TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, 
         }
 
         //Make a legend to hold all the information we care about
-        TLegend* legend = new TLegend(0.35, 0.35, 0.55, 0.45);
+        TLegend* legend = new TLegend(0.7, 0.35, 0.9, 0.45);
         legend->AddEntry(plot_nocut_clone,name_nocut,"f l");
         legend->AddEntry(plot_cut_clone,name_cut,"f l");
         legend->SetFillStyle(0);
@@ -1176,17 +1205,33 @@ TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name){
 }
 
 TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name, const char *label,vector<TLine*> Lines_Fid){
+	gStyle->SetGridStyle(1);
 	//Create a canvas we will use to store information
         TCanvas *myTotCan = new TCanvas(can_name,Form("%s",label),1600,1200);
+	
 	//Make a clone of the 1D efficiency histogram to be able to manipulate it
 	TH1D* eff_vs_expect_clone = (TH1D*) (eff_vs_expect->Clone(name));
 	eff_vs_expect_clone->SetTitle(label);
 	eff_vs_expect_clone->SetStats(0);
-	eff_vs_expect_clone->GetYaxis()->SetRangeUser(0.0,2.0);
-	eff_vs_expect_clone->GetYaxis()->SetTitle("Efficiency Ratio");
+	double expect_max = eff_vs_expect_clone->GetMaximum() + 0.6;
+
+	eff_vs_expect_clone->GetYaxis()->SetRangeUser(0.0,expect_max);
+	eff_vs_expect_clone->GetYaxis()->SetTitle("Relative Rate Ratio");
+	
+	string mystring(name);
+        if(mystring.find("xexpect") != string::npos ){
+        eff_vs_expect_clone->GetXaxis()->SetNdivisions(25);
+        eff_vs_expect_clone->GetYaxis()->SetNdivisions(10);
+        }else if(mystring.find("yexpect") != string::npos){
+        eff_vs_expect_clone->GetXaxis()->SetNdivisions(12);
+        eff_vs_expect_clone->GetYaxis()->SetNdivisions(10);
+        }else{
+        cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+        }	
+	
+	myTotCan->SetGrid();
 	eff_vs_expect_clone->Draw();
 
-	string mystring(name);
 	if(mystring.find("xexpect") != string::npos ){
 	Lines_Fid[0]->Draw("same");
         Lines_Fid[1]->Draw("same");
@@ -1288,5 +1333,81 @@ TCanvas* plot_HCalEffMap_overlay_Comp(TH2D* eff_map,const char *can_name, const 
 
         return myTotCan;
 }
+
+TCanvas* plot_Comp_1DEff_Scale(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid){
+        gStyle->SetGridStyle(1);
+        //Create a canvas we will use to store information
+        TCanvas *myTotCan = new TCanvas(can_name,Form("Plot Comparison: %s and %s",plot_nocut->GetName(),plot_cut->GetName()),1600,1200);
+
+        //Make clones of the histograms
+        TH1D* plot_nocut_clone = (TH1D*) (plot_nocut->Clone(name_nocut));
+        TH1D* plot_cut_clone = (TH1D*) (plot_cut->Clone(name_cut));
+        plot_nocut_clone->SetMarkerStyle(20);
+        plot_cut_clone->SetMarkerStyle(20);
+        plot_nocut_clone->SetLineColor(kBlack);
+        plot_nocut_clone->SetMarkerColor(kBlack);
+        plot_cut_clone->SetLineColor(kRed);
+        plot_cut_clone->SetMarkerColor(kRed);
+        //sets grid divisions
+        string mystring(other_name);
+
+	double plot_nocut_clone_int;
+        double plot_cut_clone_int;
+        if(mystring.find("xexpect") != string::npos ){
+        plot_nocut_clone->GetXaxis()->SetNdivisions(25);
+        plot_nocut_clone->GetYaxis()->SetNdivisions(10);
+	int bin_low_1 = plot_nocut_clone->FindBin(-0.5);
+	int bin_high_1 = plot_nocut_clone->FindBin(0.5);
+	int bin_low_2 = plot_cut_clone->FindBin(-0.5);
+        int bin_high_2 = plot_cut_clone->FindBin(0.5);
+	plot_nocut_clone_int = plot_nocut_clone->Integral(bin_low_1,bin_high_1);
+        plot_cut_clone_int = plot_cut_clone->Integral(bin_low_2,bin_high_2);
+        }else if(mystring.find("yexpect") != string::npos){
+        plot_nocut_clone->GetXaxis()->SetNdivisions(12);
+        plot_nocut_clone->GetYaxis()->SetNdivisions(10);
+        int bin_low_1 = plot_nocut_clone->FindBin(-0.3);
+        int bin_high_1 = plot_nocut_clone->FindBin(0.3);
+        int bin_low_2 = plot_cut_clone->FindBin(-0.3);
+        int bin_high_2 = plot_cut_clone->FindBin(0.3);
+        plot_nocut_clone_int = plot_nocut_clone->Integral(bin_low_1,bin_high_1);
+        plot_cut_clone_int = plot_cut_clone->Integral(bin_low_2,bin_high_2);
+	}else{
+        cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+        }
+
+        //Scale the red histogram up to the black to compare the two histogram
+	double my_scale_fac = plot_nocut_clone_int/plot_cut_clone_int;
+	
+	plot_cut_clone->Scale(my_scale_fac);
+
+        //enables grid
+        myTotCan->SetGrid();
+        plot_nocut_clone->Draw("P");
+        plot_cut_clone->Draw("same");
+
+        if(mystring.find("xexpect") != string::npos ){
+        Lines_Fid[0]->Draw("same");
+        Lines_Fid[1]->Draw("same");
+
+        }else if(mystring.find("yexpect") != string::npos){
+	Lines_Fid[2]->Draw("same");
+        Lines_Fid[3]->Draw("same");
+
+        }else{
+        cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
+        }
+
+        //Make a legend to hold all the information we care about
+        TLegend* legend = new TLegend(0.7, 0.35, 0.9, 0.45);
+        legend->AddEntry(plot_nocut_clone,name_nocut,"f l");
+        legend->AddEntry(plot_cut_clone,Form("%s_Scaled",name_cut),"f l");
+        legend->SetFillStyle(0);
+        legend->Draw("same");
+
+        return myTotCan;
+
+
+}
+		
 
 }//end namespace
