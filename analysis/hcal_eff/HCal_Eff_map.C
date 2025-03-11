@@ -61,6 +61,8 @@ double fidx_max = mainConfig.get_fidxmax();
 double fidy_min = mainConfig.get_fidymin();
 double fidy_max = mainConfig.get_fidymax();
 
+TString spot_choice = mainConfig.get_spot_choice();
+
 vector<double> hcalpos;
 vector<double> hcalaa;
 
@@ -375,11 +377,18 @@ for( int i=1; i<=heff_vs_xexpect->GetNbinsX(); i++ ){
   heff_vs_rowcol->SetName( "heff_vs_rowcol_total" );
   heff_vs_rowcol->Divide( h_rowcol_hcal_num_total, h_rowcol_hcal_denom_total );
 
+
+  double xexpect_max = heff_vs_xexpect->GetMaximum();
+  double yexpect_max = heff_vs_yexpect->GetMaximum();
+
+  double fidx_val_max = 1.05*xexpect_max;
+  double fidy_val_max = 1.05*yexpect_max;
+
   //diff lines for the fiduical region on 1D histos
-  TLine *LineL_FidX = plots::setupLine_Vert(0.0,1.0,fidx_min,2,kMagenta,2);
-  TLine *LineR_FidX = plots::setupLine_Vert(0.0,1.0,fidx_max,2,kMagenta,2);
-  TLine *LineL_FidY = plots::setupLine_Vert(0.0,1.0,fidy_min,2,kMagenta,2);
-  TLine *LineR_FidY = plots::setupLine_Vert(0.0,1.0,fidy_max,2,kMagenta,2);
+  TLine *LineL_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_max,2,kMagenta,2);
 
   vector<TLine*> Lines_Fid_diff;
   Lines_Fid_diff.push_back(LineL_FidX);
@@ -398,7 +407,7 @@ for( int i=1; i<=heff_vs_xexpect->GetNbinsX(); i++ ){
 
   TCanvas* c5 = plots::plot_Comp(h_W2_denom_total,h_W2_num_total,"c5","h_W2_denom_total","h_W2_num_total");
   
-  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect_total");
+  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect_total",target,spot_choice);
 
   //make lines for physical HCal position
   vector<TLine*> Lines_pos = plots::setupLines(hcalpos,4,kBlack);
@@ -408,17 +417,17 @@ for( int i=1; i<=heff_vs_xexpect->GetNbinsX(); i++ ){
 
   TCanvas* c7 = plots::plot_HCalEffMap_overlay(heff_vs_xyexpect,"c7","heff_vs_xyexpect_total_overlay",Lines_pos,Lines_Fid);
 
-  TCanvas* c8 = plots::plot_HCalEffMap(h_xy_expect_num_total,"c8","h_xy_expect_num_total");
+  TCanvas* c8 = plots::plot_HCalEffMap(h_xy_expect_num_total,"c8","h_xy_expect_num_total",target,spot_choice);
 
-  TCanvas* c9 = plots::plot_HCalEffMap(h_xy_expect_denom_total,"c9","h_xy_expect_denom_total");
+  TCanvas* c9 = plots::plot_HCalEffMap(h_xy_expect_denom_total,"c9","h_xy_expect_denom_total",target,spot_choice);
 
-  TCanvas* c10 = plots::plot_HCalEffMap(h_xy_expect_fail_total,"c10","h_xy_expect_fail_total");
+  TCanvas* c10 = plots::plot_HCalEffMap(h_xy_expect_fail_total,"c10","h_xy_expect_fail_total",target,spot_choice);
 
-  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol_total");
+  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol_total",target,spot_choice);
 
-  TCanvas* c12 = plots::plot_HCalEffMap(h_dxdy_num_total,"c12","h_dxdy_num_total");
+  TCanvas* c12 = plots::plot_HCalEffMap(h_dxdy_num_total,"c12","h_dxdy_num_total",target,spot_choice);
 
-  TCanvas* c13 = plots::plot_HCalEffMap(h_dxdy_denom_total,"c13","h_dxdy_denom_total");
+  TCanvas* c13 = plots::plot_HCalEffMap(h_dxdy_denom_total,"c13","h_dxdy_denom_total",target,spot_choice);
 
   //Write stuff to a pdf
   TString plotname = outfile;

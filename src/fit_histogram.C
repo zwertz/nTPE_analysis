@@ -296,7 +296,7 @@ string mystring("Shift");
 	datFit->SetParLimits(0,0,10000); //Make sure scale_p is positive
 	datFit->SetParLimits(1,0,2); //Make sure Rsf stays between 0 and 2
 	//maybe constraint the x^2 term in the background. May need to think about that one
-	//datFit->SetParLimits(6,-10000000,0.0000000001); //downward concavity
+	datFit->SetParLimits(6,-10000000,0.0000000001); //downward concavity
 	//This one below is the max. But it takes longer to process
 	//datFit->SetNpx(10000000);
 	//Happy medium

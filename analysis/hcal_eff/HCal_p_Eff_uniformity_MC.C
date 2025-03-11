@@ -81,6 +81,7 @@ TH1::SetDefaultSumw2(kTRUE);
   double dxsig_fid_p = mainConfig.get_dxsigfidp();
   double dysig_fid_p = mainConfig.get_dysigfidp();
 
+  TString spot_choice = mainConfig.get_spot_choice();
 
   //setup hcal physical bounds that match database
   vector<double> hcalpos = cuts::hcal_Position_MC();
@@ -162,7 +163,7 @@ TH1::SetDefaultSumw2(kTRUE);
 
   //Branch variables
   double ehcal, ehcal_tree, xhcal, yhcal, dx, dy, proton_deflection, xexp, yexp, W2, BBps_e, BBtr_vz, BBtr_p, BBgem_nhits, rowblkHCAL, colblkHCAL, uncorr_mc_weight, corr_mc_weight, BBgem_chi2ndf;
-  int BBsh_nclus;
+  int BBsh_nclus,hcal_clus_blk;
 
   //Get the branches we need from Parse
   C->SetBranchStatus("ehcal",1);
@@ -185,6 +186,7 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchStatus("Uncorr_MC_weight",1);
   C->SetBranchStatus("Corr_MC_weight",1);
   C->SetBranchStatus("BBgem_chi2ndf",1);
+  C->SetBranchStatus("hcal_clus_blk",1);
 
   C->SetBranchAddress("ehcal",&ehcal);
   C->SetBranchAddress("ehcal_tree",&ehcal_tree);
@@ -206,6 +208,7 @@ TH1::SetDefaultSumw2(kTRUE);
   C->SetBranchAddress("Uncorr_MC_weight",&uncorr_mc_weight);
   C->SetBranchAddress("Corr_MC_weight",&corr_mc_weight);
   C->SetBranchAddress("BBgem_chi2ndf",&BBgem_chi2ndf);
+  C->SetBranchAddress("hcal_clus_blk",&hcal_clus_blk);
 
   //setup global cut formula
   TTreeFormula *GlobalCut = new TTreeFormula( "GlobalCut", globalcut, C );
@@ -231,10 +234,29 @@ TH1::SetDefaultSumw2(kTRUE);
 	bool passHCalE = cuts::passHCalE(ehcal_tree,ehcal_min);
 	bool hcalaa_ON = cuts::hcalaa_ON(xhcal,yhcal,hcalaa);
 	bool HCal_spot = cuts::passHCal_Spot(dx,dy,dxO_p,dyO_p,dxsig_p,dysig_p,spot_sig);
-	bool pass_HCalCut = passHCalE && hcalaa_ON && HCal_spot;
+	bool HCal_clus = cuts::passHCal_NClus(hcal_clus_blk,0);
+	bool pass_HCalCut = passHCalE && hcalaa_ON && HCal_clus && HCal_spot;
+
+        double xexp_pro = xexp - proton_deflection;
+        double xexp_neu = xexp;
+
+        double my_xexp = 0.0;
+
+        //proton spot case
+        if(spot_choice == "proton"){
+        my_xexp = xexp_pro;
+        //neutron spot case
+        }else if(spot_choice == "neutron"){
+        my_xexp = xexp;
+        }else{
+        //catch all, defaults to zero
+        cout << "You have given me a spot choice of " << spot_choice << ", this is not implemented properly! Figure it out!" << endl;
+        return;
+        }
+
 
 	//Fiducial region, we want to separate the direction so not using the standard function calls
-	bool fidx_cut = (xexp - proton_deflection) >= fidx_min && (xexp - proton_deflection) <= fidx_max;
+	bool fidx_cut = (my_xexp) >= fidx_min && (my_xexp) <= fidx_max;
 	bool fidy_cut = yexp >= fidy_min && yexp <= fidy_max;
 
 	//W2 cut
@@ -261,18 +283,18 @@ TH1::SetDefaultSumw2(kTRUE);
 			//enforce fiducial cut in the y direction. Going to fill x direction plots
 			if(fidy_cut){
 			//Fill histograms for the denominator
-			hx_expect_all->Fill(xexp - proton_deflection,uncorr_mc_weight);
+			hx_expect_all->Fill(my_xexp,uncorr_mc_weight);
 			hx_HCal_all->Fill(xhcal,uncorr_mc_weight);
 			hrowHCal_all->Fill(rowblkHCAL,uncorr_mc_weight);
 
 				//enforce the HCal cut now
 				//Fill histograms for numerator
 				if(pass_HCalCut){
-				hx_expect_hcalcut->Fill(xexp - proton_deflection,corr_mc_weight);
+				hx_expect_hcalcut->Fill(my_xexp,corr_mc_weight);
                         	hx_HCal_cut->Fill(xhcal,corr_mc_weight);
                         	hrowHCal_cut->Fill(rowblkHCAL,corr_mc_weight);
 				}else{
-				hx_expect_anticut->Fill(xexp - proton_deflection,corr_mc_weight);
+				hx_expect_anticut->Fill(my_xexp,corr_mc_weight);
                                 hx_HCal_anticut->Fill(xhcal,corr_mc_weight);
                                 hrowHCal_anticut->Fill(rowblkHCAL,corr_mc_weight);
 				}	
@@ -301,11 +323,11 @@ TH1::SetDefaultSumw2(kTRUE);
 
 
 			//check the xy expect distribution under HCal cut but not fid
-			hxy_expect_all->Fill(yexp,xexp - proton_deflection,uncorr_mc_weight);
+			hxy_expect_all->Fill(yexp,my_xexp,uncorr_mc_weight);
 			if(pass_HCalCut){
-			hxy_expect_hcalcut->Fill(yexp,xexp - proton_deflection,corr_mc_weight);
+			hxy_expect_hcalcut->Fill(yexp,my_xexp,corr_mc_weight);
 			}else{
-			hxy_expect_anticut->Fill(yexp,xexp - proton_deflection,corr_mc_weight);
+			hxy_expect_anticut->Fill(yexp,my_xexp,corr_mc_weight);
 			}
 
 			//For pretty much everything else to fill enforce the fiducial cut and then check which ones are passing HCal cut
@@ -420,11 +442,17 @@ TH1::SetDefaultSumw2(kTRUE);
     heff_vs_W2->SetBinError(i,err);
   }
 
+  double xexpect_max = heff_vs_xexpect->GetMaximum();
+  double yexpect_max = heff_vs_yexpect->GetMaximum();
+
+  double fidx_val_max = 1.15*xexpect_max;
+  double fidy_val_max = 1.15*yexpect_max;
+
   //diff lines for the fiduical region on 1D histos
-  TLine *LineL_FidX = plots::setupLine_Vert(0.0,1.0,fidx_min,2,kMagenta,2);
-  TLine *LineR_FidX = plots::setupLine_Vert(0.0,1.0,fidx_max,2,kMagenta,2);
-  TLine *LineL_FidY = plots::setupLine_Vert(0.0,1.0,fidy_min,2,kMagenta,2);
-  TLine *LineR_FidY = plots::setupLine_Vert(0.0,1.0,fidy_max,2,kMagenta,2);
+  TLine *LineL_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_max,2,kMagenta,2);
 
   vector<TLine*> Lines_Fid_diff;
   Lines_Fid_diff.push_back(LineL_FidX);
@@ -433,9 +461,9 @@ TH1::SetDefaultSumw2(kTRUE);
   Lines_Fid_diff.push_back(LineR_FidY);
 
   //Make the canvases which hold the fitted histogram
-  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_clone","heff_vs_xexpect_wfit",fitx_low,fitx_high,Lines_Fid_diff);
+  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_clone","heff_vs_xexpect_wfit",fitx_low,fitx_high,Lines_Fid_diff,target,spot_choice,sbs_field);
 
-  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_clone","heff_vs_yexpect_wfit",fity_low,fity_high,Lines_Fid_diff);
+  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_clone","heff_vs_yexpect_wfit",fity_low,fity_high,Lines_Fid_diff,target,spot_choice,sbs_field);
   
   TCanvas* c3 = plots::plot_Comp(hx_expect_all,hx_expect_hcalcut,"c3","hx_expect_all_clone","hx_expect_cut_clone");
   
@@ -443,7 +471,7 @@ TH1::SetDefaultSumw2(kTRUE);
 
   TCanvas* c5 = plots::plot_Comp(h_W2_globcut,h_W2_hcalcut,"c5","hW2_globcut_clone","hW2_hcalcut_clone");
 
-  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect");
+  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect",target,spot_choice);
 
   //make lines for physical HCal position
   vector<TLine*> Lines_pos = plots::setupLines(hcalpos,4,kBlack);
@@ -453,13 +481,13 @@ TH1::SetDefaultSumw2(kTRUE);
 
   TCanvas* c7 = plots::plot_HCalEffMap_overlay(heff_vs_xyexpect,"c7","heff_vs_xyexpect_overlay",Lines_pos,Lines_Fid);
 
-  TCanvas* c8 = plots::plot_HCalEffMap(hxy_expect_hcalcut,"c8","h_xy_expect_num");
+  TCanvas* c8 = plots::plot_HCalEffMap(hxy_expect_hcalcut,"c8","h_xy_expect_num",target,spot_choice);
 
-  TCanvas* c9 = plots::plot_HCalEffMap(hxy_expect_all,"c9","h_xy_expect_denom");
+  TCanvas* c9 = plots::plot_HCalEffMap(hxy_expect_all,"c9","h_xy_expect_denom",target,spot_choice);
 
-  TCanvas* c10 = plots::plot_HCalEffMap(hxy_expect_anticut,"c10","h_xy_expect_fail");
+  TCanvas* c10 = plots::plot_HCalEffMap(hxy_expect_anticut,"c10","h_xy_expect_fail",target,spot_choice);
 
-  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol");
+  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol",target,spot_choice);
 
   //Write the info to file
   fout->Write();

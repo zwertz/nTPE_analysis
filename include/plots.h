@@ -53,15 +53,18 @@ TCanvas* plotDataMCFitsResiduals_NoBG(fit_histogram* myFitHisto,const char *name
 TCanvas* plotBGResiduals(TH1D* hdx_data, TH1D* hdx_mc_p, TH1D* hdx_mc_n, TF1* bg,const char *name,const char *fitName, const char* fitType, const vector<pair<double,double>> params,double hcalfit_low, double hcalfit_high,bool shiftfit);
 
 //Function to plot the fit over the HCal position dependent efficiency histogram. Should work for both x and y directions
+TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high,vector<TLine*> Lines_Fid,TString target,TString spot_choice,int sbs_field);
+
+//Function to plot the fit over the HCal position dependent efficiency histogram. Should work for both x and y directions
 TCanvas* plotHCalEff(TH1D* h_eff_plot,const char *can_name, const char *name, const char *fitName, double fit_low, double fit_high,vector<TLine*> Lines_Fid);
 
 //A function to compare a histogram under different sets of cuts on the same scale.
 TCanvas* plot_Comp(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut);
 
-TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid);
+TCanvas* plot_Comp_1DEff(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid, TString target);
 
 //A function to plot the 2D efficiency map on a canvas
-TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name);
+TCanvas* plot_HCalEffMap(TH2D* eff_map,const char *can_name, const char *name, TString target,TString spot_choice);
 
 //A function to plot the 2D efficiency map on a canvas with some HCal info overlaid
 TCanvas* plot_HCalEffMap_overlay(TH2D* eff_map,const char *can_name, const char *name,vector<TLine*> Lines_pos,vector<TLine*> Lines_Fid);
@@ -74,7 +77,7 @@ TCanvas* plot_HCalEffMap_overlay_Comp(TH2D* eff_map,const char *can_name, const 
 
 TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char *name,const char *label,vector<TLine*> Lines_Fid);
 
-TCanvas* plot_Comp_1DEff_Scale(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid);
+TCanvas* plot_Comp_1DEff_Scale(TH1D* plot_nocut,TH1D* plot_cut, const char *can_name, const char *name_nocut, const char *name_cut,const char *other_name,vector<TLine*> Lines_Fid,TString target);
 
 }//end namespace
 #endif

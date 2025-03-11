@@ -46,7 +46,7 @@ namespace utility{
   TString makeReportFileName_DataMCComp(TString exp, TString pass, TString Kin, int SBS_field,TString target);
 
   //Helper function to make output file name for stability studies
-  TString makeOutputFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target);
+  TString makeOutputFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target, int slice_mode, TString left_right);
 
   //Helper function to make report file name for stability studies
   TString makeReportFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target);
@@ -103,6 +103,23 @@ namespace utility{
   //dir1 is path to .csv , dir2 is path to .root , partialName is the search word, vec1 stores the root file absolute paths, csvData is a vector to store the CSV info and the root file path
   void SyncFilesCSV(TString dir1, TString dir2,TString partialName,vector<string>& vec1,vector<pair<string,vector<float>>>& csvData);
 
+  //Function for stability analysis initially. Calculate the mean of the vector of doubles
+  double calculateMean(vector<double> myVec);
+
+  //Function for stability analysis initially. Calculate the Std Dev of the vector of doubles
+  double calculateStDev(vector<double> myVec);
+
+  //Function for stability analysis initially. Calculate the weighted mean of the vector of doubles
+  double calculateWeightMean(vector<double> myVec, vector<double> myVec_uncert);
+
+  //Function for stability analysis initially. Calculate the weighted Std Dev of the vector of doubles
+  double calculateWeightStDev(vector<double> myVec, vector<double> myVec_uncert);
+
+  //Function for stability analysis initially. Calculate the pull of the distribution of the vector of doubles
+  double calculatePull(vector<double> myVec, vector<double> myVec_uncert);
+
+  //Function to customize TGraphErrors
+  void customizeGraph(TGraphErrors *graph, int markerStyle, int markerColor, double markerSize,string graphTitle, string xAxisLabel, string yAxisLabel, double TitleOffsetX, double TitleOffsetY, double LabelOffsetX, double LabelOffsetY);
 
 }
 #endif

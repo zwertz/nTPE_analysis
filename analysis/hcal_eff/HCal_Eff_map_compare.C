@@ -207,7 +207,7 @@ heff_vs_xyexpect_comp->Divide(heff_vs_xyexpect_1_clone,heff_vs_xyexpect_2_clone)
   double yexpect_max = heff_vs_yexpect_comp->GetMaximum();
 
   double fidx_val_max = 1.05*xexpect_max;
-  double fidy_val_max = 0.92*yexpect_max;
+  double fidy_val_max = 0.95*yexpect_max;
 
   //diff lines for the fiduical region on 1D histos
   TLine *LineL_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_min,2,kMagenta,2);
@@ -250,11 +250,11 @@ TCanvas* c2 = plots::plot_HCalEffMap_1D(heff_vs_yexpect_comp,"c2",Form("%s_%s_co
 TCanvas* c3 = plots::plot_HCalEffMap_Comp(heff_vs_xyexpect_comp,"c3",Form("%s_%s_xycompare",label_1.Data(),label_2.Data()));
 TCanvas* c4 = plots::plot_HCalEffMap_overlay_Comp(heff_vs_xyexpect_comp,"c4",Form("%s_%s_xycompare",label_1.Data(),label_2.Data()),Lines_pos,Lines_Fid);
 
-TCanvas* c5 = plots::plot_Comp_1DEff(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c5",label_1,label_2,eff_xexpect_name_1_new,Lines_Fid_diff_2);
-TCanvas* c6 = plots::plot_Comp_1DEff(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c6",label_1,label_2,eff_yexpect_name_1_new,Lines_Fid_diff_2);
+TCanvas* c5 = plots::plot_Comp_1DEff(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c5",label_1,label_2,eff_xexpect_name_1_new,Lines_Fid_diff_2,target_1);
+TCanvas* c6 = plots::plot_Comp_1DEff(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c6",label_1,label_2,eff_yexpect_name_1_new,Lines_Fid_diff_2,target_1);
 
-TCanvas* c7 = plots::plot_Comp_1DEff_Scale(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c7",label_1,label_2,eff_xexpect_name_1_new,Lines_Fid_diff_2);
-TCanvas* c8 = plots::plot_Comp_1DEff_Scale(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c8",label_1,label_2,eff_yexpect_name_1_new,Lines_Fid_diff_2);
+TCanvas* c7 = plots::plot_Comp_1DEff_Scale(heff_vs_xexpect_1_clone,heff_vs_xexpect_2_clone,"c7",label_1,label_2,eff_xexpect_name_1_new,Lines_Fid_diff_2,target_1);
+TCanvas* c8 = plots::plot_Comp_1DEff_Scale(heff_vs_yexpect_1_clone,heff_vs_yexpect_2_clone,"c8",label_1,label_2,eff_yexpect_name_1_new,Lines_Fid_diff_2,target_1);
 
 //Write stuff to a pdf
   TString plotname = outfile;

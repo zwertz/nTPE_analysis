@@ -86,8 +86,16 @@ namespace utility{
   }
 
   //Helper function to make output file name for for stability studies
-  TString makeOutputFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target){
-  TString outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%i.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field);
+  TString makeOutputFileName_Stability(TString exp, TString pass, TString Kin, int SBS_field,TString target, int slice_mode, TString left_right){
+  
+  //We only want left_right for mode 1
+  
+  TString outfile;
+  if(slice_mode == 1){
+  outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%i_mode_%i_%s.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field,slice_mode,left_right.Data());
+  }else{
+  outfile = Form("%s/Zeke_Stability_%s_%s_%s_%s_%i_mode_%i.root",(getOutputDir()).Data(),exp.Data(),pass.Data(),Kin.Data(),target.Data(),SBS_field,slice_mode);
+  }
   return outfile;
   }
 
@@ -481,6 +489,124 @@ namespace utility{
 
   //Everything is stored in references to the orignal structures so we do not have to return anything.
   }//End CSV function
+
+  //Function for stability analysis initially. Calculate the mean of the vector of doubles
+  double calculateMean(vector<double> myVec){
+  double sum = 0;
+
+  //loop over the entries of the vector
+  int vec_length = myVec.size();
+  for(int i=0; i<vec_length; i++){
+	sum += myVec[i];
+	}
+  double mean = sum/vec_length;
+  return mean;
+  }
+
+  //Function for stability analysis intitially. Calculate the Std Dev of the vector of doubles
+  double calculateStDev(vector<double> myVec){
+  double mean = calculateMean(myVec);
+  double numerator = 0;
+  int vec_length = myVec.size();
+
+  	//loop over the entries of the vector
+  	for(int i=0; i<vec_length; i++){
+        numerator += pow((myVec[i] - mean),2);
+        }
+
+  double std_dev = sqrt(numerator/(vec_length-1));
+  return std_dev;
+  }
+
+  //Function for stability analysis initially. Calculate the weight mean of the vector of doubles
+  double calculateWeightMean(vector<double> myVec, vector<double> myVec_uncert){
+  double numerator = 0;
+  double sum_weights = 0;
+  int vec_length = myVec.size();
+  int vec_uncert_length = myVec_uncert.size();
+  
+  	if(vec_length != vec_uncert_length){
+	cout << "The lengths of the vectors while calculating weighted mean are not the same. Figure it out!" << endl;
+	}
+
+	//loop over the entries of the vector
+	for(int i=0; i< vec_length; i++){
+	double value = myVec[i];
+	double weight = 1/pow(myVec_uncert[i],2);
+
+	numerator += weight*value;
+	sum_weights += weight;
+	}
+  double weight_mean = numerator/sum_weights;
+  return weight_mean;
+  }
+
+
+  //Function for stability analysis initially. Calculate the weighted Std Dev of the vector of doubles
+  double calculateWeightStDev(vector<double> myVec, vector<double> myVec_uncert){
+  double numerator = 0;
+  double sum_weights = 0;
+  int vec_length = myVec.size();
+  int vec_uncert_length = myVec_uncert.size();
+  double weight_mean = calculateWeightMean(myVec,myVec_uncert);
+
+        if(vec_length != vec_uncert_length){
+        cout << "The lengths of the vectors while calculating weighted mean are not the same. Figure it out!" << endl;
+        }
+
+  	//loop over the entries of the vector
+  	for(int i=0; i<vec_length; i++){
+	double value = myVec[i];
+        double weight = 1/pow(myVec_uncert[i],2);
+	numerator += weight*pow((value-weight_mean),2);
+	sum_weights += weight;
+	}
+	 
+  double std_dev = sqrt(numerator/sum_weights);
+  return std_dev;
+  }
+
+  //Function for stability analysis initially. Calculate the pull of the distribution of the vector of doubles
+  double calculatePull(vector<double> myVec, vector<double> myVec_uncert){
+  int vec_length = myVec.size();
+  int vec_uncert_length = myVec_uncert.size();
+  double mean = calculateMean(myVec);
+  double pull_sum = 0;
+
+  	//loop over the entries
+	for(int i=0; i<vec_length;i++){
+	double pull = (mean - myVec[i])/myVec_uncert[i];
+	pull_sum += pull;
+	}
+  double pull_avg = pull_sum/vec_length;
+  return pull_avg;
+  }
+
+  void customizeGraph(TGraphErrors *graph, int markerStyle, int markerColor, double markerSize,
+                                 string graphTitle ="", string xAxisLabel="", string yAxisLabel="",
+                                 double TitleOffsetX = 1.4, double TitleOffsetY = 2,
+                                 double LabelOffsetX = 0.01, double LabelOffsetY = 0.01){
+  // Set marker style, color, and size
+  graph->SetMarkerStyle(markerStyle);
+  graph->SetMarkerColor(markerColor);
+  graph->SetMarkerSize(markerSize);
+
+  // Set graph title and axis labels
+  graph->SetTitle(graphTitle.c_str());
+  graph->GetXaxis()->SetTitle(xAxisLabel.c_str());
+  graph->GetYaxis()->SetTitle(yAxisLabel.c_str());
+
+  // Adjust axis title offsets to provide more space
+  graph->GetXaxis()->SetTitleOffset(TitleOffsetX); // Adjust as needed
+  graph->GetYaxis()->SetTitleOffset(TitleOffsetY); // Adjust as needed
+
+
+  // Adjust axis label offsets to provide more space
+  graph->GetXaxis()->SetLabelOffset(LabelOffsetX); // Adjust as needed
+  graph->GetYaxis()->SetLabelOffset(LabelOffsetY); // Adjust as needed
+
+  }
+
 
 
 } //end namespace

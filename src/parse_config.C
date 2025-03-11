@@ -122,7 +122,9 @@
 			//cout << "Energy Cut: " << EnergyCut << endl;
 			}else if (key == "TrackQualityCut"){
 			TrackQualityCut = val;
-                        //cout << "Track Quality Cut: " << TrackQualityCut << endl;
+			}else if (key == "TrackHitsCut"){
+			TrackHitsCut = val;
+			//cout << "TrackHitsCut: " << TrackHitsCut << endl;
 			}else if (key == "TargetVertexCut"){
 			TargetVertexCut = val;
                         //cout << "Target Vertex Cut: " << TargetVertexCut << endl;
@@ -165,6 +167,8 @@
 			}else if(key == "HCal_Eff_map_file"){
 			HCal_Eff_map_file = val;
 			//cout << "HCal_Eff_map_file: " << HCal_Eff_map_file << endl;
+			}else if(key == "left_right"){
+			left_right = val;
 			}else if(key == "SBS_field"){
                         SBS_field = val.Atoi();
                         //cout << "SBS Field " << SBS_field << endl;
@@ -177,6 +181,8 @@
 			}else if(key == "e_method"){
 			e_method = val.Atoi();
 			//cout << "e method " << e_method << endl;
+			}else if(key == "slice_mode"){
+			slice_mode = val.Atoi();
 			}else if(key == "W2_low"){
                         W2_low = val.Atof();
                         //cout << "W2 low " << W2_low << endl;
@@ -443,6 +449,8 @@
 
   TString parse_config::getTrackQualityCut(){return TrackQualityCut;}
 
+  TString parse_config::getTrackHitsCut(){return TrackHitsCut;}
+  
   TString parse_config::getTargetVertexCut(){return TargetVertexCut;}
 
   TString parse_config::getW2Cut(){return W2Cut;}
@@ -489,6 +497,8 @@
 
   TString parse_config::get_spot_choice(){return spot_choice;}
   
+  TString parse_config::get_left_right(){return left_right;}
+  
   int parse_config::getSBSField(){ return SBS_field; }
 
   int parse_config::getAlshield(){ return useAlshield; }
@@ -502,6 +512,8 @@
   int parse_config::getSBS_field_1(){return SBS_field_1;}
 
   int parse_config::getSBS_field_2(){return SBS_field_2;}
+
+  int parse_config::get_slice_mode(){return slice_mode;}
 
   double parse_config::get_dxOn(){ return dxO_n; }
 

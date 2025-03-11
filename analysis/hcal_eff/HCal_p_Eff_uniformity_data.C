@@ -219,7 +219,7 @@ TH1::SetDefaultSumw2(kTRUE);
 
   //ttree formula variables
   int treenum = 0, currenttreenum = 0;
-
+  
   //event loop
   while(C->GetEntry(nevent++)){
 
@@ -443,22 +443,30 @@ TH1::SetDefaultSumw2(kTRUE);
     heff_vs_W2->SetBinError(i,err);
   }
   
-  //diff lines for the fiduical region on 1D histos
-  TLine *LineL_FidX = plots::setupLine_Vert(0.0,1.0,fidx_min,2,kMagenta,2);
-  TLine *LineR_FidX = plots::setupLine_Vert(0.0,1.0,fidx_max,2,kMagenta,2);
-  TLine *LineL_FidY = plots::setupLine_Vert(0.0,1.0,fidy_min,2,kMagenta,2);
-  TLine *LineR_FidY = plots::setupLine_Vert(0.0,1.0,fidy_max,2,kMagenta,2);
+  
+  double xexpect_max = heff_vs_xexpect->GetMaximum();
+  double yexpect_max = heff_vs_yexpect->GetMaximum();
 
+  double fidx_val_max = 1.15*xexpect_max;
+  double fidy_val_max = 1.15*yexpect_max;
+
+  //diff lines for the fiduical region on 1D histos
+  TLine *LineL_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_min,2,kMagenta,2);
+  TLine *LineR_FidX = plots::setupLine_Vert(0.0,fidx_val_max,fidx_max,2,kMagenta,2);
+  TLine *LineL_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_min,2,kMagenta,2);
+  TLine *LineR_FidY = plots::setupLine_Vert(0.0,fidy_val_max,fidy_max,2,kMagenta,2);
+  
   vector<TLine*> Lines_Fid_diff;
   Lines_Fid_diff.push_back(LineL_FidX);
   Lines_Fid_diff.push_back(LineR_FidX);
   Lines_Fid_diff.push_back(LineL_FidY);
   Lines_Fid_diff.push_back(LineR_FidY);
-
+  
   //Make the canvases which hold the fitted histogram
-  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_clone","heff_vs_xexpect_wfit",fitx_low,fitx_high,Lines_Fid_diff);
-
-  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_clone","heff_vs_yexpect_wfit",fity_low,fity_high,Lines_Fid_diff);
+  TCanvas* c0 = plots::plotHCalEff(heff_vs_xexpect,"c0","heff_vs_xexpect_clone","heff_vs_xexpect_wfit",fitx_low,fitx_high,Lines_Fid_diff,target,spot_choice,sbs_field);
+ 
+  
+  TCanvas* c2 = plots::plotHCalEff(heff_vs_yexpect,"c2","heff_vs_yexpect_clone","heff_vs_yexpect_wfit",fity_low,fity_high,Lines_Fid_diff,target,spot_choice,sbs_field);
   
   TCanvas* c3 = plots::plot_Comp(hx_expect_all,hx_expect_hcalcut,"c3","hx_expect_all_clone","hx_expect_cut_clone");
   
@@ -466,7 +474,7 @@ TH1::SetDefaultSumw2(kTRUE);
 
   TCanvas* c5 = plots::plot_Comp(h_W2_globcut,h_W2_hcalcut,"c5","hW2_globcut_clone","hW2_hcalcut_clone");
 
-  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect");
+  TCanvas* c6 = plots::plot_HCalEffMap(heff_vs_xyexpect,"c6","heff_vs_xyexpect",target,spot_choice);
 
   //make lines for physical HCal position
   vector<TLine*> Lines_pos = plots::setupLines(hcalpos,4,kBlack);
@@ -476,13 +484,13 @@ TH1::SetDefaultSumw2(kTRUE);
 
   TCanvas* c7 = plots::plot_HCalEffMap_overlay(heff_vs_xyexpect,"c7","heff_vs_xyexpect_overlay",Lines_pos,Lines_Fid);
 
-  TCanvas* c8 = plots::plot_HCalEffMap(hxy_expect_hcalcut,"c8","h_xy_expect_num");
+  TCanvas* c8 = plots::plot_HCalEffMap(hxy_expect_hcalcut,"c8","h_xy_expect_num",target,spot_choice);
 
-  TCanvas* c9 = plots::plot_HCalEffMap(hxy_expect_all,"c9","h_xy_expect_denom");
+  TCanvas* c9 = plots::plot_HCalEffMap(hxy_expect_all,"c9","h_xy_expect_denom",target,spot_choice);
 
-  TCanvas* c10 = plots::plot_HCalEffMap(hxy_expect_anticut,"c10","h_xy_expect_fail");
+  TCanvas* c10 = plots::plot_HCalEffMap(hxy_expect_anticut,"c10","h_xy_expect_fail",target,spot_choice);
 
-  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol");
+  TCanvas* c11 = plots::plot_HCalEffMap(heff_vs_rowcol,"c11","heff_vs_rowcol",target,spot_choice);
   
 
   //Write the info to file
@@ -507,7 +515,7 @@ TH1::SetDefaultSumw2(kTRUE);
   c10->Print(plotname.Data(),"pdf");
   c11->Print(end.Data(),"pdf");
 
-
+   
   // Send time efficiency report to console
   cout << "CPU time elapsed = " << watch->CpuTime() << " s = " << watch->CpuTime()/60.0 << " min. Real time = " << watch->RealTime() << " s = " << watch->RealTime()/60.0 << " min." << endl;
 }//end main

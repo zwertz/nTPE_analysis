@@ -32,7 +32,8 @@ class parse_config{
   double thetapq_low,thetapq_high,W2fitmax,W2fitmaxwide,binfac,hbinfac,fidx_min,fidx_max,fidy_min,fidy_max,spot_sig,fitx_low,fitx_high,fity_low,fity_high,dxsig_fid_n,dxsig_fid_p,dysig_fid_n,dysig_fid_p;
 
   //For stability studies
-  TString EnergyCut, TrackQualityCut, TargetVertexCut, W2Cut, FidXCut, FidYCut, dyCut, eOverpCut, HCal_Shower_atime_Cut, HCal_Energy_Cut, OpticsCut, ProtonSpotCut, NeutronSpotCut, isProtonCut, isNeutronCut;
+  int slice_mode;
+  TString EnergyCut,TrackHitsCut,  TrackQualityCut, TargetVertexCut, W2Cut, FidXCut, FidYCut, dyCut, eOverpCut, HCal_Shower_atime_Cut, HCal_Energy_Cut, OpticsCut, ProtonSpotCut, NeutronSpotCut, isProtonCut, isNeutronCut, left_right;
 
 
 public:
@@ -82,6 +83,8 @@ public:
 
   TString getTrackQualityCut();
 
+  TString getTrackHitsCut();
+  
   TString getTargetVertexCut();
 
   TString getW2Cut();
@@ -128,6 +131,8 @@ public:
 
   TString get_spot_choice();
 
+  TString get_left_right();
+
   int getSBSField();
 
   int getSBS_field_1();
@@ -141,6 +146,8 @@ public:
   int get_emethod();
 
   int get_HCalNclusMin();
+
+  int get_slice_mode();
 
   double get_dxOn();
 
