@@ -107,5 +107,14 @@ TCanvas* plot1DCutOverlay();
 //Function that shows the number of entries in each slice
 TCanvas* plotNEntries();
 
+//Function that shows the Chi2/ndf graph
+TCanvas* plotChi2_NDFGraph();
+
+//Function that plots Rsf for the different slice as a TGraphErrors at the XMin values. Return the canvas
+TCanvas* plotRsfTGraphError_xMin();
+
+//Function that plots Rsf for the different slice as a TGraphErrors at the XMax values. Return the canvas
+TCanvas* plotRsfTGraphError_xMax();
+
 };//end class
 #endif

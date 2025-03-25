@@ -274,6 +274,8 @@ TCanvas* stability_analysis::plotRsfTGraphError(){
   double x0 = Rsf_graph ->GetX()[0];
   double xEnd = Rsf_graph->GetX()[Rsf_graph->GetN()-1];
   TF1* fit_Rsf_graph = new TF1("fit_Rsf_graph", "pol1",x0, xEnd);
+  fit_Rsf_graph->SetLineColor(kRed);
+  Rsf_graph->Fit(fit_Rsf_graph, "Q RN"); // N supresses the drawing of it automatically
 
   // Fit a pol0 to the graph 
   TF1* fit_pol0_Rsf_graph = new TF1("fit_pol0_Rsf_graph", "pol0",Rsf_graph ->GetX()[0], Rsf_graph->GetX()[Rsf_graph->GetN()-1]);
@@ -285,12 +287,19 @@ TCanvas* stability_analysis::plotRsfTGraphError(){
   //Make the canvas
   TCanvas *graphCanvas = new TCanvas(Form("Rsf graph stability: %s",myCutVar.Data()),Form("Rsf graph stability: %s",myCutVar.Data()),1600,1200);
   graphCanvas->SetGrid();
-  graphCanvas->Divide(2,1);
-  graphCanvas->cd(1);
   Rsf_graph->Draw("AP");
   fit_Rsf_graph->Draw("same");
   fit_pol0_Rsf_graph->Draw("same");
   graphCanvas->Update();
+
+  //Get fit parameters pol1
+  double constant = fit_Rsf_graph->GetParameter(0);
+  double constant_Error = fit_Rsf_graph->GetParError(0);
+  double slope = fit_Rsf_graph->GetParameter(1);
+  double slope_Error = fit_Rsf_graph->GetParError(1);
+  double chi2_pol1 = fit_Rsf_graph->GetChisquare();
+  int ndf_pol1 = fit_Rsf_graph->GetNDF();
+  double chi2_ndf_pol1 = chi2_pol1/ndf_pol1;
 
   // Get fit parameters pol0
   double constant_pol0 = fit_pol0_Rsf_graph->GetParameter(0);       // The constant value
@@ -299,42 +308,21 @@ TCanvas* stability_analysis::plotRsfTGraphError(){
   int ndf_pol0= fit_pol0_Rsf_graph->GetNDF();// The number of degrees of freedom
   double chi2_ndf_pol0 = chi2_pol0 / ndf_pol0;
 
+  //Calculate the rise of the linear fit
+  double y0 = slope*x0 + constant;
+  double yEnd = slope*xEnd +constant;
+  double rise = yEnd - y0;
+
   // Use TLatex to add the fit result and chi²/ndf to the canvas
   TLatex latex;
   latex.SetNDC();  // Use normalized coordinates (0 to 1)
-  latex.SetTextSize(0.03);
-  latex.DrawLatex(0.14, 0.85, Form("pol0: y =  %.5f #pm %.5f",  constant_pol0,constantError_pol0));
-  latex.DrawLatex(0.14, 0.81, Form("Rsf Mean = %.5f #pm StDev = %.5f", Rsf_mean, Rsf_stdev));
-  latex.DrawLatex(0.14, 0.77, Form("Rsf Weighted Mean = %.5f #pm Weighted StDev = %.5f",Rsf_weight_mean, Rsf_weight_stdev));
-  latex.DrawLatex(0.14, 0.73, Form("Rsf pull = %.5f",Rsf_pull) );
-  graphCanvas->Update();
-
-  //// Plot Chi2/ndf
-  //// Make arrays that TGraphErrors can use
-
-  double x_ch[num_slices];
-  double y_ch[num_slices];
-  double x_ch_err[num_slices];
-  double y_ch_err[num_slices];
-  	
-  	for (int slice_num = 0 ; slice_num < num_slices ; slice_num++){
-	//Get the min and max values from the data cutvar vector pair
-        double xMin = xMin_xMax_vec[slice_num].first;
-        double xMax = xMin_xMax_vec[slice_num].second;
-        double xCenter = (xMin + xMax)/2;
-        double xWidth = xMax - xMin;
-	
-      	x_ch[slice_num] = xCenter;
-      	y_ch[slice_num] = ChiSq_vector[slice_num] /ndf_vector[slice_num];
-      	x_ch_err[slice_num] = xWidth;
-      	y_ch_err[slice_num] = 0;
-    	}
-
-  TGraphErrors *Chi2_ndf_graph = new TGraphErrors(num_slices, x_ch, y_ch, x_ch_err, y_ch_err);
-  utility::customizeGraph(Chi2_ndf_graph, 33, kBlue, 3,"","Bin Width","Chi^{2}/ndf",1.4,1.4);
-  
-  graphCanvas->cd(2);
-  Chi2_ndf_graph ->Draw("AP");
+  latex.SetTextSize(0.025);
+  latex.DrawLatex(0.14, 0.87, Form("pol0: y =  %.5f #pm %.5f, Fit #chi^{2}/ndf: %.3f",  constant_pol0,constantError_pol0,chi2_ndf_pol0));
+  latex.DrawLatex(0.14, 0.84, Form("pol1: y =  %.5f x + %.5f, Fit #chi^{2}/ndf: %.3f",  slope,constant,chi2_ndf_pol1));
+  latex.DrawLatex(0.14, 0.16, Form("Rise across range: %.5f", rise));
+  //latex.DrawLatex(0.14, 0.77, Form("Rsf Weighted Mean = %.5f #pm Weighted StDev = %.5f",Rsf_weight_mean, Rsf_weight_stdev));
+  //latex.DrawLatex(0.14, 0.73, Form("Rsf pull = %.5f",Rsf_pull) );
+  latex.DrawLatex(0.14, 0.13, Form("Rsf Mean = %.5f #pm StDev = %.5f", Rsf_mean, Rsf_stdev));
   graphCanvas->Update();
 
   return graphCanvas;
@@ -516,7 +504,7 @@ TCanvas* stability_analysis::plot2DCutOverlay(){
     lineRight->SetLineWidth(2);     // Set line width
     lineRight->Draw("SAME");
   }
-  
+
   //MC p histogram
   cut_2Dcanvas->cd(2);
   //Draw the MC p histogram 
@@ -657,6 +645,7 @@ TCanvas* stability_analysis::plot1DCutOverlay(){
   //Data
   cut_1Dcanvas->cd(1);
   TH1D* hist_1D_data = (TH1D*) (data_Var->get2DdxCutHisto())->ProjectionX()->Clone();
+  int daDataEntries = hist_1D_data->GetEntries();
   hist_1D_data->SetTitle(Form("Data Cut Visualization 1D: %s",myCutVar.Data()));
   hist_1D_data->SetStats(0);
   hist_1D_data->Draw();
@@ -674,6 +663,12 @@ TCanvas* stability_analysis::plot1DCutOverlay(){
     lineRight->SetLineWidth(2);     // Set line width
     lineRight->Draw("SAME");
   }
+
+  TLatex latex;
+  latex.SetNDC();  // Use normalized coordinates (0 to 1)
+  latex.SetTextSize(0.065);
+  latex.DrawLatex(0.7, 0.7, Form("Number Entries: %i",  daDataEntries));
+
 
   //MC P
   cut_1Dcanvas->cd(2);
@@ -755,4 +750,224 @@ TCanvas* stability_analysis::plotNEntries(){
 
   nEntries_canvas->Update();
 return nEntries_canvas;
+}
+
+//Function that plots Rsf for the different slice as a TGraphErrors at the XMin values. Return the canvas
+TCanvas* stability_analysis::plotRsfTGraphError_xMin(){
+//calculate some stat info for Rsf
+  double Rsf_mean = utility::calculateMean(Rsf_vector);
+  double Rsf_stdev = utility::calculateStDev(Rsf_vector);
+  double Rsf_weight_mean = utility::calculateWeightMean(Rsf_vector,Rsf_err_vector);
+  double Rsf_weight_stdev = utility::calculateWeightStDev(Rsf_vector,Rsf_err_vector);
+  double Rsf_pull = utility::calculatePull(Rsf_vector,Rsf_err_vector);
+
+  //need info from the cutvar
+  vector<pair<double,double>> xMin_xMax_vec = data_Var->getXMinXMaxRange();
+  int num_slices = xMin_xMax_vec.size();
+  //convert the slice ranges to array for TGraph errors, uninitialized arrays
+  double x_min[num_slices];
+  double y_min[num_slices];
+  double x_min_err[num_slices];
+  double y_min_err[num_slices];
+
+        //Fill the arrays
+        //loop over the number of slices and plot the Rsf value at the central value of the range
+        for(int slice_num = 0; slice_num < num_slices; slice_num++){
+
+        //Get the min and max values from the data cutvar vector pair
+        double xMin = xMin_xMax_vec[slice_num].first;
+
+        x_min[slice_num] = xMin;
+        y_min[slice_num] = Rsf_vector[slice_num];
+        x_min_err[slice_num] = 0;
+        y_min_err[slice_num] = Rsf_err_vector[slice_num];
+
+        }
+ 
+  //Initialize the TGraphErrors
+  TGraphErrors *Rsf_xMin_graph = new TGraphErrors(num_slices, x_min, y_min, x_min_err, y_min_err);
+  utility::customizeGraph(Rsf_xMin_graph, 33, kBlue, 3,"",myCutVar.Data(),"Rsf",1.4,1.4);
+
+  //Fit straight line for the Rsf graph
+  double x0_xMin = Rsf_xMin_graph ->GetX()[0];
+  double xEnd_xMin = Rsf_xMin_graph->GetX()[Rsf_xMin_graph->GetN()-1];
+  TF1* fit_Rsf_xMin_graph = new TF1("fit_Rsf_xMin_graph", "pol1",x0_xMin, xEnd_xMin);
+  fit_Rsf_xMin_graph->SetLineColor(kRed);
+  Rsf_xMin_graph->Fit(fit_Rsf_xMin_graph, "Q RN"); // N supresses the drawing of it automatically
+
+  // Fit a pol0 to the graph 
+  TF1* fit_pol0_Rsf_xMin_graph = new TF1("fit_pol0_Rsf_xMin_graph", "pol0",Rsf_xMin_graph ->GetX()[0], Rsf_xMin_graph->GetX()[Rsf_xMin_graph->GetN()-1]);
+  fit_pol0_Rsf_xMin_graph->SetLineColor(kViolet);
+  fit_pol0_Rsf_xMin_graph->SetLineWidth(2);
+  fit_pol0_Rsf_xMin_graph->SetLineStyle(9);
+  Rsf_xMin_graph->Fit(fit_pol0_Rsf_xMin_graph, "Q RN"); // N supresses the drawing of it automatically
+
+  //Make the canvas
+  TCanvas *RsfxMin_Canvas = new TCanvas(Form("Rsf xMin graph stability: %s",myCutVar.Data()),Form("Rsf xMin graph stability: %s",myCutVar.Data()),1600,1200);
+  RsfxMin_Canvas->SetGrid();
+  Rsf_xMin_graph->Draw("AP");
+  fit_Rsf_xMin_graph->Draw("same");
+  fit_pol0_Rsf_xMin_graph->Draw("same");
+  RsfxMin_Canvas->Update();
+
+  //Get fit parameters pol1
+  double constant_xMin = fit_Rsf_xMin_graph->GetParameter(0);
+  double constant_Error_xMin = fit_Rsf_xMin_graph->GetParError(0);
+  double slope_xMin = fit_Rsf_xMin_graph->GetParameter(1);
+  double slope_Error_xMin = fit_Rsf_xMin_graph->GetParError(1);
+  double chi2_pol1_xMin = fit_Rsf_xMin_graph->GetChisquare();
+  int ndf_pol1_xMin = fit_Rsf_xMin_graph->GetNDF();
+  double chi2_ndf_pol1_xMin = chi2_pol1_xMin/ndf_pol1_xMin;
+
+  // Get fit parameters pol0
+  double constant_pol0_xMin = fit_pol0_Rsf_xMin_graph->GetParameter(0);       // The constant value
+  double constantError_pol0_xMin = fit_pol0_Rsf_xMin_graph->GetParError(0);    // The error on the constan
+  double chi2_pol0_xMin = fit_pol0_Rsf_xMin_graph->GetChisquare();             // The chi-squared value
+  int ndf_pol0_xMin = fit_pol0_Rsf_xMin_graph->GetNDF();// The number of degrees of freedom
+  double chi2_ndf_pol0_xMin = chi2_pol0_xMin / ndf_pol0_xMin;
+
+  //Calculate the rise of the linear fit
+  double y0_xMin = slope_xMin*x0_xMin + constant_xMin;
+  double yEnd_xMin = slope_xMin*xEnd_xMin +constant_xMin;
+  double rise_xMin = yEnd_xMin - y0_xMin;  
+ 
+  // Use TLatex to add the fit result and chi²/ndf to the canvas
+  TLatex latex;
+  latex.SetNDC();  // Use normalized coordinates (0 to 1)
+  latex.SetTextSize(0.025);
+  latex.DrawLatex(0.14, 0.87, Form("pol0: y =  %.5f #pm %.5f, Fit #chi^{2}/ndf: %.3f",  constant_pol0_xMin,constantError_pol0_xMin,chi2_ndf_pol0_xMin));
+  latex.DrawLatex(0.14, 0.84, Form("pol1: y =  %.5f x + %.5f, Fit #chi^{2}/ndf: %.3f",  slope_xMin,constant_xMin,chi2_ndf_pol1_xMin));
+  latex.DrawLatex(0.14, 0.16, Form("Rise across range: %.5f", rise_xMin));
+  latex.DrawLatex(0.14, 0.13, Form("Rsf Mean = %.5f #pm StDev = %.5f", Rsf_mean, Rsf_stdev));
+  RsfxMin_Canvas->Update();
+return RsfxMin_Canvas;
+}// end plot Rsf xMin Function
+
+//Function that plots Rsf for the different slice as a TGraphErrors at the XMax values. Return the canvas
+TCanvas* stability_analysis::plotRsfTGraphError_xMax(){
+//calculate some stat info for Rsf
+  double Rsf_mean = utility::calculateMean(Rsf_vector);
+  double Rsf_stdev = utility::calculateStDev(Rsf_vector);
+  double Rsf_weight_mean = utility::calculateWeightMean(Rsf_vector,Rsf_err_vector);
+  double Rsf_weight_stdev = utility::calculateWeightStDev(Rsf_vector,Rsf_err_vector);
+  double Rsf_pull = utility::calculatePull(Rsf_vector,Rsf_err_vector);
+
+  //need info from the cutvar
+  vector<pair<double,double>> xMin_xMax_vec = data_Var->getXMinXMaxRange();
+  int num_slices = xMin_xMax_vec.size();
+  //convert the slice ranges to array for TGraph errors, uninitialized arrays
+  double x_max[num_slices];
+  double y_max[num_slices];
+  double x_max_err[num_slices];
+  double y_max_err[num_slices];
+
+        //Fill the arrays
+        //loop over the number of slices and plot the Rsf value at the central value of the range
+        for(int slice_num = 0; slice_num < num_slices; slice_num++){
+
+        //Get the min and max values from the data cutvar vector pair
+        double xMax = xMin_xMax_vec[slice_num].second;
+
+        x_max[slice_num] = xMax;
+        y_max[slice_num] = Rsf_vector[slice_num];
+        x_max_err[slice_num] = 0;
+        y_max_err[slice_num] = Rsf_err_vector[slice_num];
+
+        }
+
+  //Initialize the TGraphErrors
+  TGraphErrors *Rsf_xMax_graph = new TGraphErrors(num_slices, x_max, y_max, x_max_err, y_max_err);
+  utility::customizeGraph(Rsf_xMax_graph, 33, kBlue, 3,"",myCutVar.Data(),"Rsf",1.4,1.4);
+
+  //Fit straight line for the Rsf graph
+  double x0_xMax = Rsf_xMax_graph ->GetX()[0];
+  double xEnd_xMax = Rsf_xMax_graph->GetX()[Rsf_xMax_graph->GetN()-1];
+  TF1* fit_Rsf_xMax_graph = new TF1("fit_Rsf_xMax_graph", "pol1",x0_xMax, xEnd_xMax);
+  fit_Rsf_xMax_graph->SetLineColor(kRed);
+  Rsf_xMax_graph->Fit(fit_Rsf_xMax_graph, "Q RN"); // N supresses the drawing of it automatically
+
+  // Fit a pol0 to the graph 
+  TF1* fit_pol0_Rsf_xMax_graph = new TF1("fit_pol0_Rsf_xMax_graph", "pol0",Rsf_xMax_graph ->GetX()[0], Rsf_xMax_graph->GetX()[Rsf_xMax_graph->GetN()-1]);
+  fit_pol0_Rsf_xMax_graph->SetLineColor(kViolet);
+  fit_pol0_Rsf_xMax_graph->SetLineWidth(2);
+  fit_pol0_Rsf_xMax_graph->SetLineStyle(9);
+  Rsf_xMax_graph->Fit(fit_pol0_Rsf_xMax_graph, "Q RN"); // N supresses the drawing of it automatically
+
+  //Make the canvas
+  TCanvas *RsfxMax_Canvas = new TCanvas(Form("Rsf xMax graph stability: %s",myCutVar.Data()),Form("Rsf xMax graph stability: %s",myCutVar.Data()),1600,1200);
+  RsfxMax_Canvas->SetGrid();
+  Rsf_xMax_graph->Draw("AP");
+  fit_Rsf_xMax_graph->Draw("same");
+  fit_pol0_Rsf_xMax_graph->Draw("same");
+  RsfxMax_Canvas->Update();
+
+  //Get fit parameters pol1
+  double constant_xMax = fit_Rsf_xMax_graph->GetParameter(0);
+  double constant_Error_xMax = fit_Rsf_xMax_graph->GetParError(0);
+  double slope_xMax = fit_Rsf_xMax_graph->GetParameter(1);
+  double slope_Error_xMax = fit_Rsf_xMax_graph->GetParError(1);
+  double chi2_pol1_xMax = fit_Rsf_xMax_graph->GetChisquare();
+  int ndf_pol1_xMax = fit_Rsf_xMax_graph->GetNDF();
+  double chi2_ndf_pol1_xMax = chi2_pol1_xMax/ndf_pol1_xMax;
+
+  // Get fit parameters pol0
+  double constant_pol0_xMax = fit_pol0_Rsf_xMax_graph->GetParameter(0);       // The constant value
+  double constantError_pol0_xMax = fit_pol0_Rsf_xMax_graph->GetParError(0);    // The error on the constan
+  double chi2_pol0_xMax = fit_pol0_Rsf_xMax_graph->GetChisquare();             // The chi-squared value
+  int ndf_pol0_xMax = fit_pol0_Rsf_xMax_graph->GetNDF();// The number of degrees of freedom
+  double chi2_ndf_pol0_xMax = chi2_pol0_xMax / ndf_pol0_xMax;
+  //Calculate the rise of the linear fit
+  double y0_xMax = slope_xMax*x0_xMax + constant_xMax;
+  double yEnd_xMax = slope_xMax*xEnd_xMax +constant_xMax;
+  double rise_xMax = yEnd_xMax - y0_xMax;
+
+  // Use TLatex to add the fit result and chi²/ndf to the canvas
+  TLatex latex;
+  latex.SetNDC();  // Use normalized coordinates (0 to 1)
+  latex.SetTextSize(0.025);
+  latex.DrawLatex(0.14, 0.87, Form("pol0: y =  %.5f #pm %.5f, Fit #chi^{2}/ndf: %.3f",  constant_pol0_xMax,constantError_pol0_xMax,chi2_ndf_pol0_xMax));
+  latex.DrawLatex(0.14, 0.84, Form("pol1: y =  %.5f x + %.5f, Fit #chi^{2}/ndf: %.3f",  slope_xMax,constant_xMax,chi2_ndf_pol1_xMax));
+  latex.DrawLatex(0.14, 0.16, Form("Rise across range: %.5f", rise_xMax));
+  latex.DrawLatex(0.14, 0.13, Form("Rsf Mean = %.5f #pm StDev = %.5f", Rsf_mean, Rsf_stdev));
+  RsfxMax_Canvas->Update();
+return RsfxMax_Canvas;
+}// end plot Rsf xMax Function
+
+//Function that shows the Chi2/ndf graph
+TCanvas* stability_analysis::plotChi2_NDFGraph(){
+
+//need info from the cutvar
+  vector<pair<double,double>> xMin_xMax_vec = data_Var->getXMinXMaxRange();
+  int num_slices = xMin_xMax_vec.size();
+
+//// Plot Chi2/ndf
+//// Make arrays that TGraphErrors can use
+
+  double x_ch[num_slices];
+  double y_ch[num_slices];
+  double x_ch_err[num_slices];
+  double y_ch_err[num_slices];
+
+        for (int slice_num = 0 ; slice_num < num_slices ; slice_num++){
+        //Get the min and max values from the data cutvar vector pair
+        double xMin = xMin_xMax_vec[slice_num].first;
+        double xMax = xMin_xMax_vec[slice_num].second;
+        double xCenter = (xMin + xMax)/2;
+        double xWidth = xMax - xMin;
+
+        x_ch[slice_num] = xCenter;
+        y_ch[slice_num] = ChiSq_vector[slice_num] /ndf_vector[slice_num];
+        x_ch_err[slice_num] = xWidth;
+        y_ch_err[slice_num] = 0;
+        }
+
+  TGraphErrors *Chi2_ndf_graph = new TGraphErrors(num_slices, x_ch, y_ch, x_ch_err, y_ch_err);
+  utility::customizeGraph(Chi2_ndf_graph, 33, kBlue, 3,"","Bin Width","chi^{2}/ndf",1.4,1.4);
+
+  //Make the canvas
+  TCanvas *graphCanvas = new TCanvas(Form("Chi^{2}/ndf stability: %s",myCutVar.Data()),Form("Chi^{2}/ndf stability: %s",myCutVar.Data()),1600,1200);
+  graphCanvas->SetGrid();
+  Chi2_ndf_graph ->Draw("AP");
+  graphCanvas->Update();
+  return graphCanvas;
 }

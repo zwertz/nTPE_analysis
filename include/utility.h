@@ -121,5 +121,7 @@ namespace utility{
   //Function to customize TGraphErrors
   void customizeGraph(TGraphErrors *graph, int markerStyle, int markerColor, double markerSize,string graphTitle, string xAxisLabel, string yAxisLabel, double TitleOffsetX, double TitleOffsetY, double LabelOffsetX, double LabelOffsetY);
 
+  //Function that puts TH2D minimally on Canvas
+  TCanvas* printTH2D(TH2D* myHisto, TString title);
 }
 #endif

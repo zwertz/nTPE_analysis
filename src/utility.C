@@ -607,6 +607,23 @@ namespace utility{
 
   }
 
+  TCanvas* printTH2D(TH2D* myHisto, TString title){
 
+  TCanvas* daCanvas = new TCanvas(myHisto->GetName(),myHisto->GetName(),1600,1200);
+
+  TH2D* myHisto_Clone = (TH2D*) myHisto->Clone();
+
+  TString Xaxis_name = (myHisto_Clone->GetXaxis())->GetTitle();
+  TString Yaxis_name = (myHisto_Clone->GetYaxis())->GetTitle();
+  TString new_Title = title + "_" + Yaxis_name + "__" + Xaxis_name;
+  myHisto_Clone->SetName(new_Title.Data());
+  myHisto_Clone->SetTitle(new_Title.Data());
+  myHisto_Clone->SetStats(0);
+  myHisto_Clone->Draw("COLZ");
+
+  daCanvas->Update();
+
+  return daCanvas;
+  }
 
 } //end namespace

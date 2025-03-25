@@ -33,7 +33,7 @@ class parse_config{
 
   //For stability studies
   int slice_mode;
-  TString EnergyCut,TrackHitsCut,  TrackQualityCut, TargetVertexCut, W2Cut, FidXCut, FidYCut, dyCut, eOverpCut, HCal_Shower_atime_Cut, HCal_Energy_Cut, OpticsCut, ProtonSpotCut, NeutronSpotCut, isProtonCut, isNeutronCut, left_right;
+  TString EnergyCut,TrackHitsCut,  TrackQualityCut, TargetVertexCut, W2Cut, FidXCut, FidYCut, dyCut, eOverpCut, HCal_Shower_atime_Cut, HCal_Energy_Cut, OpticsCut_x,OpticsCut_y, ProtonSpotCut, NeutronSpotCut, isProtonCut, isNeutronCut, left_right;
 
 
 public:
@@ -101,7 +101,9 @@ public:
 
   TString getHCal_Energy_Cut();
 
-  TString getOpticsCut();
+  TString getOpticsCutX();
+
+  TString getOpticsCutY();
 
   TString getProtonSpotCut();
 

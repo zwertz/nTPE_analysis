@@ -187,7 +187,7 @@ return good_dy;
 
 //Function to check if above min HCal E value
 bool passHCalE(double hcal_e,double hcalemin){
-bool passE = hcal_e > hcalemin;
+bool passE = hcal_e >= hcalemin;
 return passE;
 }
 

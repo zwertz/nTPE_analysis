@@ -45,6 +45,11 @@ vector<pair<double,double>> xMin_xMax_y_exp;
 vector<pair<double,double>> xMin_xMax_coin_diff;
 /////******* track chi2ndf ***********************************************************
 vector<pair<double,double>> xMin_xMax_BBgem_chi2ndf;
+/////******* Optics X ***********************************************************
+vector<pair<double,double>> xMin_xMax_Optics_x;
+/////******* Optics Y ***********************************************************
+vector<pair<double,double>> xMin_xMax_Optics_y;
+
 
 //Function that will create a histogram of dx vs the cut variable. Relies on initialization of histo info from constructor.
 TH2D* make2DdxCutHisto(TChain* C);
@@ -110,7 +115,6 @@ vector<pair<double,double>> getXMinXMaxRange();
 
 TH2D* get2DdxCutHisto();
 
-//Function not implemented yet
 TH2D* get2DW2CutHisto();
 
 vector<TH1D*> sliceAndProjectHisto_xMinxMax(TH2D* histo2D,TString xAxisName, TString yAxisName );

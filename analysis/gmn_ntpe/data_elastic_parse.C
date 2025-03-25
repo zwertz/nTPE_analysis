@@ -80,6 +80,7 @@ void data_elastic_parse(const char *setup_file_name){
   double coin_mean = mainConfig.getCoinMean();
   double coin_sig_fac = mainConfig.getCoinSigFac();
   double coin_profile_sig = mainConfig.getCoinProfSig();
+  double coin_sig =  mainConfig.getCoinSig();
   double hcalemin = mainConfig.getHCaleMin();
   double dysig_cut_fac = mainConfig.get_dySigCutFac();
   int hcalnclusmin = mainConfig.get_HCalNclusMin();
@@ -791,7 +792,7 @@ void data_elastic_parse(const char *setup_file_name){
 	bool good_dy = cuts::good_dy(dy_bestclus,dyO_p,dysig_cut_fac,dysig_p);
 
 	//good coincidence time cut
-	bool passCoin = cuts::passCoin(coin_bestclus,coin_mean,coin_sig_fac,coin_profile_sig);
+	bool passCoin = cuts::passCoin(coin_bestclus,coin_mean,coin_sig_fac,coin_sig);
 
 	//good fiducial cut
 	bool passFid = cuts::hcalfid_IN(xhcal_expect,yhcal_expect,dx_pn,hcalfid);	
@@ -842,7 +843,7 @@ void data_elastic_parse(const char *setup_file_name){
 	BBtr_r_th_out = tr_r_th[0];
 	BBtr_r_ph_out = tr_r_ph[0];
 	coin_mean_out = coin_mean;
-  	coin_sigma_out = coin_profile_sig;
+  	coin_sigma_out = coin_sig;
   	dyO_p_out = dyO_p;
   	dyO_n_out = dyO_n;
   	dysig_p_out = dysig_p;

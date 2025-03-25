@@ -45,7 +45,8 @@ void stability_study(const char *setup_file_name){
   TString eOverpCut = mainConfig.geteOverpCut();
   TString HCal_Energy_Cut = mainConfig.getHCal_Energy_Cut();
   TString HCal_Shower_atime_Cut = mainConfig.getHCal_Shower_atime_Cut();
-  TString OpticsCut = mainConfig.getOpticsCut();
+  TString OpticsCut_x = mainConfig.getOpticsCutX();
+  TString OpticsCut_y = mainConfig.getOpticsCutY();
   TString ProtonSpotCut = mainConfig.getProtonSpotCut();
   TString NeutronSpotCut = mainConfig.getNeutronSpotCut();
   TString isProtonCut = mainConfig.getisProtonCut();
@@ -88,9 +89,9 @@ void stability_study(const char *setup_file_name){
 
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data ps
-  TString ps_e_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString ps_e_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y + "&&"+ HCal_Shower_atime_Cut;
   //For MC ps 
-  TString ps_e_study_mc = TrackHitsCut + "&&" + TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut;
+  TString ps_e_study_mc = TrackHitsCut + "&&" + TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString ps_e_study_mc_p = ps_e_study_mc + "&&" + isProtonCut;
   TString ps_e_study_mc_n = ps_e_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -122,9 +123,9 @@ void stability_study(const char *setup_file_name){
 
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data BBGEM hits
-  TString BBgem_nhits_study_data = EnergyCut + "&&" + TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString BBgem_nhits_study_data = EnergyCut + "&&" + TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y  + "&&" + HCal_Shower_atime_Cut;
   //For MC BBGEM hits
-  TString BBgem_nhits_study_mc = EnergyCut + "&&" +TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut;
+  TString BBgem_nhits_study_mc = EnergyCut + "&&" +TrackQualityCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString BBgem_nhits_study_mc_p = BBgem_nhits_study_mc + "&&" + isProtonCut;
   TString BBgem_nhits_study_mc_n = BBgem_nhits_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -155,9 +156,9 @@ void stability_study(const char *setup_file_name){
 
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data BBGEM Track Chi2
-  TString BBgem_chi2ndf_study_data = EnergyCut + "&&" + TrackHitsCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString BBgem_chi2ndf_study_data = EnergyCut + "&&" + TrackHitsCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
   //For MC BBGEM Track Chi2
-  TString BBgem_chi2ndf_study_mc = EnergyCut + "&&" +TrackHitsCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut;
+  TString BBgem_chi2ndf_study_mc = EnergyCut + "&&" +TrackHitsCut + "&&" + TargetVertexCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString BBgem_chi2ndf_study_mc_p = BBgem_chi2ndf_study_mc + "&&" + isProtonCut;
   TString BBgem_chi2ndf_study_mc_n = BBgem_chi2ndf_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -187,9 +188,9 @@ void stability_study(const char *setup_file_name){
 
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data vertex
-  TString vert_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString vert_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
   //For MC vertex 
-  TString vert_study_mc = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut;
+  TString vert_study_mc = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + W2Cut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString vert_study_mc_p = vert_study_mc + "&&" + isProtonCut;
   TString vert_study_mc_n = vert_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -219,9 +220,9 @@ void stability_study(const char *setup_file_name){
   //W2 Stability Analysis
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data W2
-  TString W2_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString W2_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
   //For MC W2
-  TString W2_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut;
+  TString W2_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + FidXCut + "&&" + FidYCut + "&&" + eOverpCut + "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString W2_study_mc_p = W2_study_mc + "&&" + isProtonCut;
   TString W2_study_mc_n = W2_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -251,9 +252,9 @@ void stability_study(const char *setup_file_name){
   //BB E over p Stability Analysis
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data BB E over p
-  TString BB_E_over_p_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString BB_E_over_p_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" + HCal_Energy_Cut + "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
   //For MC BB E over p
-  TString BB_E_over_p_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut;
+  TString BB_E_over_p_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString BB_E_over_p_study_mc_p = BB_E_over_p_study_mc + "&&" + isProtonCut;
   TString BB_E_over_p_study_mc_n = BB_E_over_p_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -283,9 +284,9 @@ void stability_study(const char *setup_file_name){
   //HCal Energy Stability Analysis
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data HCal Energy
-  TString ehcal_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + dyCut + "&&" + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString ehcal_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + dyCut + "&&" + OpticsCut_x + "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
   //For MC ehcal 
-  TString ehcal_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + dyCut+ "&&" + OpticsCut;
+  TString ehcal_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + dyCut+ "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString ehcal_study_mc_p = ehcal_study_mc + "&&" + isProtonCut;
   TString ehcal_study_mc_n = ehcal_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -315,9 +316,9 @@ void stability_study(const char *setup_file_name){
   //HCal Shower analog time diff Stability Analysis
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data HCal Shower analog time diff
-  TString hcal_sh_atime_diff_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&"  + dyCut+ "&&" + OpticsCut;
+  TString hcal_sh_atime_diff_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&"  + dyCut+ "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   //For MC ps 
-  TString hcal_sh_atime_diff_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut;
+  TString hcal_sh_atime_diff_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString hcal_sh_atime_diff_study_mc_p = hcal_sh_atime_diff_study_mc + "&&" + isProtonCut;
   TString hcal_sh_atime_diff_study_mc_n = hcal_sh_atime_diff_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -347,9 +348,9 @@ void stability_study(const char *setup_file_name){
   //dy Stability Analysis
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data dy
-  TString dy_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&"  + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString dy_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&"  + OpticsCut_x + "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
   //For MC dy
-  TString dy_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + OpticsCut;
+  TString dy_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + OpticsCut_x + "&&" + OpticsCut_y;
   TString dy_study_mc_p = dy_study_mc + "&&" + isProtonCut;
   TString dy_study_mc_n = dy_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -379,9 +380,9 @@ void stability_study(const char *setup_file_name){
   //Fid X, x expect Stability Analysis
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data Fid X
-  TString xexp_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&"  + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString xexp_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&"  + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
   //For MC Fid X
-  TString xexp_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidYCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + dyCut+ "&&" + OpticsCut;
+  TString xexp_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidYCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + dyCut+ "&&" + OpticsCut_y;
   TString xexp_study_mc_p = xexp_study_mc + "&&" + isProtonCut;
   TString xexp_study_mc_n = xexp_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -411,9 +412,9 @@ void stability_study(const char *setup_file_name){
   //Fid Y, y expect Stability Analysis
   //First setup the cutvar string which should be every other cut but the one under consideration
   //For data Fid Y
-  TString yexp_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&"  + OpticsCut + "&&" + HCal_Shower_atime_Cut;
+  TString yexp_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&"  + OpticsCut_x  + "&&" + HCal_Shower_atime_Cut;
   //For MC Fid Y
-  TString yexp_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + dyCut+ "&&" + OpticsCut;
+  TString yexp_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + dyCut+ "&&" + OpticsCut_x ;
   TString yexp_study_mc_p = yexp_study_mc + "&&" + isProtonCut;
   TString yexp_study_mc_n = yexp_study_mc + "&&" + isNeutronCut;
   //setup cutvar objects, central to this stability study, for data and mc
@@ -439,104 +440,297 @@ void stability_study(const char *setup_file_name){
    //Setup a stability analysis object. This is useful for getting physics quantities for the overall dx slices
   stability_analysis yexpVar_stability(yexpVar_data,yexpVar_mc_p,yexpVar_mc_n,slice_yexpVar_data,slice_yexpVar_mc_p,slice_yexpVar_mc_n,FitType);
 
+   ////////////////////////////////////////////////////////////////////////////////////////////
+  //Optics X validity Stability Analysis
+  //First setup the cutvar string which should be every other cut but the one under consideration
+  //For data Optics X
+  TString OpticsCut_x_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +   "&&"+ FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
+  //For MC OpticsCut_x
+  TString OpticsCut_x_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  +  "&&" +FidYCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + dyCut+ "&&"  + OpticsCut_y;
+  TString OpticsCut_x_study_mc_p = OpticsCut_x_study_mc + "&&" + isProtonCut;
+  TString OpticsCut_x_study_mc_n = OpticsCut_x_study_mc + "&&" + isNeutronCut;
+  //setup cutvar objects, central to this stability study, for data and mc
+  TString OpticsCut_xVar_string = "BBtr_r_x-BBtr_r_th*0.9";
+  cutvar OpticsCut_xVar_data(OpticsCut_xVar_string, OpticsCut_x_study_data, data_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_data);
+  //For MC proton
+  cutvar OpticsCut_xVar_mc_p(OpticsCut_xVar_string, OpticsCut_x_study_mc_p, mc_p_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+  //For MC neutron
+  cutvar OpticsCut_xVar_mc_n(OpticsCut_xVar_string, OpticsCut_x_study_mc_n, mc_n_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+
+  //Get the 2D histgroms associated with the cut var for both data and mc
+  TH2D* OpticsCut_x_dxhist_data = OpticsCut_xVar_data.get2DdxCutHisto();
+  TH2D* OpticsCut_x_dxhist_mc_p = OpticsCut_xVar_mc_p.get2DdxCutHisto();
+  TH2D* OpticsCut_x_dxhist_mc_n = OpticsCut_xVar_mc_n.get2DdxCutHisto();
+  //Slice the histogram according to the given range of the cut var and make projections in based on the 2DHisto
+  //For data  dx histo
+  vector<TH1D*> slice_OpticsCut_xVar_data = OpticsCut_xVar_data.sliceAndProjectHisto_xMinxMax(OpticsCut_x_dxhist_data,OpticsCut_xVar_data.getAxisTitle().Data(),"dx");
+  //For MC proton dx histo
+  vector<TH1D*> slice_OpticsCut_xVar_mc_p = OpticsCut_xVar_mc_p.sliceAndProjectHisto_xMinxMax(OpticsCut_x_dxhist_mc_p,OpticsCut_xVar_mc_p.getAxisTitle().Data(),"dx");
+  //For MC neutron dx histo
+  vector<TH1D*> slice_OpticsCut_xVar_mc_n = OpticsCut_xVar_mc_n.sliceAndProjectHisto_xMinxMax(OpticsCut_x_dxhist_mc_n,OpticsCut_xVar_mc_n.getAxisTitle().Data(),"dx");
+
+   //Setup a stability analysis object. This is useful for getting physics quantities for the overall dx slices
+  stability_analysis OpticsCut_xVar_stability(OpticsCut_xVar_data,OpticsCut_xVar_mc_p,OpticsCut_xVar_mc_n,slice_OpticsCut_xVar_data,slice_OpticsCut_xVar_mc_p,slice_OpticsCut_xVar_mc_n,FitType);
+
+  //Check on correlation between W2 and Optics X
+  TString W2_OpticsCut_x_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&"  + dyCut+ "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
+  //For MC W2 and dy study
+  TString W2_OpticsCut_x_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&"+ FidYCut+ "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" +dyCut + "&&" + OpticsCut_y;
+  TString W2_OpticsCut_x_study_mc_p = W2_OpticsCut_x_study_mc + "&&" + isProtonCut;
+  TString W2_OpticsCut_x_study_mc_n = W2_OpticsCut_x_study_mc + "&&" + isNeutronCut;
+  //setup cutvar objects, central to this stability study, for data and mc
+  TString W2_OpticsCut_xVar_string = "BBtr_r_x-BBtr_r_th*0.9";
+  cutvar W2_OpticsCut_xVar_data(W2_OpticsCut_xVar_string, W2_OpticsCut_x_study_data, data_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_data);
+  //For MC proton
+  cutvar W2_OpticsCut_xVar_mc_p(W2_OpticsCut_xVar_string, W2_OpticsCut_x_study_mc_p, mc_p_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+  //For MC neutron
+  cutvar W2_OpticsCut_xVar_mc_n(W2_OpticsCut_xVar_string, W2_OpticsCut_x_study_mc_n, mc_n_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+
+  //Get the 2D histgroms associated with the cut var for both data and mc
+  TH2D* W2_OpticsCut_x_W2hist_data = W2_OpticsCut_xVar_data.get2DW2CutHisto();
+  TH2D* W2_OpticsCut_x_W2hist_mc_p = W2_OpticsCut_xVar_mc_p.get2DW2CutHisto();
+  TH2D* W2_OpticsCut_x_W2hist_mc_n = W2_OpticsCut_xVar_mc_n.get2DW2CutHisto();
+
+
+  //Optics Y validity Stability Analysis
+  //First setup the cutvar string which should be every other cut but the one under consideration
+  //For data Optics Y
+  TString OpticsCut_y_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + W2Cut  +  "&&" + FidXCut +  "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&" + dyCut+ "&&" + OpticsCut_x + "&&" + HCal_Shower_atime_Cut;
+  //For MC OpticsCut_y
+  TString OpticsCut_y_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + W2Cut  + "&&" + FidXCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + dyCut+ "&&"  + OpticsCut_x;
+  TString OpticsCut_y_study_mc_p = OpticsCut_y_study_mc + "&&" + isProtonCut;
+  TString OpticsCut_y_study_mc_n = OpticsCut_y_study_mc + "&&" + isNeutronCut;
+  //setup cutvar objects, central to this stability study, for data and mc
+  TString OpticsCut_yVar_string = "BBtr_r_y-0.9*BBtr_r_ph";
+  cutvar OpticsCut_yVar_data(OpticsCut_yVar_string, OpticsCut_y_study_data, data_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_data);
+  //For MC proton
+  cutvar OpticsCut_yVar_mc_p(OpticsCut_yVar_string, OpticsCut_y_study_mc_p, mc_p_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+  //For MC neutron
+  cutvar OpticsCut_yVar_mc_n(OpticsCut_yVar_string, OpticsCut_y_study_mc_n, mc_n_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+
+  //Get the 2D histgroms associated with the cut var for both data and mc
+  TH2D* OpticsCut_y_dxhist_data = OpticsCut_yVar_data.get2DdxCutHisto();
+  TH2D* OpticsCut_y_dxhist_mc_p = OpticsCut_yVar_mc_p.get2DdxCutHisto();
+  TH2D* OpticsCut_y_dxhist_mc_n = OpticsCut_yVar_mc_n.get2DdxCutHisto();
+  //Slice the histogram according to the given range of the cut var and make projections in based on the 2DHisto
+  //For data  dx histo
+  vector<TH1D*> slice_OpticsCut_yVar_data = OpticsCut_yVar_data.sliceAndProjectHisto_xMinxMax(OpticsCut_y_dxhist_data,OpticsCut_yVar_data.getAxisTitle().Data(),"dx");
+  //For MC proton dx histo
+  vector<TH1D*> slice_OpticsCut_yVar_mc_p = OpticsCut_yVar_mc_p.sliceAndProjectHisto_xMinxMax(OpticsCut_y_dxhist_mc_p,OpticsCut_yVar_mc_p.getAxisTitle().Data(),"dx");
+  //For MC neutron dx histo
+  vector<TH1D*> slice_OpticsCut_yVar_mc_n = OpticsCut_yVar_mc_n.sliceAndProjectHisto_xMinxMax(OpticsCut_y_dxhist_mc_n,OpticsCut_yVar_mc_n.getAxisTitle().Data(),"dx");
+
+   //Setup a stability analysis object. This is useful for getting physics quantities for the overall dx slices
+  stability_analysis OpticsCut_yVar_stability(OpticsCut_yVar_data,OpticsCut_yVar_mc_p,OpticsCut_yVar_mc_n,slice_OpticsCut_yVar_data,slice_OpticsCut_yVar_mc_p,slice_OpticsCut_yVar_mc_n,FitType);
+
+  //Check on correlation between W2 and Optics Y
+  TString W2_OpticsCut_y_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + FidXCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&"  + dyCut+ "&&" + OpticsCut_x + "&&" + HCal_Shower_atime_Cut;
+  //For MC W2 and dy study
+  TString W2_OpticsCut_y_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + FidXCut + "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" +dyCut + "&&" + OpticsCut_x;
+  TString W2_OpticsCut_y_study_mc_p = W2_OpticsCut_y_study_mc + "&&" + isProtonCut;
+  TString W2_OpticsCut_y_study_mc_n = W2_OpticsCut_y_study_mc + "&&" + isNeutronCut;
+  //setup cutvar objects, central to this stability study, for data and mc
+  TString W2_OpticsCut_yVar_string = "BBtr_r_y-0.9*BBtr_r_ph";
+  cutvar W2_OpticsCut_yVar_data(W2_OpticsCut_yVar_string, W2_OpticsCut_y_study_data, data_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_data);
+  //For MC proton
+  cutvar W2_OpticsCut_yVar_mc_p(W2_OpticsCut_yVar_string, W2_OpticsCut_y_study_mc_p, mc_p_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+  //For MC neutron
+  cutvar W2_OpticsCut_yVar_mc_n(W2_OpticsCut_yVar_string, W2_OpticsCut_y_study_mc_n, mc_n_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+
+  //Get the 2D histgroms associated with the cut var for both data and mc
+  TH2D* W2_OpticsCut_y_W2hist_data = W2_OpticsCut_yVar_data.get2DW2CutHisto();
+  TH2D* W2_OpticsCut_y_W2hist_mc_p = W2_OpticsCut_yVar_mc_p.get2DW2CutHisto();
+  TH2D* W2_OpticsCut_y_W2hist_mc_n = W2_OpticsCut_yVar_mc_n.get2DW2CutHisto();
+  
+  //Check on correlation between W2 and dy
+  TString W2_dy_study_data = TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut  + "&&" + FidXCut + "&&" + FidYCut + "&&" +eOverpCut+ "&&" + HCal_Energy_Cut + "&&"  + OpticsCut_x + "&&" + OpticsCut_y + "&&" + HCal_Shower_atime_Cut;
+  //For MC W2 and dy study
+  TString W2_dy_study_mc =TrackHitsCut + "&&" + TrackQualityCut + "&&" + EnergyCut + "&&" + TargetVertexCut + "&&" + FidXCut + "&&"+ FidYCut+ "&&" +eOverpCut+"&&" + HCal_Energy_Cut +  "&&" + OpticsCut_x + "&&" + OpticsCut_y;
+  TString W2_dy_study_mc_p = W2_dy_study_mc + "&&" + isProtonCut;
+  TString W2_dy_study_mc_n = W2_dy_study_mc + "&&" + isNeutronCut;
+  //setup cutvar objects, central to this stability study, for data and mc
+  TString W2_dyVar_string = "dy";
+  cutvar W2_dyVar_data(W2_dyVar_string, W2_dy_study_data, data_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_data);
+  //For MC proton
+  cutvar W2_dyVar_mc_p(W2_dyVar_string, W2_dy_study_mc_p, mc_p_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+  //For MC neutron
+  cutvar W2_dyVar_mc_n(W2_dyVar_string, W2_dy_study_mc_n, mc_n_flag_string, slice_mode, left_right, kin, sbs_field, dx_hist_low, dx_hist_high, dx_hist_bin, W2_hist_low, W2_hist_high, W2_hist_bin,C_mc);
+
+  //Get the 2D histgroms associated with the cut var for both data and mc
+  TH2D* W2_dy_W2hist_data = W2_dyVar_data.get2DW2CutHisto();
+  TH2D* W2_dy_W2hist_mc_p = W2_dyVar_mc_p.get2DW2CutHisto();
+  TH2D* W2_dy_W2hist_mc_n = W2_dyVar_mc_n.get2DW2CutHisto();
+
   //draw the histos for pre shower plots
   TCanvas* c0 = psVar_stability.plotRsfTGraphError();
-  TCanvas* c2 = psVar_stability.plotdxSliceHistos();
-  TCanvas* c3 = psVar_stability.plotdxSliceResidual();
-  TCanvas* c4 = psVar_stability.plot2DCutOverlay();
-  TCanvas* c5 = psVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c6 = psVar_stability.plot1DCutOverlay();
-  TCanvas* c7 = psVar_stability.plotNEntries();
+  TCanvas* c2 = psVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c3 = psVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c4 = psVar_stability.plotChi2_NDFGraph();
+  TCanvas* c5 = psVar_stability.plotdxSliceHistos();
+  TCanvas* c6 = psVar_stability.plotdxSliceResidual();
+  TCanvas* c7 = psVar_stability.plot2DCutOverlay();
+  TCanvas* c8 = psVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c9 = psVar_stability.plot1DCutOverlay();
+  TCanvas* c10 = psVar_stability.plotNEntries();
 
   //draw thistos for the BBgem_nhits plots
-  TCanvas* c8 = BBgem_nhitsVar_stability.plotRsfTGraphError();
-  TCanvas* c9 = BBgem_nhitsVar_stability.plotdxSliceHistos();
-  TCanvas* c10 = BBgem_nhitsVar_stability.plotdxSliceResidual();
-  TCanvas* c11 = BBgem_nhitsVar_stability.plot2DCutOverlay();
-  TCanvas* c12 = BBgem_nhitsVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c13 = BBgem_nhitsVar_stability.plot1DCutOverlay();
-  TCanvas* c14 = BBgem_nhitsVar_stability.plotNEntries();
+  TCanvas* c11 = BBgem_nhitsVar_stability.plotRsfTGraphError();
+  TCanvas* c12 = BBgem_nhitsVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c13 = BBgem_nhitsVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c14 = BBgem_nhitsVar_stability.plotChi2_NDFGraph();
+  TCanvas* c15 = BBgem_nhitsVar_stability.plotdxSliceHistos();
+  TCanvas* c16 = BBgem_nhitsVar_stability.plotdxSliceResidual();
+  TCanvas* c17 = BBgem_nhitsVar_stability.plot2DCutOverlay();
+  TCanvas* c18 = BBgem_nhitsVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c19 = BBgem_nhitsVar_stability.plot1DCutOverlay();
+  TCanvas* c20 = BBgem_nhitsVar_stability.plotNEntries();
 
   //draw the histos for vertex plots
-  TCanvas* c15 = BBgem_chi2ndfVar_stability.plotRsfTGraphError();
-  TCanvas* c16 = BBgem_chi2ndfVar_stability.plotdxSliceHistos();
-  TCanvas* c17 = BBgem_chi2ndfVar_stability.plotdxSliceResidual();
-  TCanvas* c18 = BBgem_chi2ndfVar_stability.plot2DCutOverlay();
-  TCanvas* c19 = BBgem_chi2ndfVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c20 = BBgem_chi2ndfVar_stability.plot1DCutOverlay();
-  TCanvas* c21 = BBgem_chi2ndfVar_stability.plotNEntries();
+  TCanvas* c21 = BBgem_chi2ndfVar_stability.plotRsfTGraphError();
+  TCanvas* c22 = BBgem_chi2ndfVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c23 = BBgem_chi2ndfVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c24 = BBgem_chi2ndfVar_stability.plotChi2_NDFGraph();
+  TCanvas* c25 = BBgem_chi2ndfVar_stability.plotdxSliceHistos();
+  TCanvas* c26 = BBgem_chi2ndfVar_stability.plotdxSliceResidual();
+  TCanvas* c27 = BBgem_chi2ndfVar_stability.plot2DCutOverlay();
+  TCanvas* c28 = BBgem_chi2ndfVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c29 = BBgem_chi2ndfVar_stability.plot1DCutOverlay();
+  TCanvas* c30 = BBgem_chi2ndfVar_stability.plotNEntries();
 
   //draw the histos for vertex plots
-  TCanvas* c22 = vertVar_stability.plotRsfTGraphError();
-  TCanvas* c23 = vertVar_stability.plotdxSliceHistos();
-  TCanvas* c24 = vertVar_stability.plotdxSliceResidual();
-  TCanvas* c25 = vertVar_stability.plot2DCutOverlay();
-  TCanvas* c26 = vertVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c27 = vertVar_stability.plot1DCutOverlay();
-  TCanvas* c28 = vertVar_stability.plotNEntries();
+  TCanvas* c31 = vertVar_stability.plotRsfTGraphError();
+  TCanvas* c32 = vertVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c33 = vertVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c34 = vertVar_stability.plotChi2_NDFGraph();
+  TCanvas* c35 = vertVar_stability.plotdxSliceHistos();
+  TCanvas* c36 = vertVar_stability.plotdxSliceResidual();
+  TCanvas* c37 = vertVar_stability.plot2DCutOverlay();
+  TCanvas* c38 = vertVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c39 = vertVar_stability.plot1DCutOverlay();
+  TCanvas* c40 = vertVar_stability.plotNEntries();
   
   //draw the histos for W2 plots
-  TCanvas* c29 = W2Var_stability.plotRsfTGraphError();
-  TCanvas* c30 = W2Var_stability.plotdxSliceHistos();
-  TCanvas* c31 = W2Var_stability.plotdxSliceResidual();
-  TCanvas* c32 = W2Var_stability.plot2DCutOverlay();
-  TCanvas* c33 = W2Var_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c34 = W2Var_stability.plot1DCutOverlay();
-  TCanvas* c35 = W2Var_stability.plotNEntries();
+  TCanvas* c41 = W2Var_stability.plotRsfTGraphError();
+  TCanvas* c42 = W2Var_stability.plotRsfTGraphError_xMin();
+  TCanvas* c43 = W2Var_stability.plotRsfTGraphError_xMax();
+  TCanvas* c44 = W2Var_stability.plotChi2_NDFGraph();
+  TCanvas* c45 = W2Var_stability.plotdxSliceHistos();
+  TCanvas* c46 = W2Var_stability.plotdxSliceResidual();
+  TCanvas* c47 = W2Var_stability.plot2DCutOverlay();
+  TCanvas* c48 = W2Var_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c49 = W2Var_stability.plot1DCutOverlay();
+  TCanvas* c50 = W2Var_stability.plotNEntries();
 
   //draw the histos for E over p plots
-  TCanvas* c36 = BB_E_over_pVar_stability.plotRsfTGraphError();
-  TCanvas* c37 = BB_E_over_pVar_stability.plotdxSliceHistos();
-  TCanvas* c38 = BB_E_over_pVar_stability.plotdxSliceResidual();
-  TCanvas* c39 = BB_E_over_pVar_stability.plot2DCutOverlay();
-  TCanvas* c40 = BB_E_over_pVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c41 = BB_E_over_pVar_stability.plot1DCutOverlay();
-  TCanvas* c42 = BB_E_over_pVar_stability.plotNEntries();
+  TCanvas* c51 = BB_E_over_pVar_stability.plotRsfTGraphError();
+  TCanvas* c52 = BB_E_over_pVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c53 = BB_E_over_pVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c54 = BB_E_over_pVar_stability.plotChi2_NDFGraph();
+  TCanvas* c55 = BB_E_over_pVar_stability.plotdxSliceHistos();
+  TCanvas* c56 = BB_E_over_pVar_stability.plotdxSliceResidual();
+  TCanvas* c57 = BB_E_over_pVar_stability.plot2DCutOverlay();
+  TCanvas* c58 = BB_E_over_pVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c59 = BB_E_over_pVar_stability.plot1DCutOverlay();
+  TCanvas* c60 = BB_E_over_pVar_stability.plotNEntries();
 
   //draw the histos for HCal E
-  TCanvas* c43 = ehcalVar_stability.plotRsfTGraphError();
-  TCanvas* c44 = ehcalVar_stability.plotdxSliceHistos();
-  TCanvas* c45 = ehcalVar_stability.plotdxSliceResidual();
-  TCanvas* c46 = ehcalVar_stability.plot2DCutOverlay();
-  TCanvas* c47 = ehcalVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c48 = ehcalVar_stability.plot1DCutOverlay();
-  TCanvas* c49 = ehcalVar_stability.plotNEntries();
+  TCanvas* c61 = ehcalVar_stability.plotRsfTGraphError();
+  TCanvas* c62 = ehcalVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c63 = ehcalVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c64 = ehcalVar_stability.plotChi2_NDFGraph();
+  TCanvas* c65 = ehcalVar_stability.plotdxSliceHistos();
+  TCanvas* c66 = ehcalVar_stability.plotdxSliceResidual();
+  TCanvas* c67 = ehcalVar_stability.plot2DCutOverlay();
+  TCanvas* c68 = ehcalVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c69 = ehcalVar_stability.plot1DCutOverlay();
+  TCanvas* c70 = ehcalVar_stability.plotNEntries();
 
   //draw the histos for HCal sh analog time diff
-  TCanvas* c50 = hcal_sh_atime_diffVar_stability.plotRsfTGraphError();
-  TCanvas* c51 = hcal_sh_atime_diffVar_stability.plotdxSliceHistos();
-  TCanvas* c52 = hcal_sh_atime_diffVar_stability.plotdxSliceResidual();
-  TCanvas* c53 = hcal_sh_atime_diffVar_stability.plot2DCutOverlay();
-  TCanvas* c54 = hcal_sh_atime_diffVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c55 = hcal_sh_atime_diffVar_stability.plot1DCutOverlay();
-  TCanvas* c56 = hcal_sh_atime_diffVar_stability.plotNEntries();
+  TCanvas* c71 = hcal_sh_atime_diffVar_stability.plotRsfTGraphError();
+  TCanvas* c72 = hcal_sh_atime_diffVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c73 = hcal_sh_atime_diffVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c74 = hcal_sh_atime_diffVar_stability.plotChi2_NDFGraph();
+  TCanvas* c75 = hcal_sh_atime_diffVar_stability.plotdxSliceHistos();
+  TCanvas* c76 = hcal_sh_atime_diffVar_stability.plotdxSliceResidual();
+  TCanvas* c77 = hcal_sh_atime_diffVar_stability.plot2DCutOverlay();
+  TCanvas* c78 = hcal_sh_atime_diffVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c79 = hcal_sh_atime_diffVar_stability.plot1DCutOverlay();
+  TCanvas* c80 = hcal_sh_atime_diffVar_stability.plotNEntries();
 
   //draw the histos for dy
-  TCanvas* c57 = dyVar_stability.plotRsfTGraphError();
-  TCanvas* c58 = dyVar_stability.plotdxSliceHistos();
-  TCanvas* c59 = dyVar_stability.plotdxSliceResidual();
-  TCanvas* c60 = dyVar_stability.plot2DCutOverlay();
-  TCanvas* c61 = dyVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c62 = dyVar_stability.plot1DCutOverlay();
-  TCanvas* c63 = dyVar_stability.plotNEntries();
+  TCanvas* c81 = dyVar_stability.plotRsfTGraphError();
+  TCanvas* c82 = dyVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c83 = dyVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c84 = dyVar_stability.plotChi2_NDFGraph();
+  TCanvas* c85 = dyVar_stability.plotdxSliceHistos();
+  TCanvas* c86 = dyVar_stability.plotdxSliceResidual();
+  TCanvas* c87 = dyVar_stability.plot2DCutOverlay();
+  TCanvas* c88 = dyVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c89 = dyVar_stability.plot1DCutOverlay();
+  TCanvas* c90 = dyVar_stability.plotNEntries();
 
    //draw the histos for Fid X, x expect
-  TCanvas* c64 = xexpVar_stability.plotRsfTGraphError();
-  TCanvas* c65 = xexpVar_stability.plotdxSliceHistos();
-  TCanvas* c66 = xexpVar_stability.plotdxSliceResidual();
-  TCanvas* c67 = xexpVar_stability.plot2DCutOverlay();
-  TCanvas* c68 = xexpVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c69 = xexpVar_stability.plot1DCutOverlay();
-  TCanvas* c70 = xexpVar_stability.plotNEntries();
+  TCanvas* c91 = xexpVar_stability.plotRsfTGraphError();
+  TCanvas* c92 = xexpVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c93 = xexpVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c94 = xexpVar_stability.plotChi2_NDFGraph();
+  TCanvas* c95 = xexpVar_stability.plotdxSliceHistos();
+  TCanvas* c96 = xexpVar_stability.plotdxSliceResidual();
+  TCanvas* c97 = xexpVar_stability.plot2DCutOverlay();
+  TCanvas* c98 = xexpVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c99 = xexpVar_stability.plot1DCutOverlay();
+  TCanvas* c100 = xexpVar_stability.plotNEntries();
 
   //draw the histos for Fid Y, Y expect
-  TCanvas* c71 = yexpVar_stability.plotRsfTGraphError();
-  TCanvas* c72 = yexpVar_stability.plotdxSliceHistos();
-  TCanvas* c73 = yexpVar_stability.plotdxSliceResidual();
-  TCanvas* c74 = yexpVar_stability.plot2DCutOverlay();
-  TCanvas* c75 = yexpVar_stability.plot2DCutOverlay_CutRegion();
-  TCanvas* c76 = yexpVar_stability.plot1DCutOverlay();
-  TCanvas* c77 = yexpVar_stability.plotNEntries();
+  TCanvas* c101 = yexpVar_stability.plotRsfTGraphError();
+  TCanvas* c102 = yexpVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c103 = yexpVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c104 = yexpVar_stability.plotChi2_NDFGraph();
+  TCanvas* c105 = yexpVar_stability.plotdxSliceHistos();
+  TCanvas* c106 = yexpVar_stability.plotdxSliceResidual();
+  TCanvas* c107 = yexpVar_stability.plot2DCutOverlay();
+  TCanvas* c108 = yexpVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c109 = yexpVar_stability.plot1DCutOverlay();
+  TCanvas* c110 = yexpVar_stability.plotNEntries();
+
+  //draw the histos for the Optics X cut
+  TCanvas* c111 = OpticsCut_xVar_stability.plotRsfTGraphError();
+  TCanvas* c112 = OpticsCut_xVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c113 = OpticsCut_xVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c114 = OpticsCut_xVar_stability.plotChi2_NDFGraph();
+  TCanvas* c115 = OpticsCut_xVar_stability.plotdxSliceHistos();
+  TCanvas* c116 = OpticsCut_xVar_stability.plotdxSliceResidual();
+  TCanvas* c117 = OpticsCut_xVar_stability.plot2DCutOverlay();
+  TCanvas* c118 = OpticsCut_xVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c119 = OpticsCut_xVar_stability.plot1DCutOverlay();
+  TCanvas* c120 = OpticsCut_xVar_stability.plotNEntries();
+
+  //draw the histos for the Optics Y cut
+  TCanvas* c121 = OpticsCut_yVar_stability.plotRsfTGraphError();
+  TCanvas* c122 = OpticsCut_yVar_stability.plotRsfTGraphError_xMin();
+  TCanvas* c123 = OpticsCut_yVar_stability.plotRsfTGraphError_xMax();
+  TCanvas* c124 = OpticsCut_yVar_stability.plotChi2_NDFGraph();
+  TCanvas* c125 = OpticsCut_yVar_stability.plotdxSliceHistos();
+  TCanvas* c126 = OpticsCut_yVar_stability.plotdxSliceResidual();
+  TCanvas* c127 = OpticsCut_yVar_stability.plot2DCutOverlay();
+  TCanvas* c128 = OpticsCut_yVar_stability.plot2DCutOverlay_CutRegion();
+  TCanvas* c129 = OpticsCut_yVar_stability.plot1DCutOverlay();
+  TCanvas* c130 = OpticsCut_yVar_stability.plotNEntries();
+
+  //Draw histos for W2 and dy study
+  TCanvas* c131 = utility::printTH2D(W2_dy_W2hist_data,W2_dyVar_data.getDataMCFlag());
+  TCanvas* c132 = utility::printTH2D(W2_dy_W2hist_mc_p,W2_dyVar_mc_p.getDataMCFlag());
+  TCanvas* c133 = utility::printTH2D(W2_dy_W2hist_mc_n,W2_dyVar_mc_n.getDataMCFlag());
+
+  //Draw histos for W2 and OpticsCut_x study
+  TCanvas* c134 = utility::printTH2D(W2_OpticsCut_x_W2hist_data,W2_OpticsCut_xVar_data.getDataMCFlag());
+  TCanvas* c135 = utility::printTH2D(W2_OpticsCut_x_W2hist_mc_p,W2_OpticsCut_xVar_mc_p.getDataMCFlag());
+  TCanvas* c136 = utility::printTH2D(W2_OpticsCut_x_W2hist_mc_n,W2_OpticsCut_xVar_mc_n.getDataMCFlag());
+
+  //Draw histos for W2 and OpticsCut_y study
+  TCanvas* c137 = utility::printTH2D(W2_OpticsCut_y_W2hist_data,W2_OpticsCut_yVar_data.getDataMCFlag());
+  TCanvas* c138 = utility::printTH2D(W2_OpticsCut_y_W2hist_mc_p,W2_OpticsCut_yVar_mc_p.getDataMCFlag());
+  TCanvas* c139 = utility::printTH2D(W2_OpticsCut_y_W2hist_mc_n,W2_OpticsCut_yVar_mc_n.getDataMCFlag());
 
   //Write stuff to a pdf
   TString plotname = outfile;
@@ -621,7 +815,69 @@ void stability_study(const char *setup_file_name){
   c74->Print(plotname.Data(),"pdf");
   c75->Print(plotname.Data(),"pdf");
   c76->Print(plotname.Data(),"pdf");
-  c77->Print(end.Data(),"pdf");
+  c77->Print(plotname.Data(),"pdf");
+  c78->Print(plotname.Data(),"pdf");
+  c79->Print(plotname.Data(),"pdf");
+  c80->Print(plotname.Data(),"pdf");
+  c81->Print(plotname.Data(),"pdf");
+  c82->Print(plotname.Data(),"pdf");
+  c83->Print(plotname.Data(),"pdf");
+  c84->Print(plotname.Data(),"pdf");
+  c85->Print(plotname.Data(),"pdf");
+  c86->Print(plotname.Data(),"pdf");
+  c87->Print(plotname.Data(),"pdf");
+  c88->Print(plotname.Data(),"pdf");
+  c89->Print(plotname.Data(),"pdf");
+  c90->Print(plotname.Data(),"pdf");
+  c91->Print(plotname.Data(),"pdf");
+  c92->Print(plotname.Data(),"pdf");
+  c93->Print(plotname.Data(),"pdf");
+  c94->Print(plotname.Data(),"pdf");
+  c95->Print(plotname.Data(),"pdf");
+  c96->Print(plotname.Data(),"pdf");
+  c97->Print(plotname.Data(),"pdf");
+  c98->Print(plotname.Data(),"pdf");
+  c99->Print(plotname.Data(),"pdf");
+  c100->Print(plotname.Data(),"pdf");
+  c101->Print(plotname.Data(),"pdf");
+  c102->Print(plotname.Data(),"pdf");
+  c103->Print(plotname.Data(),"pdf");
+  c104->Print(plotname.Data(),"pdf");
+  c105->Print(plotname.Data(),"pdf");
+  c106->Print(plotname.Data(),"pdf");
+  c107->Print(plotname.Data(),"pdf");
+  c108->Print(plotname.Data(),"pdf");
+  c109->Print(plotname.Data(),"pdf");
+  c110->Print(plotname.Data(),"pdf");
+  c111->Print(plotname.Data(),"pdf");
+  c112->Print(plotname.Data(),"pdf");
+  c113->Print(plotname.Data(),"pdf");
+  c114->Print(plotname.Data(),"pdf");
+  c115->Print(plotname.Data(),"pdf");
+  c116->Print(plotname.Data(),"pdf");
+  c117->Print(plotname.Data(),"pdf");
+  c118->Print(plotname.Data(),"pdf");
+  c119->Print(plotname.Data(),"pdf");
+  c120->Print(plotname.Data(),"pdf");
+  c121->Print(plotname.Data(),"pdf");
+  c122->Print(plotname.Data(),"pdf");
+  c123->Print(plotname.Data(),"pdf");
+  c124->Print(plotname.Data(),"pdf");
+  c125->Print(plotname.Data(),"pdf");
+  c126->Print(plotname.Data(),"pdf");
+  c127->Print(plotname.Data(),"pdf");
+  c128->Print(plotname.Data(),"pdf");
+  c129->Print(plotname.Data(),"pdf");
+  c130->Print(plotname.Data(),"pdf");
+  c131->Print(plotname.Data(),"pdf");
+  c132->Print(plotname.Data(),"pdf");
+  c133->Print(plotname.Data(),"pdf");
+  c134->Print(plotname.Data(),"pdf");
+  c135->Print(plotname.Data(),"pdf");
+  c136->Print(plotname.Data(),"pdf");
+  c137->Print(plotname.Data(),"pdf");
+  c138->Print(plotname.Data(),"pdf");
+  c139->Print(end.Data(),"pdf");
  
   fout->Write();
 

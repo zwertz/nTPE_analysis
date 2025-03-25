@@ -149,9 +149,12 @@
 			}else if (key == "HCal_Shower_atime_Cut"){
 			HCal_Shower_atime_Cut = val;
                         //cout << "HCal_Shower_atime_Cut: " << HCal_Shower_atime_Cut << endl;
-			}else if (key == "OpticsCut"){
-			OpticsCut = val;
-                        //cout << "Optics Cut: " << OpticsCut << endl;
+			}else if (key == "OpticsCut_x"){
+			OpticsCut_x = val;
+                        //cout << "Optics Cut X: " << OpticsCut_x << endl;
+			}else if (key == "OpticsCut_y"){
+                        OpticsCut_y = val;
+                        //cout << "Optics Cut Y: " << OpticsCut_y << endl;
 			}else if (key == "ProtonSpotCut"){
 			ProtonSpotCut = val;
                         //cout << "ProtonSpot Cut: " << ProtonSpotCut << endl;
@@ -467,7 +470,9 @@
 
   TString parse_config::getHCal_Energy_Cut(){return HCal_Energy_Cut;}
 
-  TString parse_config::getOpticsCut(){return OpticsCut;}
+  TString parse_config::getOpticsCutX(){return OpticsCut_x;}
+
+  TString parse_config::getOpticsCutY(){return OpticsCut_y;}
 
   TString parse_config::getProtonSpotCut(){return ProtonSpotCut;}
 

@@ -300,7 +300,7 @@ string mystring("Shift");
 	//This one below is the max. But it takes longer to process
 	//datFit->SetNpx(10000000);
 	//Happy medium
-	datFit->SetNpx(250000);
+	datFit->SetNpx(500000);
 
 
 //Fit the provided histogram with the fit we have
