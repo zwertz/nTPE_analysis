@@ -81,6 +81,7 @@ double hbinfac = mainConfig.getHBinFac();
 int e_method = mainConfig.get_emethod();
 int maxtracks = mainConfig.getMAXNTRACKS();
 double hcalemin = mainConfig.getHCaleMin();
+double dysig_cut = mainConfig.get_dySigCut();
 double dysig_cut_fac = mainConfig.get_dySigCutFac();
 int hcalnclusmin = mainConfig.get_HCalNclusMin();
 double hcal_offset = exp_constants::getHCalOffset(pass);
@@ -247,15 +248,15 @@ double dx_pn = mainConfig.get_dxpn();
   TH1D *h_ntracks = new TH1D("ntracks","Number of Tracks;", 150, 0, 5);
   TH1D *h_ntracks_globcut = new TH1D("ntracks_globcut","Number of Tracks,global cut;", 150, 0, 5);
   TH1D *h_ntracks_cut = new TH1D("ntracks_cut","Number of Tracks, cuts;", 150, 0, 5);
-  TH1D *h_track_chi2ndf_nocut = new TH1D("track_chi2ndf_nocut","Track Chi^2/NDF, no cuts;",200,0,20);
+  TH1D *h_track_chi2ndf_nocut = new TH1D("track_chi2ndf_nocut","Track Chi^2/NDF, no cuts;",200,0,50);
   TH1D *h_track_chi2ndf_globcut = new TH1D("track_chi2ndf_globcut","Track Chi^2/NDF, global cuts;",200,0,20);
   TH1D *h_track_chi2ndf_cut = new TH1D("track_chi2ndf_cut","Track Chi^2/NDF, all cuts;",200,0,20);
-  TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.2);
-  TH1D *h_PS_E_globcut = new TH1D("h_ps_e_globcut"," PS Cluster Energy (GeV),global cut;",250,0.0,2.2);
-  TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), Cuts;",250,0.0,2.2);
-  TH1D *h_vert_z = new TH1D( "vert_z", "Vertex Position z-direction (m); m", 200, -0.2, 0.2 );
-  TH1D *h_vert_z_globcut = new TH1D( "vert_z_globcut", "Vertex Position z-direction (m), global cut; m", 200, -0.2, 0.2 );
-  TH1D *h_vert_z_cut = new TH1D( "vert_z_cut", "Vertex Position z-direction (m), Cuts; m", 200, -0.2, 0.2 );
+  TH1D *h_PS_E = new TH1D("h_ps_e"," PS Cluster Energy (GeV);",250,0.0,2.5);
+  TH1D *h_PS_E_globcut = new TH1D("h_ps_e_globcut"," PS Cluster Energy (GeV),global cut;",250,0.0,2.5);
+  TH1D *h_PS_E_cut = new TH1D("h_ps_e_cut"," PS Cluster Energy (GeV), Cuts;",250,0.0,2.5);
+  TH1D *h_vert_z = new TH1D( "vert_z", "Vertex Position z-direction (m); m", 200, -0.15, 0.15 );
+  TH1D *h_vert_z_globcut = new TH1D( "vert_z_globcut", "Vertex Position z-direction (m), global cut; m", 200, -0.15, 0.15 );
+  TH1D *h_vert_z_cut = new TH1D( "vert_z_cut", "Vertex Position z-direction (m), Cuts; m", 200, -0.15, 0.15 );
   TH1D *h_HCal_E = new TH1D( "HCal_E", "HCal Cluster Energy (GeV); GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_globcut = new TH1D( "HCal_E_globcut", "HCal Cluster Energy (GeV), global cut; GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 250, 0, 0.4 );
@@ -283,14 +284,20 @@ double dx_pn = mainConfig.get_dxpn();
   TH1D *h_optics_ydir_globcut = new TH1D("h_optics_ydir_globcut", "BigBite optics validity, track y-dir;",200,-0.2,0.2);
   TH2D *h_W2_optics_xdir_globcut = new TH2D("h_W2_optics_xdir_globcut", "W2 vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,binfac*W2fitmax, 0.0, W2fitmax );
   TH2D *h_W2_optics_ydir_globcut = new TH2D("h_W2_optics_ydir_globcut", "W2 vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,binfac*W2fitmax, 0.0, W2fitmax );
+  TH2D *h_xexp_optics_xdir_globcut = new TH2D("h_xexp_optics_xdir_globcut", "HCal X Expect vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,600, -3.0, 3.0 );
+  TH2D *h_yexp_optics_ydir_globcut = new TH2D("h_yexp_optics_ydir_globcut", "HCal Y Expect vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,400, -2.0, 2.0 );
   TH1D *h_optics_xdir_cut = new TH1D("h_optics_xdir_cut", "BigBite optics validity, track x-dir;",200,-0.6,0.6);
   TH1D *h_optics_ydir_cut = new TH1D("h_optics_ydir_cut", "BigBite optics validity, track y-dir;",200,-0.2,0.2);
   TH2D *h_W2_optics_xdir_cut = new TH2D("h_W2_optics_xdir_cut", "W2 vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,binfac*W2fitmax, 0.0, W2fitmax );
   TH2D *h_W2_optics_ydir_cut = new TH2D("h_W2_optics_ydir_cut", "W2 vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,binfac*W2fitmax, 0.0, W2fitmax );
+  TH2D *h_xexp_optics_xdir_cut = new TH2D("h_xexp_optics_xdir_cut", "HCal X Expect vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,600, -3.0, 3.0 );
+  TH2D *h_yexp_optics_ydir_cut = new TH2D("h_yexp_optics_ydir_cut", "HCal Y Expect vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,400, -2.0, 2.0 );
   TH1D *h_optics_xdir_nocut = new TH1D("h_optics_xdir_nocut", "BigBite optics validity, track x-dir;",200,-0.6,0.6);
   TH1D *h_optics_ydir_nocut = new TH1D("h_optics_ydir_nocut", "BigBite optics validity, track y-dir;",200,-0.2,0.2);
   TH2D *h_W2_optics_xdir_nocut = new TH2D("h_W2_optics_xdir_nocut", "W2 vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,binfac*W2fitmax, 0.0, W2fitmax );
   TH2D *h_W2_optics_ydir_nocut = new TH2D("h_W2_optics_ydir_nocut", "W2 vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,binfac*W2fitmax, 0.0, W2fitmax );
+  TH2D *h_xexp_optics_xdir_nocut = new TH2D("h_xexp_optics_xdir_nocut", "HCal X Expect vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,600, -3.0, 3.0 );
+  TH2D *h_yexp_optics_ydir_nocut = new TH2D("h_yexp_optics_ydir_nocut", "HCal Y Expect vs BigBite optics validity, track y-dir;", 200, -0.2, 0.2,400, -2.0, 2.0 );
 
 //basic H-arm
   TH2D *hxy_globcut = new TH2D("hxy_globcut","HCal X  vs Y, global cut;HCal Y  (m); HCal X  (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
@@ -305,6 +312,13 @@ double dx_pn = mainConfig.get_dxpn();
   TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV^{2}) all cuts; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *h_Q2_globcut = new TH1D( "Q2_globcut", "Q2 (GeV^{2}) global cut; GeV^{2}", 300, 0.0, 6.0 );
   TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV^{2}) all cuts; GeV^{2}", 300, 0.0, 6.0 );
+  TH1D *hx_expect_nocut = new TH1D("hx_expect_nocut","HCal X Expect, no cut; HCal X Expect (m)", 600, -3.0, 3.0 );
+  TH1D *hx_expect_globcut = new TH1D("hx_expect_globcut","HCal X Expect, global cut; HCal X Expect (m)", 600, -3.0, 3.0 );
+  TH1D *hx_expect_cut = new TH1D("hx_expect_cut","HCal X Expect, all cuts; HCal X Expect (m)", 600, -3.0, 3.0 );
+  TH1D *hy_expect_nocut = new TH1D("hy_expect_nocut","HCal Y Expect, no cut; HCal Y Expect (m)", 400, -2.0, 2.0 );
+  TH1D *hy_expect_globcut = new TH1D("hy_expect_globcut","HCal Y Expect, global cut; HCal Y Expect (m)", 400, -2.0, 2.0 );
+  TH1D *hy_expect_cut = new TH1D("hy_expect_cut","HCal Y Expect, all cuts; HCal Y Expect (m)", 400, -2.0, 2.0 );
+  TH2D *hxy_expect_nocut = new TH2D("hxy_expect_nocut","HCal X Expect vs Y Expect, no cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_globcut = new TH2D("hxy_expect_globcut","HCal X Expect vs Y Expect, global cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_glob_W2_cut = new TH2D("hxy_expect_glob_W2_cut","HCal X Expect vs Y Expect, global & W2 cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_n = new TH2D("hxy_expect_n","HCal X Expect vs Y Expect, elastic cuts neutron;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
@@ -313,9 +327,6 @@ double dx_pn = mainConfig.get_dxpn();
  TH2D *hxy_expect_fidcutn = new TH2D("hxy_expect_fidcutn","HCal X Expect vs Y Expect, neutron passed fiducial;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_failedfid = new TH2D("hxy_expect_failedfid","HCal X Expect vs Y Expect, failed fiducial cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_cut = new TH2D("hxy_expect_cut","HCal X Expect vs Y Expect, all cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
-
-  TH1D *hx_expect_all = new TH1D("hx_expect_all","HCal X Expect, global cut;HCal X Expect (m)", 147, -3.5, 3.0 );
-  TH1D *hx_expect_cut = new TH1D("hx_expect_hcalcut","HCal X Expect, global+HCal cut;HCal X Expect (m)", 147, -3.5, 3.0 );
 
 //Both arms
   TH2D *hdxdy_globcut = new TH2D("dxdy_globcut","HCal dxdy, global cut ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",400,dy_low,dy_high,600,dx_low,dx_high);
@@ -350,11 +361,11 @@ double dx_pn = mainConfig.get_dxpn();
   TH1D *hdy_cut_nofid = new TH1D( "dy_cut_nofid","HCal dy, all cuts but fiducial; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
   TH1D *hdy_cut = new TH1D( "dy_cut","HCal dy, all cuts; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
 
-  TH1D *hcoin_nocut = new TH1D( "hcoin_nocut", "HCal ADCt - BBCal ADCt, no cuts; ns", 400, -100, 100 );
-  TH1D *hcoin_glob_W2_cut = new TH1D( "hcoin_glob_W2_cut", "HCal ADCt - BBCal ADCt, global & W2 cuts; ns", 400, -100, 100 );
-  TH1D *hcoin_cut = new TH1D( "hcoin_cut", "HCal ADCt - BBCal ADCt, cuts; ns", 400, -100, 100 );
-  TH1D *hcoin_pclus_glob_W2_cut = new TH1D( "hcoin_pclus_glob_W2_cut", "HCal ADCt - BBCal ADCt, pclus,global & W2 cuts; ns", 400, -100, 100 );
-  TH1D *hcoin_pclus_cut = new TH1D( "hcoin_pclus_cut", "HCal ADCt - BBCal ADCt,pclus, cuts; ns", 400, -100, 100 );
+  TH1D *hcoin_nocut = new TH1D( "hcoin_nocut", "HCal ADCt - BBCal ADCt, no cuts; ns", 400, -60, 60 );
+  TH1D *hcoin_glob_W2_cut = new TH1D( "hcoin_glob_W2_cut", "HCal ADCt - BBCal ADCt, global & W2 cuts; ns", 400, -60, 60 );
+  TH1D *hcoin_cut = new TH1D( "hcoin_cut", "HCal ADCt - BBCal ADCt, cuts; ns", 400, -60, 60 );
+  TH1D *hcoin_pclus_glob_W2_cut = new TH1D( "hcoin_pclus_glob_W2_cut", "HCal ADCt - BBCal ADCt, pclus,global & W2 cuts; ns", 400, -60, 60 );
+  TH1D *hcoin_pclus_cut = new TH1D( "hcoin_pclus_cut", "HCal ADCt - BBCal ADCt,pclus, cuts; ns", 400, -60, 60 );
 
   TH1D *hMott_cs = new TH1D( "hMott_cs", "Mott Cross Section, no cut; (GeV/c)^{-2}", 200, 0, 0.0002 );
   TH2D *hdx_xhcal = new TH2D("hdx_xhcal","dx vs xhcal; xhcal; x_{HCAL}-x_{expect} (m)",600,-3.0,3.0,hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high);
@@ -1166,7 +1177,7 @@ double dx_pn = mainConfig.get_dxpn();
 				bool goodW2 = cuts::goodW2(W2,W2_low,W2_high);
 
 				//good dy boolean
-				bool good_dy = cuts::good_dy(dy_bestclus,dyO_p,dysig_cut_fac,dysig_p);
+				bool good_dy = cuts::good_dy(dy_bestclus,dyO_p,dysig_cut_fac,dysig_cut);
 
 				//good coincidence time cut. MC timing is poor do not implement this cut.
 				//bool passCoin = cuts::passCoin(coin_pclus,coin_mean,coin_sig_fac,coin_profile_sig);
@@ -1328,10 +1339,15 @@ double dx_pn = mainConfig.get_dxpn();
         			h_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],corr_mc_weight);
         			h_W2_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,corr_mc_weight);
 				h_track_chi2ndf_nocut->Fill(gem_ChiSqr[0],corr_mc_weight);
+				h_xexp_optics_xdir_nocut->Fill(tr_r_x[0]-0.9*tr_r_th[0],xhcal_expect,corr_mc_weight);
+        			h_yexp_optics_ydir_nocut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],yhcal_expect,corr_mc_weight);
 
         			hdx_nocut->Fill(dx_bestclus,corr_mc_weight);
         			hcoin_nocut->Fill(coin_bestclus,corr_mc_weight);
         			hdy_nocut->Fill(dy_bestclus,corr_mc_weight);
+				hxy_expect_nocut->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
+        			hx_expect_nocut->Fill(xhcal_expect,corr_mc_weight);
+        			hy_expect_nocut->Fill(yhcal_expect,corr_mc_weight);
 
 				//Fill some histograms here after basic global cuts
 				if(!failglobal){
@@ -1352,10 +1368,14 @@ double dx_pn = mainConfig.get_dxpn();
         			h_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],corr_mc_weight);
        				h_W2_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,corr_mc_weight);
 				h_track_chi2ndf_globcut->Fill(gem_ChiSqr[0],corr_mc_weight);
+				h_xexp_optics_xdir_globcut->Fill(tr_r_x[0]-0.9*tr_r_th[0],xhcal_expect,corr_mc_weight);
+        			h_yexp_optics_ydir_globcut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],yhcal_expect,corr_mc_weight);
 
 				//physics quantities
 				hxy_globcut->Fill(yhcal_bestclus,xhcal_bestclus,corr_mc_weight);
-        			h_W2_globcut->Fill(W2,corr_mc_weight);
+        			hx_expect_globcut->Fill(xhcal_expect,corr_mc_weight);
+        			hy_expect_globcut->Fill(yhcal_expect,corr_mc_weight);
+				h_W2_globcut->Fill(W2,corr_mc_weight);
         			h_Q2_globcut->Fill(Q2,corr_mc_weight);
         			hxy_expect_globcut->Fill(yhcal_expect,xhcal_expect,corr_mc_weight);
         			hxy_mctruen_globcut->Fill(yhcal_mctrue_n,xhcal_mctrue_n,corr_mc_weight);
@@ -1363,7 +1383,6 @@ double dx_pn = mainConfig.get_dxpn();
         			hdx_globcut->Fill(dx_bestclus,corr_mc_weight);
         			hdy_globcut->Fill(dy_bestclus,corr_mc_weight);
         			
-				hx_expect_all->Fill(xhcal_expect,corr_mc_weight);
 					if(nuc == "p"){
 					hdxdy_globcut_p->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);
 					hdx_globcut_p->Fill(dx_bestclus,corr_mc_weight);
@@ -1463,12 +1482,15 @@ double dx_pn = mainConfig.get_dxpn();
         			h_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],corr_mc_weight);
         			h_W2_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],W2,corr_mc_weight);
 				h_track_chi2ndf_cut->Fill(gem_ChiSqr[0],corr_mc_weight);
+				h_xexp_optics_xdir_cut->Fill(tr_r_x[0]-0.9*tr_r_th[0],xhcal_expect,corr_mc_weight);
+       				h_yexp_optics_ydir_cut->Fill(tr_r_y[0]-0.9*tr_r_ph[0],yhcal_expect,corr_mc_weight);
+        			hx_expect_cut->Fill(xhcal_expect,corr_mc_weight);
+        			hy_expect_cut->Fill(yhcal_expect,corr_mc_weight);
 
         			hxy_expect_fidcutp->Fill(yhcal_expect,(xhcal_expect-dx_pn),corr_mc_weight);
         			hxy_mctruen_fidcutp->Fill(yhcal_mctrue_n,(xhcal_mctrue_n-dx_pn),corr_mc_weight);
 				hdxvE->Fill(hcal_e_bestclus,dx_bestclus,corr_mc_weight);
         			hdxvW2->Fill(W2,dx_bestclus,corr_mc_weight);
-        			hx_expect_cut->Fill(xhcal_expect,corr_mc_weight);
 				
 					if(nuc == "p"){
                                         hdxdy_cut_p->Fill(dy_bestclus, dx_bestclus,corr_mc_weight);

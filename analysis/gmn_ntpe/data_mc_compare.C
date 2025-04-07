@@ -72,18 +72,46 @@ TH1D *hdx_p_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_p")); //the M
 
 TH1D *hdx_n_nofid = dynamic_cast<TH1D*>(mc_file->Get("dx_cut_nofid_n")); //the MC dx histrogram for neutrons with all cuts but fid
 
+TH1D *hdx_dt_bkgd = dynamic_cast<TH1D*>(data_file->Get("dx_coin_anticut")); //the data dx histogram for anti coin cut, a type of bkgd
+
+TH1D *hdx_W2_anticut = dynamic_cast<TH1D*>(data_file->Get("dx_W2_anticut_morehigh")); //the data dx histogram to include some of the W2 inlastic background
 
 //Histogram clones for this analysis
-TH1D *hdx_data_clone = (TH1D*)(hdx_data->Clone("dx_data_clone"));
+/*TH1D *hdx_data_clone = (TH1D*)(hdx_data->Clone("dx_data_clone"));
 
 TH1D *hdx_data_clone_bg = (TH1D*)(hdx_data->Clone("dx_data_clone_bg"));
+*/
+TH1D *hdx_data_bg_gaussBG = (TH1D*)(hdx_data->Clone("dx_data_bg_gaussBG"));
 
-TH1D *hdx_data_bg = (TH1D*)(hdx_data->Clone("dx_data_bg"));
+TH1D *hdx_p_clone_gaussBG = (TH1D*)(hdx_p->Clone("dx_mc_p_clone_gaussBG"));
 
-TH1D *hdx_p_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_clone"));
+TH1D *hdx_n_clone_gaussBG = (TH1D*)(hdx_n->Clone("dx_mc_n_clone_gaussBG"));
 
-TH1D *hdx_n_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_clone"));
+TH1D *hdx_data_bg_poly2 = (TH1D*)(hdx_data->Clone("dx_data_bg_poly2"));
 
+TH1D *hdx_p_clone_poly2 = (TH1D*)(hdx_p->Clone("dx_mc_p_clone_poly2"));
+
+TH1D *hdx_n_clone_poly2 = (TH1D*)(hdx_n->Clone("dx_mc_n_clone_poly2"));
+
+TH1D *hdx_data_bg_poly3 = (TH1D*)(hdx_data->Clone("dx_data_bg_poly3"));
+
+TH1D *hdx_p_clone_poly3 = (TH1D*)(hdx_p->Clone("dx_mc_p_clone_poly3"));
+
+TH1D *hdx_n_clone_poly3 = (TH1D*)(hdx_n->Clone("dx_mc_n_clone_poly3"));
+
+TH1D *hdx_data_bg_dt_bkgd = (TH1D*)(hdx_data->Clone("dx_data_bg_dt_bkgd"));
+
+TH1D *hdx_p_clone_dt_bkgd = (TH1D*)(hdx_p->Clone("dx_mc_p_clone_dt_bkgd"));
+
+TH1D *hdx_n_clone_dt_bkgd = (TH1D*)(hdx_n->Clone("dx_mc_n_clone_dt_bkgd"));
+
+TH1D *hdx_data_bg_W2_bkgd = (TH1D*)(hdx_data->Clone("dx_data_bg_W2_bkgd"));
+
+TH1D *hdx_p_clone_W2_bkgd = (TH1D*)(hdx_p->Clone("dx_mc_p_clone_W2_bkgd"));
+
+TH1D *hdx_n_clone_W2_bkgd = (TH1D*)(hdx_n->Clone("dx_mc_n_clone_W2_bkgd"));
+
+/*
 TH1D *hdx_p_nofid_clone = (TH1D*)(hdx_p_nofid->Clone("dx_mc_p_nofid_clone"));
 
 TH1D *hdx_n_nofid_clone = (TH1D*)(hdx_n_nofid->Clone("dx_mc_n_nofid_clone"));
@@ -91,7 +119,65 @@ TH1D *hdx_n_nofid_clone = (TH1D*)(hdx_n_nofid->Clone("dx_mc_n_nofid_clone"));
 TH1D *hdx_data_fit_error = (TH1D*)(hdx_data->Clone("dx_data_fit_error"));
 
 TH1D *hdx_data_nofid_clone = (TH1D*)(hdx_data_nofid->Clone("dx_data_nofid_clone"));
+*/
+TH1D *hdx_data_gaussBG_clone = (TH1D*)(hdx_data->Clone("dx_data_gaussBG_clone"));
 
+TH1D *hdx_p_gaussBG_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_gaussBG_clone"));
+
+TH1D *hdx_n_gaussBG_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_gaussBG_clone"));
+
+TH1D *hdx_data_gaussBG_clone_bg = (TH1D*)(hdx_data->Clone("dx_data_gaussBG_clone_bg"));
+
+TH1D *hdx_data_totfit_gaussBG = (TH1D*)(hdx_data->Clone("dx_data_totfit_gaussBG"));
+
+TH1D *hdx_data_poly2_clone = (TH1D*)(hdx_data->Clone("dx_data_poly2_clone"));
+
+TH1D *hdx_p_poly2_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_poly2_clone"));
+
+TH1D *hdx_n_poly2_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_poly2_clone"));
+
+TH1D *hdx_data_poly2_clone_bg = (TH1D*)(hdx_data->Clone("dx_data_poly2_clone_bg"));
+
+TH1D *hdx_data_totfit_poly2 = (TH1D*)(hdx_data->Clone("dx_data_totfit_poly2"));
+
+TH1D *hdx_data_poly3_clone = (TH1D*)(hdx_data->Clone("dx_data_poly3_clone"));
+
+TH1D *hdx_p_poly3_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_poly3_clone"));
+
+TH1D *hdx_n_poly3_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_poly3_clone"));
+
+TH1D *hdx_data_poly3_clone_bg = (TH1D*)(hdx_data->Clone("dx_data_poly3_clone_bg"));
+
+TH1D *hdx_data_totfit_poly3 = (TH1D*)(hdx_data->Clone("dx_data_totfit_poly3"));
+
+TH1D *hdx_dt_bkgd_clone = (TH1D*)(hdx_dt_bkgd->Clone("hdx_dt_bkgd_clone"));
+
+hdx_dt_bkgd_clone->Smooth();
+
+TH1D *hdx_data_dt_bkgd_clone = (TH1D*)(hdx_data->Clone("dx_data_dt_bkgd_clone"));
+
+TH1D *hdx_p_dt_bkgd_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_dt_bkgd_clone"));
+
+TH1D *hdx_n_dt_bkgd_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_dt_bkgd_clone"));
+
+TH1D *hdx_data_dt_bkgd_clone_bg = (TH1D*)(hdx_data->Clone("dx_data_dt_bkgd_clone_bg"));
+
+TH1D *hdx_data_totfit_dt_bkgd = (TH1D*)(hdx_data->Clone("dx_data_totfit_dt_bkgd"));
+
+TH1D *hdx_W2_bkgd_clone = (TH1D*)(hdx_W2_anticut->Clone("hdx_W2_bkgd_clone"));
+hdx_W2_bkgd_clone->Smooth();
+
+TH1D *hdx_data_W2_bkgd_clone = (TH1D*)(hdx_data->Clone("dx_data_W2_bkgd_clone"));
+
+TH1D *hdx_p_W2_bkgd_clone = (TH1D*)(hdx_p->Clone("dx_mc_p_W2_bkgd_clone"));
+
+TH1D *hdx_n_W2_bkgd_clone = (TH1D*)(hdx_n->Clone("dx_mc_n_W2_bkgd_clone"));
+
+TH1D *hdx_data_W2_bkgd_clone_bg = (TH1D*)(hdx_data->Clone("dx_data_W2_bkgd_clone_bg"));
+
+TH1D *hdx_data_totfit_W2_bkgd = (TH1D*)(hdx_data->Clone("dx_data_totfit_W2_bkgd"));
+
+/*
 //do some fitting and get the fit parameters, Error, ChiSquare, and NDF from the fit. This function is not perfect as it returns the parameter and Error pair vector and updates the pair to hold the ChiSquare and NDF. Better way to code this would be a structure that holds all of that information. 
 const char* fitType = "fitFullShift_polyBG";
 //Create a fit_histogram object which is a class that handles fitting dx histograms depending on input
@@ -150,6 +236,219 @@ TF1 *bg_shiftFit_nofid = new TF1("bg_shiftFit_nofid",dxhisto_nofid,&fit_histogra
         bg_shiftFit_nofid->SetParameter(j,shiftpar_bkgd_nofid[j]);
         bg_shiftFit_nofid->SetParError(j,shiftpar_bkgd_nofid_err[j]);
         }
+*/
+//*********************************************************
+//Information for Systematic Study and/or final result
+//********Gauss Background***
+const char* fitType_gaussBG = "fitFullShift_gaussBG";
+//Create a fit_histogram object which is a class that handles fitting dx histograms depending on input
+fit_histogram *dxhisto_gaussBG = new fit_histogram(hdx_data_gaussBG_clone,hdx_p_gaussBG_clone,hdx_n_gaussBG_clone,"shiftFit_gaussBG",fitType_gaussBG,7,hcalfit_low,hcalfit_high,fitopt.Data() );
+vector<double> gaussBG_param = dxhisto_gaussBG->get_bkgd_params();
+vector<double> gaussBG_param_err = dxhisto_gaussBG->get_bkgd_param_errs();
+string fitTypeString_gaussBG = fitType_gaussBG;
+vector<pair<double,double>> gaussBG_vec = dxhisto_gaussBG->get_fitParamsErrs();
+
+//Make background functions
+TF1 *gaussBG_shiftFit = new TF1("gaussBG_shiftFit",dxhisto_gaussBG,&fit_histogram::Gauss,hcalfit_low,hcalfit_high,3,"fit_histogram","Gauss");
+
+//set the background parameters
+        for(int j=0; j<3; ++j ){
+	gaussBG_shiftFit->SetParameter(j,gaussBG_param[j]);
+        gaussBG_shiftFit->SetParError(j,gaussBG_param_err[j]);
+        }
+
+TF1 *gaussBG_shiftFit_clone = new TF1("gaussBG_shiftFit_clone",dxhisto_gaussBG,&fit_histogram::Gauss,hcalfit_low,hcalfit_high,3,"fit_histogram","Gauss");
+//set the background parameters
+        for(int j=0; j<3; ++j ){
+        gaussBG_shiftFit_clone->SetParameter(j,gaussBG_param[j]);
+        gaussBG_shiftFit_clone->SetParError(j,gaussBG_param_err[j]);
+        }
+
+TF1 *total_fit_gaussBG;
+        //This conditional works but we will need to modify it if we need any new types of functions
+        if(fitTypeString_gaussBG =="fitFullShift_gaussBG"){
+	total_fit_gaussBG = new TF1("total_fit_gaussBG",dxhisto_gaussBG,&fit_histogram::fitFullShift_gaussBG,hcalfit_low,hcalfit_high,7,"fit_histogram","fitFullShift_gaussBG");
+	}else{
+        cout << "The plot function you are trying to implement " << fitType_gaussBG << " is no good! Figure it out now!" << endl;
+        total_fit_gaussBG = new TF1("total_fit_gaussBG",dxhisto_gaussBG,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,7,"fit_histogram","fitFullShift_polyBG");
+	}
+
+TFitResultPtr totfit_ptr_gaussBG = hdx_data_totfit_gaussBG->Fit(total_fit_gaussBG,"QS");
+
+//Do some fitting and get fit parameters. Do this for the background subtracted histogram
+TH1D* hdx_data_nobg_gaussBG = plots::subtractBG(hdx_data_gaussBG_clone_bg,gaussBG_shiftFit,totfit_ptr_gaussBG);
+const char* fitType_nobg_gaussBG = "fitFullShiftNoBG";
+fit_histogram *dxhisto_gaussBG_nobg = new fit_histogram(hdx_data_nobg_gaussBG,hdx_p_gaussBG_clone,hdx_n_gaussBG_clone,"shiftFit_gaussBG no bg",fitType_nobg_gaussBG,7,hcalfit_low,hcalfit_high,fitopt.Data() );
+
+/**********************************************************
+//Information for Systematic Study and/or final result
+*******Poly2 Background*********/
+const char* fitType_poly2 = "fitFullShift_polyBG";
+//Create a fit_histogram object which is a class that handles fitting dx histograms depending on input
+fit_histogram *dxhisto_poly2 = new fit_histogram(hdx_data_poly2_clone,hdx_p_poly2_clone,hdx_n_poly2_clone,"fitFullShift_poly2",fitType_poly2,2,7,hcalfit_low,hcalfit_high,fitopt.Data() );
+vector<double> poly2_param = dxhisto_poly2->get_bkgd_params();
+vector<double> poly2_param_err = dxhisto_poly2->get_bkgd_param_errs();
+string fitTypeString_poly2 = fitType_poly2;
+vector<pair<double,double>> poly2_vec = dxhisto_poly2->get_fitParamsErrs();
+
+//Make background functions
+TF1 *poly2_shiftFit = new TF1("poly2_shiftFit",dxhisto_poly2,&fit_histogram::polyN_fit,hcalfit_low,hcalfit_high,3,"fit_histogram","polyN_fit");
+
+//set the background parameters
+        for(int j=0; j<3; ++j ){
+        poly2_shiftFit->SetParameter(j,poly2_param[j]);
+        poly2_shiftFit->SetParError(j,poly2_param_err[j]);
+        }
+
+TF1 *poly2_shiftFit_clone = new TF1("poly2_shiftFit_clone",dxhisto_poly2,&fit_histogram::polyN_fit,hcalfit_low,hcalfit_high,3,"fit_histogram","polyN_fit");
+//set the background parameters
+        for(int j=0; j<3; ++j ){
+        poly2_shiftFit_clone->SetParameter(j,poly2_param[j]);
+        poly2_shiftFit_clone->SetParError(j,poly2_param_err[j]);
+        }
+
+TF1 *total_fit_poly2;
+        //This conditional works but we will need to modify it if we need any new types of functions
+        if(fitTypeString_poly2 =="fitFullShift_polyBG"){
+        total_fit_poly2 = new TF1("total_fit_poly2",dxhisto_poly2,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,7,"fit_histogram","fitFullShift_polyBG");
+        }else{
+        cout << "The plot function you are trying to implement " << fitType_poly2 << " is no good! Figure it out now!" << endl;
+        total_fit_poly2 = new TF1("total_fit_poly2",dxhisto_poly2,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,7,"fit_histogram","fitFullShift_polyBG");
+        }
+
+TFitResultPtr totfit_ptr_poly2 = hdx_data_totfit_poly2->Fit(total_fit_poly2,"QS");
+
+//Do some fitting and get fit parameters. Do this for the background subtracted histogram
+TH1D* hdx_data_nobg_poly2 = plots::subtractBG(hdx_data_poly2_clone_bg,poly2_shiftFit,totfit_ptr_poly2);
+const char* fitType_nobg_poly2 = "fitFullShiftNoBG";
+fit_histogram *dxhisto_poly2_nobg = new fit_histogram(hdx_data_nobg_poly2,hdx_p_poly2_clone,hdx_n_poly2_clone,"shiftFit_poly2 no bg",fitType_nobg_poly2,2,7,hcalfit_low,hcalfit_high,fitopt.Data() );
+
+
+/**********************************************************
+//Information for Systematic Study and/or final result
+*******Poly3 Background*********/
+const char* fitType_poly3 = "fitFullShift_polyBG";
+//Create a fit_histogram object which is a class that handles fitting dx histograms depending on input
+fit_histogram *dxhisto_poly3 = new fit_histogram(hdx_data_poly3_clone,hdx_p_poly3_clone,hdx_n_poly3_clone,"fitFullShift_poly3",fitType_poly3,3,8,hcalfit_low,hcalfit_high,fitopt.Data() );
+vector<double> poly3_param = dxhisto_poly3->get_bkgd_params();
+vector<double> poly3_param_err = dxhisto_poly3->get_bkgd_param_errs();
+string fitTypeString_poly3 = fitType_poly3;
+vector<pair<double,double>> poly3_vec = dxhisto_poly3->get_fitParamsErrs();
+
+//Make background functions
+TF1 *poly3_shiftFit = new TF1("poly3_shiftFit",dxhisto_poly3,&fit_histogram::polyN_fit,hcalfit_low,hcalfit_high,4,"fit_histogram","polyN_fit");
+
+//set the background parameters
+        for(int j=0; j<4; ++j ){
+        poly3_shiftFit->SetParameter(j,poly3_param[j]);
+        poly3_shiftFit->SetParError(j,poly3_param_err[j]);
+        }
+
+TF1 *poly3_shiftFit_clone = new TF1("poly3_shiftFit_clone",dxhisto_poly3,&fit_histogram::polyN_fit,hcalfit_low,hcalfit_high,4,"fit_histogram","polyN_fit");
+//set the background parameters
+        for(int j=0; j<4; ++j ){
+        poly3_shiftFit_clone->SetParameter(j,poly3_param[j]);
+        poly3_shiftFit_clone->SetParError(j,poly3_param_err[j]);
+        }
+
+TF1 *total_fit_poly3;
+        //This conditional works but we will need to modify it if we need any new types of functions
+        if(fitTypeString_poly3 =="fitFullShift_polyBG"){
+        total_fit_poly3 = new TF1("total_fit_poly3",dxhisto_poly3,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,8,"fit_histogram","fitFullShift_polyBG");
+        }else{
+        cout << "The plot function you are trying to implement " << fitType_poly3 << " is no good! Figure it out now!" << endl;
+        total_fit_poly3 = new TF1("total_fit_poly3",dxhisto_poly3,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,8,"fit_histogram","fitFullShift_polyBG");
+        }
+
+TFitResultPtr totfit_ptr_poly3 = hdx_data_totfit_poly3->Fit(total_fit_poly3,"QS");
+
+//Do some fitting and get fit parameters. Do this for the background subtracted histogram
+TH1D* hdx_data_nobg_poly3 = plots::subtractBG(hdx_data_poly3_clone_bg,poly3_shiftFit,totfit_ptr_poly3);
+const char* fitType_nobg_poly3 = "fitFullShiftNoBG";
+fit_histogram *dxhisto_poly3_nobg = new fit_histogram(hdx_data_nobg_poly3,hdx_p_poly3_clone,hdx_n_poly3_clone,"shiftFit_poly3 no bg",fitType_nobg_poly3,3,8,hcalfit_low,hcalfit_high,fitopt.Data() );
+
+/**********************************************************
+//Information for Systematic Study and/or final result
+*******Anti Coin Background*********/
+
+const char* fitType_dt_bkgd = "fitFullShift_InterpolateBG";
+//Create a fit_histogram object which is a class that handles fitting dx histograms depending on input
+fit_histogram *dxhisto_dt_bkgd = new fit_histogram(hdx_data_dt_bkgd_clone,hdx_p_dt_bkgd_clone,hdx_n_dt_bkgd_clone,hdx_dt_bkgd_clone,"fitFullShift_dt_bkgd",fitType_dt_bkgd,5,hcalfit_low,hcalfit_high,fitopt.Data() );
+vector<double> dt_bkgd_param = dxhisto_dt_bkgd->get_bkgd_params();
+vector<double> dt_bkgd_param_err = dxhisto_dt_bkgd->get_bkgd_param_errs();
+string fitTypeString_dt_bkgd = fitType_dt_bkgd;
+vector<pair<double,double>> dt_bkgd_vec = dxhisto_dt_bkgd->get_fitParamsErrs();
+
+//Make background functions
+TF1 *dt_bkgd_shiftFit = new TF1("dt_bkgd_shiftFit",dxhisto_dt_bkgd,&fit_histogram::InterpolateBG,hcalfit_low,hcalfit_high,1,"fit_histogram","InterpolateBG");
+//set the background parameters
+        for(int j=0; j<1; ++j ){
+        dt_bkgd_shiftFit->SetParameter(j,dt_bkgd_param[j]);
+        dt_bkgd_shiftFit->SetParError(j,dt_bkgd_param_err[j]);
+        }
+TF1 *dt_bkgd_shiftFit_clone = new TF1("dt_bkgd_shiftFit_clone",dxhisto_dt_bkgd,&fit_histogram::InterpolateBG,hcalfit_low,hcalfit_high,1,"fit_histogram","InterpolateBG");
+//set the background parameters
+        for(int j=0; j<1; ++j ){
+        dt_bkgd_shiftFit_clone->SetParameter(j,dt_bkgd_param[j]);
+        dt_bkgd_shiftFit_clone->SetParError(j,dt_bkgd_param_err[j]);
+        }
+
+TF1 *total_fit_dt_bkgd;
+        //This conditional works but we will need to modify it if we need any new types of functions
+        if(fitTypeString_dt_bkgd == "fitFullShift_InterpolateBG"){
+        total_fit_dt_bkgd = new TF1("total_fit_dt_bkgd",dxhisto_dt_bkgd,&fit_histogram::InterpolateBG,hcalfit_low,hcalfit_high,5,"fit_histogram","InterpolateBG");
+        }else{
+        cout << "The plot function you are trying to implement " << fitType_dt_bkgd << " is no good! Figure it out now!" << endl;
+        total_fit_dt_bkgd = new TF1("total_fit_dt_bkgd",dxhisto_dt_bkgd,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,5,"fit_histogram","fitFullShift_polyBG");
+        }
+
+TFitResultPtr totfit_ptr_dt_bkgd = hdx_data_totfit_dt_bkgd->Fit(total_fit_dt_bkgd,"QS");
+
+//Do some fitting and get fit parameters. Do this for the background subtracted histogram
+TH1D* hdx_data_nobg_dt_bkgd = plots::subtractBG(hdx_data_dt_bkgd_clone_bg,dt_bkgd_shiftFit,totfit_ptr_dt_bkgd);
+const char* fitType_nobg_dt_bkgd = "fitFullShiftNoBG";
+fit_histogram *dxhisto_dt_bkgd_nobg = new fit_histogram(hdx_data_nobg_dt_bkgd,hdx_p_dt_bkgd_clone,hdx_n_dt_bkgd_clone,"shiftFit_dt_bkgd no bg",fitType_nobg_dt_bkgd,5,hcalfit_low,hcalfit_high,fitopt.Data() );
+
+/**********************************************************
+//Information for Systematic Study and/or final result
+*******Anti W2 cut Background*********/
+const char* fitType_W2_bkgd = "fitFullShift_InterpolateBG";
+//Create a fit_histogram object which is a class that handles fitting dx histograms depending on input
+fit_histogram *dxhisto_W2_bkgd = new fit_histogram(hdx_data_W2_bkgd_clone,hdx_p_W2_bkgd_clone,hdx_n_W2_bkgd_clone,hdx_W2_bkgd_clone,"fitFullShift_W2_bkgd",fitType_W2_bkgd,5,hcalfit_low,hcalfit_high,fitopt.Data() );
+vector<double> W2_bkgd_param = dxhisto_W2_bkgd->get_bkgd_params();
+vector<double> W2_bkgd_param_err = dxhisto_W2_bkgd->get_bkgd_param_errs();
+string fitTypeString_W2_bkgd = fitType_W2_bkgd;
+vector<pair<double,double>> W2_bkgd_vec = dxhisto_W2_bkgd->get_fitParamsErrs();
+
+//Make background functions
+TF1 *W2_bkgd_shiftFit = new TF1("W2_bkgd_shiftFit",dxhisto_W2_bkgd,&fit_histogram::InterpolateBG,hcalfit_low,hcalfit_high,1,"fit_histogram","InterpolateBG");
+//set the background parameters
+        for(int j=0; j<1; ++j ){
+        W2_bkgd_shiftFit->SetParameter(j,W2_bkgd_param[j]);
+        W2_bkgd_shiftFit->SetParError(j,W2_bkgd_param_err[j]);
+        }
+TF1 *W2_bkgd_shiftFit_clone = new TF1("W2_bkgd_shiftFit_clone",dxhisto_W2_bkgd,&fit_histogram::InterpolateBG,hcalfit_low,hcalfit_high,1,"fit_histogram","InterpolateBG");
+//set the background parameters
+        for(int j=0; j<1; ++j ){
+        W2_bkgd_shiftFit_clone->SetParameter(j,W2_bkgd_param[j]);
+        W2_bkgd_shiftFit_clone->SetParError(j,W2_bkgd_param_err[j]);
+        }
+
+TF1 *total_fit_W2_bkgd;
+        //This conditional works but we will need to modify it if we need any new types of functions
+        if(fitTypeString_W2_bkgd == "fitFullShift_InterpolateBG"){
+        total_fit_W2_bkgd = new TF1("total_fit_W2_bkgd",dxhisto_W2_bkgd,&fit_histogram::InterpolateBG,hcalfit_low,hcalfit_high,5,"fit_histogram","InterpolateBG");
+        }else{
+        cout << "The plot function you are trying to implement " << fitType_W2_bkgd << " is no good! Figure it out now!" << endl;
+        total_fit_W2_bkgd = new TF1("total_fit_W2_bkgd",dxhisto_W2_bkgd,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,5,"fit_histogram","fitFullShift_polyBG");
+        }
+
+TFitResultPtr totfit_ptr_W2_bkgd = hdx_data_totfit_W2_bkgd->Fit(total_fit_W2_bkgd,"QS");
+
+//Do some fitting and get fit parameters. Do this for the background subtracted histogram
+TH1D* hdx_data_nobg_W2_bkgd = plots::subtractBG(hdx_data_W2_bkgd_clone_bg,W2_bkgd_shiftFit,totfit_ptr_W2_bkgd);
+const char* fitType_nobg_W2_bkgd = "fitFullShiftNoBG";
+fit_histogram *dxhisto_W2_bkgd_nobg = new fit_histogram(hdx_data_nobg_W2_bkgd,hdx_p_W2_bkgd_clone,hdx_n_W2_bkgd_clone,"shiftFit_W2_bkgd no bg",fitType_nobg_W2_bkgd,5,hcalfit_low,hcalfit_high,fitopt.Data() );
 
 //handle the information sent to the report file
 //Declare output file and open it
@@ -159,9 +458,10 @@ report.open(reportfile);
 //Print out the FF object stuff to the report file
  myFFs.print(report);
 
-//make canvas to show data and MC compare plot
-TCanvas* c0 = plots::plotDataMCFitsResiduals(dxhisto_allcuts,bg_shiftFit,"c0",true,report,myFFs);
 
+//Old but worth not deleting
+//make canvas to show data and MC compare plot
+/*TCanvas* c0 = plots::plotDataMCFitsResiduals(dxhisto_allcuts,bg_shiftFit,"c0",true,report,myFFs);
 //Do some fitting and get fit parameters. Do this for the background subtracted histogram
 TH1D* hdx_data_nobg = plots::subtractBG(hdx_data_clone_bg,bg_shiftFit,totfit_ptr);
 const char* fitType_nobg = "fitFullShiftNoBG";
@@ -175,6 +475,32 @@ TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg,hdx_p_clone,hdx_n_clone,bg_shif
 
 //Canvas for no fid
 TCanvas* c4 = plots::plotDataMCFitsResiduals(dxhisto_nofid,bg_shiftFit_nofid,"c4",true,report,myFFs);
+*/
+
+//Canvas for Gauss BG
+TCanvas* c0 = plots::plotDataMCFitsResiduals(dxhisto_gaussBG,gaussBG_shiftFit,"c0",true,report,myFFs);
+TCanvas* c2 = plots::plotDataMCFitsResiduals_NoBG(dxhisto_gaussBG_nobg,"c2",true,report,myFFs);
+TCanvas* c3 = plots::plotBGResiduals(hdx_data_bg_gaussBG,hdx_p_clone_gaussBG,hdx_n_clone_gaussBG,gaussBG_shiftFit_clone,"c3","gauss BG",fitType_gaussBG,gaussBG_vec,hcalfit_low,hcalfit_high,true);
+
+//Canvas for poly2 BG
+TCanvas* c4 = plots::plotDataMCFitsResiduals(dxhisto_poly2,poly2_shiftFit,"c4",true,report,myFFs);
+TCanvas* c5 = plots::plotDataMCFitsResiduals_NoBG(dxhisto_poly2_nobg,"c5",true,report,myFFs);
+TCanvas* c6 = plots::plotBGResiduals(hdx_data_bg_poly2,hdx_p_clone_poly2,hdx_n_clone_poly2,poly2_shiftFit_clone,"c6","poly2 BG",fitType_poly2,poly2_vec,hcalfit_low,hcalfit_high,true);
+
+//Canvas for poly3 BG
+TCanvas* c7 = plots::plotDataMCFitsResiduals(dxhisto_poly3,poly3_shiftFit,"c7",true,report,myFFs);
+TCanvas* c8 = plots::plotDataMCFitsResiduals_NoBG(dxhisto_poly3_nobg,"c8",true,report,myFFs);
+TCanvas* c9 = plots::plotBGResiduals(hdx_data_bg_poly3,hdx_p_clone_poly3,hdx_n_clone_poly3,poly3_shiftFit_clone,"c9","poly3 BG",fitType_poly3,poly3_vec,hcalfit_low,hcalfit_high,true);
+
+//Canvas for anti-coin BG
+TCanvas* c10 = plots::plotDataMCFitsResiduals(dxhisto_dt_bkgd,dt_bkgd_shiftFit,"c10",true,report,myFFs);
+TCanvas* c11 = plots::plotDataMCFitsResiduals_NoBG(dxhisto_dt_bkgd_nobg,"c11",true,report,myFFs);
+TCanvas* c12 = plots::plotBGResiduals(hdx_data_bg_dt_bkgd,hdx_p_clone_dt_bkgd,hdx_n_clone_dt_bkgd,dt_bkgd_shiftFit_clone,"c12","dt BG",fitType_dt_bkgd,dt_bkgd_vec,hcalfit_low,hcalfit_high,true);
+
+//Canvas for anti-W2 BG
+TCanvas* c13 = plots::plotDataMCFitsResiduals(dxhisto_W2_bkgd,W2_bkgd_shiftFit,"c13",true,report,myFFs);
+TCanvas* c14 = plots::plotDataMCFitsResiduals_NoBG(dxhisto_W2_bkgd_nobg,"c14",true,report,myFFs);
+TCanvas* c15 = plots::plotBGResiduals(hdx_data_bg_W2_bkgd,hdx_p_clone_W2_bkgd,hdx_n_clone_W2_bkgd,W2_bkgd_shiftFit_clone,"c15","W2 BG",fitType_W2_bkgd,W2_bkgd_vec,hcalfit_low,hcalfit_high,true);
 
 report.close();
 
@@ -188,7 +514,19 @@ TString end = Form("%s%s",plotname.Data(),")");
 c0->Print(start.Data(),"pdf");
 c2->Print(plotname.Data(),"pdf");
 c3->Print(plotname.Data(),"pdf");
-c4->Print(end.Data(),"pdf");
+c4->Print(plotname.Data(),"pdf");
+c5->Print(plotname.Data(),"pdf");
+c6->Print(plotname.Data(),"pdf");
+c7->Print(plotname.Data(),"pdf");
+c8->Print(plotname.Data(),"pdf");
+c9->Print(plotname.Data(),"pdf");
+c10->Print(plotname.Data(),"pdf");
+c11->Print(plotname.Data(),"pdf");
+c12->Print(plotname.Data(),"pdf");
+c13->Print(plotname.Data(),"pdf");
+c14->Print(plotname.Data(),"pdf");
+c15->Print(end.Data(),"pdf");
+
 
 fout->Write();
 

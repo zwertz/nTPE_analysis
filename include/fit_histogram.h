@@ -2,7 +2,7 @@
 #define FIT_HISTOGRAM_H
 
 //Author: Ezekiel Wertz
-//A class to handle fitting histograms that are used when comparing Data to MC for dx histograms. This is class adapted from Maria, but is maybe a little more basic. It should just take in input information about the histograms and return information about the fit. To be used in later analysis. This is useful because of implementing Interpolate in most of these fitting procedures. This should take as input a type specifier to allow for modularity.
+//A class to handle fitting histograms that are used when comparing Data to MC for dx histograms.  It should just take in input information about the histograms and return information about the fit. To be used in later analysis. This is useful because of implementing Interpolate in most of these fitting procedures. This should take as input a type specifier to allow for modularity.
 //// It allows you to fit the dx distribution from data to scaled version of montecarlo plus background,
 //// This should remove the necessity of the simulation variables being globals
 
@@ -19,6 +19,7 @@ string fitOptions;
 TH1D *hist_data; //data histogram for dx containing both n and p info
 TH1D *hist_p;  // proton simulation histogram
 TH1D *hist_n; // neutron simulation histogram
+TH1D *hist_bkgd; //candidate background histogram
 TF1 *fitFunc; // Custom fit function
 
 double xMin; // min x on fit range
@@ -54,8 +55,20 @@ fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_name, const char
 //constructor to handle user-input (essentially anticut or MC inelastic) backgrounds
 fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_name, const char* fitType, vector<double> bkgd_coeffs, int param_count, double xmin, double xmax, const string& fit_options);
 
+//constructor to handle gauss backgrounds. This implementation inherently assumes you are shifting the histograms as well
+fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_name, const char* fit_type, int param_count, double xmin, double xmax,const string& fit_options);
+
+//constructor to handle user-input (essentially anticut or MC inelastic) backgrounds
+fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, TH1D *h_bkgd, const char* fit_name, const char* fit_type, int param_count, double xmin, double xmax,const  string& fit_options);
+
 //A function that should be able to generate any order polynomail. We are most interested in even order polynomials. A prerequiste is that polyorder must be not null. Or this will most likely crash
 double polyN_fit(double *x, double *param);
+
+//Function to generate Gaussian same as the total fit function
+double Gauss(double *x, double *param);
+
+//A function to mimic the user-input background
+double InterpolateBG(double *x, double *param);
 
 //destructor
 //We will need to delete the dynamically allocated memory
@@ -72,9 +85,14 @@ double fitFullShiftNoBG(double *x, double *param);
 
 double fitFullShift_scale_polyBG(double *x, double *param);
 
+//Function that will take the histogram shape for the bkgd and interpolate
+double fitFullShift_InterpolateBG(double *x, double *param);
+
 //Implemented so Rsf is a fit parameter, which should better handle correllated error analysis
 //Total function for MC + background. Independently shifts the neutron and proton peaks
 double fitFullShift_polyBG(double *x, double *param);
+
+double fitFullShift_gaussBG(double *x, double *param);
 
 TH1D* get_hist_data();
 

@@ -416,14 +416,16 @@ TH1D* hist_sub = new TH1D(Form("hist_sub: %s and %s",hist_name.Data(),fit_name.D
 	double newValue = hist->GetBinContent(bin) - bgValue;
 	//Add the errors from the histogram and the fit error in quadrature. See fit error function for details
 	double histError = hist->GetBinError(bin);
-	double bgError = fits::FitErrorFunc(hist->GetXaxis()->GetBinCenter(bin),fit_ptr);
+	//This only work for a poly order 4
+	//double bgError = fits::FitErrorFunc(hist->GetXaxis()->GetBinCenter(bin),fit_ptr);
 
 	//cout << "Error when subtracting BG Hist:" << histError << " Fit: " << bgError << endl;
 
-	double newError = sqrt(pow(histError,2) + pow(bgError,2));
+	//double newError = sqrt(pow(histError,2) + pow(bgError,2));
 
 	hist_sub->SetBinContent(bin, newValue);
-	hist_sub->SetBinError(bin,newError);
+	//hist_sub->SetBinError(bin,newError);
+	hist_sub->SetBinError(bin,histError);
 	}
 
 hist_sub->SetEntries(totentries);
@@ -478,7 +480,6 @@ TH1D* hdx_data = myFitHisto->get_hist_data();
 TH1D* hdx_mc_p = myFitHisto->get_hist_p();
 TH1D* hdx_mc_n = myFitHisto->get_hist_n();
 string fitName = myFitHisto->get_fitName();
-cout << fitName << endl;
 string fitType = myFitHisto->get_fitType();
 vector<pair<double,double>> params = myFitHisto->get_fitParamsErrs();
 double hcalfit_low = myFitHisto->get_xMin();
@@ -494,6 +495,10 @@ TF1* fit;
 	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFull_polyBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFull_polyBG");
 	}else if(fitType =="fitFullShift_polyBG"){
 	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShift_polyBG");
+	}else if(fitType =="fitFullShift_gaussBG"){
+	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShift_gaussBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShift_gaussBG");
+	}else if(fitType =="fitFullShift_InterpolateBG"){
+	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShift_InterpolateBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShift_InterpolateBG");
 	}else{
 	cout << "The plot function you are trying to implement " << fitType << " is no good! Figure it out now!" << endl;
 	fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShift_polyBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShift_polyBG");
@@ -586,6 +591,7 @@ hdx_mc_n_after->SetFillColorAlpha(kBlue-9,0.5);
 hdx_mc_n_after->SetFillStyle(1001);
 hdx_mc_n_after->SetLineWidth(2);
 hdx_mc_n_after->Draw("hist same");
+
 
 //background function
 bg->SetLineColor(kGreen);
@@ -750,7 +756,7 @@ TF1* fit;
         fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullNoBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullNoBG");
         }else if(fitType =="fitFullShiftNoBG"){
         fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShiftNoBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShiftNoBG");
-        }else{
+	}else{
         cout << "The plot function you are trying to implement " << fitType << " is no good! Figure it out now!" << endl;
         fit = new TF1("fit",myFitHisto,&fit_histogram::fitFullShiftNoBG,hcalfit_low,hcalfit_high,params.size(),"fit_histogram","fitFullShiftNoBG");
         }
@@ -981,7 +987,7 @@ hdx_mc_p->Scale(params[0].first);
 hdx_mc_n->Scale(params[1].first*params[0].first);
 
 //Add the two MC histograms together for direct comparison
-TH1D* sumHist = new TH1D("sumHist1","dx for both MC protons and neutrons",hdx_mc_p->GetNbinsX(),hdx_mc_p->GetXaxis()->GetXmin(),hdx_mc_p->GetXaxis()->GetXmax());
+TH1D* sumHist = new TH1D(Form("sumHist %s %s",fitType, fitName),"dx for both MC protons and neutrons",hdx_mc_p->GetNbinsX(),hdx_mc_p->GetXaxis()->GetXmin(),hdx_mc_p->GetXaxis()->GetXmax());
 sumHist->Add(hdx_mc_p,hdx_mc_n);
 //Subtract the MC info from data to get hist that looks like background
 TH1D* hdx_bg = plots::subtractHist(hdx_data,sumHist);
