@@ -147,10 +147,12 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *h_vert_z_cut = new TH1D( "vert_z_cut", "Vertex Position z-direction (m), Cuts; m", 200, -0.15, 0.15 );
   TH1D *h_HCal_E = new TH1D( "HCal_E", "HCal Cluster Energy (GeV); GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_globcut = new TH1D( "HCal_E_globcut", "HCal Cluster Energy (GeV), global cut; GeV", 250, 0, 0.4 );
-  TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_cut = new TH1D( "HCal_E_cut", "HCal Cluster Energy (GeV), Cuts; GeV", 500, 0, 1.0 );
+  TH1D *h_HCal_E_cut_noHCalE = new TH1D( "HCal_E_cut_noHCalE", "HCal Cluster Energy (GeV), all cuts but HCal E; GeV", 500, 0, 1.0 );
   TH1D *h_HCal_E_best = new TH1D( "HCal_E_best", "HCal Cluster Energy (GeV), best cluster; GeV", 250, 0, 0.4 );
   TH1D *h_HCal_E_best_globcut = new TH1D( "HCal_E_best_globcut", "HCal Cluster Energy (GeV), best cluster, global cut; GeV", 250, 0, 0.4 );
-  TH1D *h_HCal_E_best_cut = new TH1D( "HCal_E_best_cut", "HCal Cluster Energy (GeV), best cluster, Cuts; GeV", 250, 0, 0.4 );
+  TH1D *h_HCal_E_best_cut = new TH1D( "HCal_E_best_cut", "HCal Cluster Energy (GeV), best cluster, Cuts; GeV", 500, 0, 1.0 );
+  TH1D *h_HCal_E_best_cut_noHCalE = new TH1D( "HCal_E_best_cut_noHCalE", "HCal Cluster Energy (GeV), best cluster,all  Cuts but HCal E; GeV", 500, 0, 1.0 );
   TH1D *h_HCal_nclus = new TH1D("HCal_nclus","HCal number of clusters meeting threshold;", 250,0,10);
   TH1D *h_HCal_nclus_globcut = new TH1D("HCal_nclus_globcut","HCal number of clusters meeting threshold, global cut;", 250,0,10);
   TH1D *h_HCal_nclus_cut = new TH1D("HCal_nclus_cut","HCal number of clusters meeting threshold, Cuts;", 250,0,10);
@@ -165,9 +167,9 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *h_bbtrp_nocut = new TH1D("bbtrp_nocut","BigBite Track Momentum (GeV), no cut;",300, 0.0, 4.0);
   TH1D *h_bbtrp_globcut = new TH1D("bbtrp_globcut","BigBite Track Momentum (GeV), global cut;",300, 0.0, 4.0);
   TH1D *h_bbtrp_cut = new TH1D("bbtrp_cut","BigBite Track Momentum (GeV), cuts;",300, 0.0, 4.0);
-  TH1D *h_bbEoverp_nocut = new TH1D("bbEoverp_nocut","BigBite E over p, no cut;",100, 0.0, 2.0);
-  TH1D *h_bbEoverp_globcut = new TH1D("bbEoverp_globcut","BigBite E over p, global cut;",100, 0.0, 2.0);
-  TH1D *h_bbEoverp_cut = new TH1D("bbEoverp_cut","BigBite E over p, cuts;",100, 0.0, 2.0);
+  TH1D *h_bbEoverp_nocut = new TH1D("bbEoverp_nocut","BigBite E over p, no cut;",300, 0.2, 1.8);
+  TH1D *h_bbEoverp_globcut = new TH1D("bbEoverp_globcut","BigBite E over p, global cut;",300, 0.2, 1.8);
+  TH1D *h_bbEoverp_cut = new TH1D("bbEoverp_cut","BigBite E over p, cuts;",300, 0.2, 1.8);
   TH1D *h_optics_xdir_globcut = new TH1D("h_optics_xdir_globcut", "BigBite optics validity, track x-dir;",200,-0.6,0.6);
   TH1D *h_optics_ydir_globcut = new TH1D("h_optics_ydir_globcut", "BigBite optics validity, track y-dir;",200,-0.2,0.2);
   TH2D *h_W2_optics_xdir_globcut = new TH2D("h_W2_optics_xdir_globcut", "W2 vs BigBite optics validity, track x-dir;", 200, -0.6, 0.6,binfac*W2fitmax, 0.0, W2fitmax );
@@ -194,12 +196,12 @@ void data_elastic_parse(const char *setup_file_name){
   TH2D *hxy_cut = new TH2D("hxy_cut","HCal X vs Y, all cuts, best cluster;y_{HCAL} (m); x_{HCAL} (m)",300, -2.0, 2.0, 500, -3.0, 3.0);
 
   //E-arm
+  TH1D *h_W2_nocut = new TH1D( "W2_nocut", "W2 (GeV^{2}) no cut; GeV^{2}", binfac*5.0, 0.0, 5.0 );
   TH1D *h_W2_globcut = new TH1D( "W2_globcut", "W2 (GeV^{2}) global cut; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *h_W2_glob_W2_cut = new TH1D( "W2_glob_W2_cut", "W2 (GeV^{2}) global & W2 cuts; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );
   TH1D *h_W2_cut = new TH1D( "W2_cut", "W2 (GeV^{2}) all cuts; GeV^{2}", binfac*W2fitmax, 0.0, W2fitmax );  
-  TH1D *h_W2_notW2_cut = new TH1D( "W2_notW2_cut", "W2 (GeV^{2}) all cuts, but W2; GeV^{2}", binfac*4.5, 0.0, 4.5 );
+  TH1D *h_W2_notW2_cut = new TH1D( "W2_notW2_cut", "W2 (GeV^{2}) all cuts, but W2; GeV^{2}", binfac*5.0, 0.0, 5.0 );
   TH1D *h_Q2_globcut = new TH1D( "Q2_globcut", "Q2 (GeV^{2}) global cut; GeV^{2}", 300, 0.0, 6.0 );
-  TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV^{2}) all cuts; GeV^{2}", 300, 0.0, 6.0 );
   TH1D *hx_expect_nocut = new TH1D("hx_expect_nocut","HCal X Expect, no cut; HCal X Expect (m)", 600, -3.0, 3.0 );
   TH1D *hx_expect_globcut = new TH1D("hx_expect_globcut","HCal X Expect, global cut; HCal X Expect (m)", 600, -3.0, 3.0 );
   TH1D *hx_expect_cut = new TH1D("hx_expect_cut","HCal X Expect, all cuts; HCal X Expect (m)", 600, -3.0, 3.0 );
@@ -207,8 +209,14 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *hy_expect_globcut = new TH1D("hy_expect_globcut","HCal Y Expect, global cut; HCal Y Expect (m)", 400, -2.0, 2.0 );
   TH1D *hy_expect_cut = new TH1D("hy_expect_cut","HCal Y Expect, all cuts; HCal Y Expect (m)", 400, -2.0, 2.0 );
   TH2D *hxy_expect_nocut = new TH2D("hxy_expect_nocut","HCal X Expect vs Y Expect, no cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_expect_nocut_n = new TH2D("hxy_expect_nocut_n","HCal X Expect vs Y Expect, no cut neu;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  TH2D *hxy_expect_nocut_p = new TH2D("hxy_expect_nocut_p","HCal X Expect vs Y Expect, no cut pro;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_globcut = new TH2D("hxy_expect_globcut","HCal X Expect vs Y Expect, global cut;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_glob_W2_cut = new TH2D("hxy_expect_glob_W2_cut","HCal X Expect vs Y Expect, global & W2 cuts;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+  
+  TH2D *hxy_expect_glob_W2_cut_n = new TH2D("hxy_expect_glob_W2_cut_n","HCal X Expect vs Y Expect, global & W2 cuts neu;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
+
+  TH2D *hxy_expect_glob_W2_cut_p = new TH2D("hxy_expect_glob_W2_cut_p","HCal X Expect vs Y Expect, global & W2 cuts pro;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_n = new TH2D("hxy_expect_n","HCal X Expect vs Y Expect, elastic cuts neutron;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_p = new TH2D("hxy_expect_p","HCal X Expect vs Y Expect, elastic cuts proton;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
   TH2D *hxy_expect_fidcutp = new TH2D("hxy_expect_fidcutp","HCal X Expect vs Y Expect, proton passed fiducial;HCal Y Expect (m); HCal X Expect (m)", 400, -2.0, 2.0, 600, -3.0, 3.0 );
@@ -221,6 +229,7 @@ void data_elastic_parse(const char *setup_file_name){
   TH2D *hdxdy_glob_W2_cut = new TH2D("dxdy_glob_W2_cut","HCal dxdy, global & W2 cuts ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",400,dy_low,dy_high,600,dx_low,dx_high);
   TH2D *hdxdy_cut = new TH2D("hdxdy_cut","HCal dxdy, all cuts;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",400,dy_low,dy_high,600,dx_low,dx_high);
   TH2D *hdxdy_nofid = new TH2D("dxdy_nofid","HCal dxdy, all cuts but fiducial ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",400,dy_low,dy_high,600,dx_low,dx_high);
+  TH2D *hdxdy_nody = new TH2D("hdxdy_nody","HCal dxdy, all cuts but dy ;y_{HCAL}-y_{expect} (m); x_{HCAL}-x_{expect} (m)",400,dy_low,dy_high,600,dx_low,dx_high);
   TH2D *hdxvE = new TH2D("dxvE","dx vs HCal E, all cuts;E_{HCAL} (GeV);x_{HCAL}-x_{expect} (m)", 400, 0.0, 4.0, 600, dx_low, dx_high );
   TH2D *hdxvW2 = new TH2D("dxvW2", "dx vs W2, all cuts; W2 (GeV); x_{HCAL}-x_{expect} (m)",binfac*W2fitmax, 0.0, W2fitmax, 600, dx_low,dx_high);
   TH1D *hdx_nocut = new TH1D( "dx_nocut", "HCal dx (m); m",hbinfac*hcal_fitrange ,hcalfit_low ,hcalfit_high);
@@ -230,12 +239,14 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *hdx_globcut = new TH1D( "dx_globcut","HCal dx, global cut; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_glob_W2_cut = new TH1D( "dx_glob_W2_cut","HCal dx, global & W2 cuts; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_nsigfid = new TH1D( "dx_nsigfid","HCal dx, nsigfid check; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
+  TH1D *hdx_nody = new TH1D( "hdx_cut_nody","HCal dx, all cuts but dy; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
 
   TH1D *hdy_nocut = new TH1D( "dy_nocut", "HCal dy (m), no cuts; m", 250, dy_low, dy_high );
   TH1D *hdy_globcut = new TH1D( "dy_globcut", "HCal dy (m), global cut; m", 250, dy_low, dy_high );
   TH1D *hdy_glob_W2_cut = new TH1D( "dy_glob_W2_cut", "HCal dy (m), global & W2 cuts; m", 250, dy_low, dy_high );
   TH1D *hdy_cut_nofid = new TH1D( "dy_cut_nofid","HCal dy, all cuts but fiducial; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
   TH1D *hdy_cut = new TH1D( "dy_cut","HCal dy, all cuts; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
+  TH1D *hdy_nody = new TH1D( "hdy_cut_nody","HCal dy, all cuts but dy; y_{HCAL}-y_{expect} (m)", 250, dy_low, dy_high );
 
   TH1D *hcoin_nocut = new TH1D( "hcoin_nocut", "HCal ADCt - BBCal ADCt, no cuts; ns", 200, -30, 30 );
   TH1D *hcoin_glob_W2_cut = new TH1D( "hcoin_glob_W2_cut", "HCal ADCt - BBCal ADCt, global & W2 cuts; ns", 200, -30, 30 );
@@ -276,6 +287,12 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *hdx_W2_anticut_both = new TH1D( "dx_W2_anticut_both","HCal dx, W2_anticut_both; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_W2_anticut_both_wide = new TH1D( "dx_W2_anticut_both_wide","HCal dx, W2_anticut_both; x_{HCAL}-x_{expect} (m)", 400, -3.0, 2.0 );
 
+  //For physics extraction
+  TH1D *h_Ebeam_corr_cut = new TH1D("Ebeam_corr_cut", "Beam Energy (GeV), all cuts; GeV", 300,EBeam-1.5,EBeam+1.5);
+  TH1D *h_E_eprime_cut = new TH1D("E_eprime_cut", "Mag. Scattered Electron Momentum (GeV), all cuts; GeV", 300, 0.0, 5.0);
+  TH1D *h_etheta_cut = new TH1D("etheta_cut","Theta for Scattered Electron from Reconstruct Track (radians), all cuts;",200, 0.0, 1.0);
+  TH1D *h_pN_cut = new TH1D("h_pN_cut", "nucleon momentum p_{N}, all cuts;p_{N} (GeV)",300,0.8*p_nuc_centr,1.2*p_nuc_centr);
+  TH1D *h_Q2_cut = new TH1D( "Q2_cut", "Q2 (GeV^{2}) all cuts; GeV^{2}", 300, 0.0, 6.0 );
 
   //allocate memory at each run
   TChain *C = nullptr;
@@ -291,7 +308,6 @@ void data_elastic_parse(const char *setup_file_name){
   double xhcal_out;
   double yhcal_out;
   double W2_out;
-  double Q2_out;
   double nu_out;
   double tau_out;
   double epsilon_out;
@@ -354,12 +370,18 @@ void data_elastic_parse(const char *setup_file_name){
 
   double hcal_sh_atime_diff_out;
   double proton_deflection_out;
-  double p_N_out;
   double p_central_out;
   double rowblkHCAL_out;
   double colblkHCAL_out;
   double nblkHCAL_out;
   double ehcal_tree_out;
+
+  //For physics extraction
+  double Ebeam_corr_out;
+  double E_eprime_out;
+  double etheta_out;
+  double p_N_out;
+  double Q2_out;
 
   //setup new output tree branches
   Parse->Branch("dx", &dx_out, "dx/D");
@@ -369,7 +391,6 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("xhcal", &xhcal_out, "xhcal/D");
   Parse->Branch("yhcal", &yhcal_out, "yhcal/D");
   Parse->Branch("W2", &W2_out, "W2/D");
-  Parse->Branch("Q2", &Q2_out, "Q2/D");
   Parse->Branch("nu", &nu_out, "nu/D");
   Parse->Branch("tau", &tau_out, "tau/D");
   Parse->Branch("epsilon", &epsilon_out, "epsilon/D");
@@ -421,7 +442,6 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch("W2high", &W2high_out, "W2high/D");
   Parse->Branch("hcal_sh_atime_diff", &hcal_sh_atime_diff_out, "hcal_sh_atime_diff/D");
   Parse->Branch("proton_deflection", &proton_deflection_out, "proton_deflection/D");
-  Parse->Branch("p_N", &p_N_out, "p_N/D");
   Parse->Branch("p_central", &p_central_out, "p_centrial/D");
 
   Parse->Branch("num_hcal_clusid", &num_hcal_clusid_out, "num_hcal_clusid/I");
@@ -440,7 +460,12 @@ void data_elastic_parse(const char *setup_file_name){
   Parse->Branch( "rowblkHCAL",&rowblkHCAL_out, "rowblkHCAL/D" );
   Parse->Branch( "colblkHCAL", &colblkHCAL_out, "colblkHCAL/D" );
 
-
+  //For physics extraction
+  Parse->Branch("Ebeam_corr", &Ebeam_corr_out, "Ebeam_corr/D");
+  Parse->Branch("E_eprime", &E_eprime_out, "E_eprime/D");
+  Parse->Branch("etheta", &etheta_out, "etheta/D");
+  Parse->Branch("p_N", &p_N_out, "p_N/D");
+  Parse->Branch("Q2", &Q2_out, "Q2/D");
 
   //loop over the run numbers
   for(int j = 0; j<num_runs; j++){
@@ -856,7 +881,6 @@ void data_elastic_parse(const char *setup_file_name){
   	xhcal_out = xhcal_bestclus;
  	yhcal_out = yhcal_bestclus;
   	W2_out = W2;
-	Q2_out = Q2;
   	nu_out = nu;
 	tau_out = tau;
 	epsilon_out = epsilon;
@@ -919,12 +943,17 @@ void data_elastic_parse(const char *setup_file_name){
   	mag_out = field;
 	hcal_sh_atime_diff_out = coin_bestclus;
 	proton_deflection_out = proton_deflection;
-	p_N_out = p_N.Vect().Mag();
 	p_central_out = pcentral;
 	nblkHCAL_out = nblkHCAL;
 	rowblkHCAL_out = rowblkHCAL[clus_idx_best];
 	colblkHCAL_out = colblkHCAL[clus_idx_best];
 
+	//For physics extraction
+	Ebeam_corr_out = Ecorr;
+	E_eprime_out =  p_eprime.E();
+	etheta_out = etheta;
+	p_N_out = p_N.Vect().Mag();
+	Q2_out = Q2;
 
 	//Fill histograms of global cut parameters here without any restrictions
 	h_ntracks->Fill(ntrack);	
@@ -951,6 +980,10 @@ void data_elastic_parse(const char *setup_file_name){
 	hxy_expect_nocut->Fill(yhcal_expect,xhcal_expect);
 	hx_expect_nocut->Fill(xhcal_expect);
 	hy_expect_nocut->Fill(yhcal_expect);
+	h_W2_nocut->Fill(W2);
+
+	hxy_expect_nocut_n->Fill(yhcal_expect,xhcal_expect);
+	hxy_expect_nocut_p->Fill(yhcal_expect,xhcal_expect-dx_pn);
 
 	//Fill some histograms here after basic global cuts
 	if(!failglobal){
@@ -1000,6 +1033,9 @@ void data_elastic_parse(const char *setup_file_name){
 	hxy_expect_n->Fill(yhcal_expect,xhcal_expect);
 	hxy_expect_p->Fill(yhcal_expect,(xhcal_expect-dx_pn));
 	hMott_cs->Fill(Mott_CS);
+
+	hxy_expect_glob_W2_cut_n->Fill(yhcal_expect,xhcal_expect);
+	hxy_expect_glob_W2_cut_p->Fill(yhcal_expect,xhcal_expect-dx_pn);
 	}
 	
 	//Now let's add in our first major hadron arm cut along with all the cuts from before.
@@ -1068,6 +1104,22 @@ void data_elastic_parse(const char *setup_file_name){
         hdx_W2_anticut_both->Fill(dx_bestclus);
         hdx_W2_anticut_both_wide->Fill(dx_bestclus);
         }
+	
+	//all cuts but HCal E
+	if(!failglobal  && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
+	h_HCal_E_best_cut_noHCalE->Fill(hcal_e_bestclus);
+	h_HCal_E_cut_noHCalE->Fill(e_hcal);
+	
+	}
+	
+	
+	//Essentially all cuts but dy (visualization)
+	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin  && passFid){
+	hdxdy_nody->Fill(dy_bestclus, dx_bestclus);
+	hdx_nody->Fill(dx_bestclus);
+	hdy_nody->Fill(dy_bestclus);
+	}
+	
 	//all cuts
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && passFid){
 	h_ntracks_cut->Fill(ntrack);
@@ -1083,7 +1135,6 @@ void data_elastic_parse(const char *setup_file_name){
         h_bbEoverp_cut->Fill(BB_E_over_p);
 	hxy_cut->Fill(yhcal_bestclus,xhcal_bestclus);
         h_W2_cut->Fill(W2);
-        h_Q2_cut->Fill(Q2);
         hxy_expect_cut->Fill(yhcal_expect,xhcal_expect);
         hdxdy_cut->Fill(dy_bestclus, dx_bestclus);
         hdx_cut->Fill(dx_bestclus);
@@ -1105,6 +1156,13 @@ void data_elastic_parse(const char *setup_file_name){
 	hdxvE->Fill(hcal_e_bestclus,dx_bestclus);
 	hdxvW2->Fill(W2,dx_bestclus);
 	
+	//For physics extraction
+	h_Ebeam_corr_cut->Fill(Ecorr);
+	h_E_eprime_cut->Fill(p_eprime.E());
+	h_etheta_cut->Fill(etheta);
+	h_pN_cut->Fill(p_N.Vect().Mag());
+	h_Q2_cut->Fill(Q2);
+
 	}
 	
 	if(!failglobal && passHCalE && passHCal_Nclus && goodW2 && hcalaa_ON && passCoin && good_dy && !passFid){
@@ -1142,6 +1200,8 @@ void data_elastic_parse(const char *setup_file_name){
   TCanvas* c0 = plots::plotAcceptance_Check("c0",Lines_pos,Lines_aa,Lines_Fid,hxy_globcut,hxy_acceptancecut);
   TCanvas* c1 = plots::plotFid_Check("c1",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_glob_W2_cut,hxy_expect_cut,hxy_expect_failedfid);
   TCanvas* c2 = plots::plotFid_Hypothesis_Check("c2",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_fidcutn,hxy_expect_fidcutp);
+  TCanvas* c3 = plots::plotFid_Hypothesis_Check("c3",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_nocut_n,hxy_expect_nocut_p);
+  TCanvas* c4 = plots::plotFid_Hypothesis_Check("c4",Lines_pos,Lines_aa,Lines_Fid,LineFidPro,hxy_expect_glob_W2_cut_n,hxy_expect_glob_W2_cut_p);
 
   //Write stuff to a pdf
   TString plotname = outfile;
@@ -1152,7 +1212,9 @@ void data_elastic_parse(const char *setup_file_name){
 
   c0->Print(start.Data(),"pdf");
   c1->Print(plotname.Data(),"pdf"); 
-  c2->Print(end.Data(),"pdf");
+  c2->Print(plotname.Data(),"pdf");
+  c3->Print(plotname.Data(),"pdf");
+  c4->Print(end.Data(),"pdf");
 
   //Write everything to output file
   fout->Write();

@@ -207,9 +207,9 @@ return mydxHist;
 TH2D* cutvar::make2DW2CutHisto(TChain* C){
 //Draw the histogram with the given cut conditions
         if(DatavMC_flag == "data"){
-        C->Draw(Form("W2:%s>>%s(%f,%f,%f,%f,%f,%f)",CutVar.Data(),W2HistogramName.Data(),cut_hist_bin,cut_hist_low,cut_hist_high,W2_hist_bin,W2_hist_low,W2_hist_high),CutString.Data(),"COLZ");
+        C->Draw(Form("W2:%s>>%s(%f,%f,%f,%f,%f,%f)",CutVar.Data(),W2HistogramName.Data(),cut_hist_bin,cut_hist_low,cut_hist_high,400.0*5.0,W2_hist_low,5.0),CutString.Data(),"COLZ");
         }else if(DatavMC_flag == "mc_p" || DatavMC_flag == "mc_n"){
-        C->Draw(Form("W2:%s>>%s(%f,%f,%f,%f,%f,%f)",CutVar.Data(),W2HistogramName.Data(),cut_hist_bin,cut_hist_low,cut_hist_high,W2_hist_bin,W2_hist_low,W2_hist_high),Form("Corr_MC_weight*(%s)",CutString.Data()),"COLZ");
+        C->Draw(Form("W2:%s>>%s(%f,%f,%f,%f,%f,%f)",CutVar.Data(),W2HistogramName.Data(),cut_hist_bin,cut_hist_low,cut_hist_high,400.0*5.0,W2_hist_low,5.0),Form("Corr_MC_weight*(%s)",CutString.Data()),"COLZ");
         }else {
         cout << "Error: Given a data mc type flag that I can't handle: " << DatavMC_flag << endl;
         }

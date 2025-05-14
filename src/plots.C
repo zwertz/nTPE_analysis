@@ -131,6 +131,7 @@ myCan->Divide(3,1);
 
 //first plot
 myCan->cd(1);
+hxy_expect_glob_W2_cut->SetStats(0);
 hxy_expect_glob_W2_cut->Draw("colz");
 Lines_pos[0]->Draw("same");
 Lines_pos[1]->Draw("same");
@@ -158,6 +159,7 @@ legend1->Draw();
 
 //second plot
 myCan->cd(2);
+hxy_expect_cut->SetStats(0);
 hxy_expect_cut->Draw("colz");
 Lines_pos[0]->Draw("same");
 Lines_pos[1]->Draw("same");
@@ -186,6 +188,7 @@ legend2->Draw();
 
 //third plot
 myCan->cd(3);
+hxy_expect_failedfid->SetStats(0);
 hxy_expect_failedfid->Draw("colz");
 
 Lines_pos[0]->Draw("same");
@@ -225,6 +228,7 @@ myCan->Divide(2,1);
 
 //first plot
 myCan->cd(1);
+hxy_expect_fidcutn->SetStats(0);
 hxy_expect_fidcutn->Draw("colz");
 
 Lines_pos[0]->Draw("same");
@@ -255,6 +259,7 @@ legend1->Draw();
 
 //second plot
 myCan->cd(2);
+hxy_expect_fidcutp->SetStats(0);
 hxy_expect_fidcutp->Draw("colz");
 Lines_pos[0]->Draw("same");
 Lines_pos[1]->Draw("same");
@@ -651,20 +656,20 @@ legend->AddEntry(bg,"Background","f l");
 legend->AddEntry(hdx_mc_p_after,"Proton SIMC MC","f l");
 legend->AddEntry(hdx_mc_n_after,"Neutron SIMC MC","f l");
 legend->AddEntry((TObject*)0,Form("data N events : %0.0f",hdx_data->GetEntries()),"");
-legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.6f #pm %0.6f",R_sf,R_sf_error),"");
+legend->AddEntry((TObject*)0,Form("n/p scale ratio R_{sf} : %0.5f #pm %0.5f",R_sf,R_sf_error),"");
 //legend->AddEntry((TObject*)0,Form("MC n yield: %1.0f #pm %1.0f",n_sum_mc,n_sum_mc_error),"");
 //legend->AddEntry((TObject*)0,Form("MC p yield: %1.0f #pm %1.0f",p_sum_mc,p_sum_mc_error),"");
 //legend->AddEntry((TObject*)0,Form("MC n/p yield ratio: %0.3f #pm %0.3f",np_sum_mc_ratio,np_sum_mc_ratio_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp n yield: %1.0f #pm %1.0f",n_sum_exp,n_sum_exp_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp p yield: %1.0f #pm %1.0f",p_sum_exp,p_sum_exp_error),"");
 //legend->AddEntry((TObject*)0,Form("Exp n/p yield ratio: %0.3f #pm %0.3f",np_sum_exp_ratio,np_sum_exp_ratio_error),"");
-legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
-legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
-legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
-legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
-legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
-legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
-legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",n_shift,p_shift),"");
+//legend->AddEntry((TObject*)0,Form("MC n red cross-section: %0.5f #pm %0.1f",n_red_cross_section,n_red_cross_section_err),"");
+//legend->AddEntry((TObject*)0,Form("MC p red cross-section: %0.5f #pm %0.1f",p_red_cross_section,p_red_cross_section_err),"");
+//legend->AddEntry((TObject*)0,Form("MC n/p RCS ratio: %0.3f #pm %0.3f",np_red_cross_section_ratio,np_red_cross_section_ratio_err),"");
+//legend->AddEntry((TObject*)0,Form("Exp n red cross-section: %0.5f #pm %f",n_red_cross_section_exp,n_red_cross_section_exp_err),"");
+//legend->AddEntry((TObject*)0,Form("Exp p red cross-section: %0.5f #pm %f",p_red_cross_section_exp,p_red_cross_section_exp_err),"");
+//legend->AddEntry((TObject*)0,Form("Exp n/p RCS ratio: %0.4f #pm %0.4f",np_red_cross_section_ratio_exp,np_red_cross_section_ratio_exp_err),"");
+//legend->AddEntry((TObject*)0,Form("dx shift pars, n/p : %0.3f / %0.3f ",n_shift,p_shift),"");
 legend->AddEntry((TObject*)0,Form("#chi^{2}/ndf: %0.3f/%d",fit->GetChisquare(),fit->GetNDF()),"");
 legend->SetTextSize(0.025);
 legend->Draw("same");
@@ -699,7 +704,7 @@ pad2->cd();
 gStyle->SetErrorX(0);
 residual_fit->Draw("E1");
 legend_res->SetTextSize(0.075);
-legend_res->Draw("same");
+//legend_res->Draw("same");
 //Draw a line at y=0 just for better reading of the residual
 TF1* zeroLine = new TF1("zeroLine","0",residual_fit->GetXaxis()->GetXmin(),residual_fit->GetXaxis()->GetXmax());
 zeroLine->SetLineColor(kBlack);
