@@ -262,6 +262,7 @@ void data_elastic_parse(const char *setup_file_name){
   TH1D *hdx_prodef = new TH1D( "dx_prodef","HCal dx + proton deflection; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hdx_defcut = new TH1D( "dx_defcut","HCal dx ; x_{HCAL}-x_{expect} (m)", hbinfac*hcal_fitrange, hcalfit_low, hcalfit_high );
   TH1D *hprodef = new TH1D( "hprodef","proton deflection; (m)", 300, 0.85*dx_pn, 1.3*dx_pn );
+  TH1D *hepsilon_cut = new TH1D("hepsilon_cut","epsilon",300,0.0,1.0);
 
   //Added for cut stability studies
   TH1D* h_nsigx_fid = new TH1D("h_nsigx_fid", "nsigx_fid",200,-20,20);
@@ -1162,6 +1163,7 @@ void data_elastic_parse(const char *setup_file_name){
 	h_etheta_cut->Fill(etheta);
 	h_pN_cut->Fill(p_N.Vect().Mag());
 	h_Q2_cut->Fill(Q2);
+	hepsilon_cut->Fill(epsilon);
 
 	}
 	
