@@ -1,5 +1,7 @@
 //Script to extract HCal proton and neutron detection efficiency from replayed MC data by Juan Carlos Cornejo detailed by both Provakar and Sebastian
 //Ezekiel Wertz Aug. 2023
+//This script is older and was not updated to function within the common analysis framework. The purpose of this script is to determine the absolute HCal detection efficiency for protons and neutrons from replayed MC files. The key feature of this efficiency determination is to consider the HCal energy as a function of the nucleon momentum. And for a given momentum bin to see if the HCal energy was above a threshold of the average energy /4. If it is it passes the cut and is counted in the numerator. The denominator should just be all possible events. For more details either read through the script or read my thesis. 
+
 
 #include "TF1.h"
 #include "TChain.h"

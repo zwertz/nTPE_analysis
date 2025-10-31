@@ -7,6 +7,7 @@
 //Includes yield blinding
 //Basic yield fitting using a 4th order poly background and gaussians for the proton and neutron data
 
+//This script is a predecessor to the parser and data MC comparison scripts. It attempts to determine the experimental neutron to proton cross-section by removing background and integrating under the peaks. It should not be used for current analysis, but is kept for historical reasons. 
 
 #include "TF1.h"
 #include "TChain.h"

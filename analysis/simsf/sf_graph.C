@@ -1,5 +1,6 @@
 //author Ezekiel Wertz
-//Script to run over multiple outputs from sf_dxdy.C. Get proton peak locations, plot means on TGraph, fit TGraph and get fit params.
+//The script requires multiple output root files from sf_dxdy.C, for different MC scale field values. The goal of this script is to get the proton peak position from the respective delta x graphs and plot them on a single TGraph as a function of the scale field value. Then fit the TGraph and get the fit parameters to ultimately see the correlation between the delta x proton peak position and the scale field value. To calibrate the MC scale field variable to realistically generate future MC files which are most identical to the real data delta x distributions. It should also be noted that this script was created prior to the common framework of this analysis. If the script would be used in the future it would probably need to be updated to be compatible with this framework. Likely would not work as is.
+
 
 #include "TF1.h"
 #include "TChain.h"

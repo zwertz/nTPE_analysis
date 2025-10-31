@@ -3,6 +3,8 @@
 #include <vector>
 #include "analysis_utility_functions.h"
 
+//Older script to try and determine elastic information for SBS GMn and nTPE based on known kinematic information. Mostly a helper script.
+
 const Double_t M_p = 0.938272; // GeV
 const Double_t M_n = 0.939565; // GeV
 const Double_t M_e = 0.00051; // GeV

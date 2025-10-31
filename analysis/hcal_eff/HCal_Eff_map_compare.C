@@ -1,6 +1,6 @@
 //Author: Ezekiel Wertz
 //12/03/2024
-//Purpose: A script to compare HCal efficiency maps between two different files. Should be compatible with output from either HCal_Eff_map.C or HCal_p_Eff_uniformity_data/MC.C.Functionality should include comparing data to MC, but also across kinematics. Basic diagramtic comparision of both common 1-dimensional and 2-dimensional plots. 
+//Purpose: A script to compare HCal efficiency maps between two different files. Should be compatible with output from either HCal_Eff_map.C or HCal_p_Eff_uniformity_data/MC.C.Functionality should include comparing data to MC, but also across kinematics. Basic diagramtic comparision of both common 1-dimensional and 2-dimensional plots. The script has been used to compare LH2 and LD2 data, data to MC, across kinematics. It is really a useful comparison tool.
 
 
 #include "TF1.h"

@@ -2,7 +2,7 @@
 #define FIT_HISTOGRAM_H
 
 //Author: Ezekiel Wertz
-//A class to handle fitting histograms that are used when comparing Data to MC for dx histograms.  It should just take in input information about the histograms and return information about the fit. To be used in later analysis. This is useful because of implementing Interpolate in most of these fitting procedures. This should take as input a type specifier to allow for modularity.
+//A class to handle fitting histograms that are used when comparing Data to MC for dx histograms. Primarily used by the data_MC_compare and stability_analysis scripts.  It should just take in input information about the histograms and return information about the fit. To be used in later analysis. This is useful because of implementing Interpolate in most of these fitting procedures. This should take as input a type specifier to allow for modularity. This class onpurpose does not have setter functions
 //// It allows you to fit the dx distribution from data to scaled version of montecarlo plus background,
 //// This should remove the necessity of the simulation variables being globals
 
@@ -46,6 +46,7 @@ vector<pair<double,double>> fitParamsErrs;
 vector<double> bkgd_params;
 vector<double> bkgd_param_errs;
 
+  //Function that internally handles the fitting of the delta x distribution 
 vector<pair<double,double>> fitAndFineFit(TH1D* histogram, string fitName, string fitFormula, int paramCount, double hcalfit_low, double hcalfit_high, const string& fitOptions = "RBMQ0");
 
 public:
@@ -94,6 +95,7 @@ double fitFullShift_polyBG(double *x, double *param);
 
 double fitFullShift_gaussBG(double *x, double *param);
 
+  //Various getter functions, pretty much for each class variable
 TH1D* get_hist_data();
 
 TH1D* get_hist_p();

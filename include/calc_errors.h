@@ -1,7 +1,7 @@
 #ifndef CALC_ERRORS_H
 #define CALC_ERRORS_H
 
-//Imported from John's files. Really this should be both a header and a source file. For now will maintain current standing. Has some useful functions will reorganize it later.
+//Imported from John Boyds files. Really this should be both a header and a source file. For now will maintain current standing. Has some useful functions will reorganize it later, if necessary. So far this header file has not been incorporated into this analysis framework. And likely will not be.
 
 //Error propagation for addition and subtraction:
 double CalculateErrorAdditionSubtraction( double val1, double val1_err, double val2, double val2_err){

@@ -1,7 +1,6 @@
 //Author Ezekiel Wertz
 //03/15/2024
-//Purpose: Parsing simulation information from a simc generator by nucleon, build histrograms for further analysis
-
+//Purpose: Parsing Script for digitized SIMC generated MC files to process either LD2 or LH2 targets. Should be compatible with pass 1 or early mass-replayed MC files. Script produces an output root tree and histogram which are used in later parts of the overall analysis flow. Most aspects of this script are mostly commented below. For LD2 expects the existence of both nucleon type files. Needs to be verified compatibility with pass 2 mass-replayed MC files.
 //The exact ordering of this matters. ROOT for some reason cannot handle calls for files that have already been included. 
 #include "TF1.h"
 #include "TChain.h"

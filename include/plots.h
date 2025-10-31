@@ -5,7 +5,7 @@
 #include "../include/fit_histogram.h"
 
 //Author Ezekiel Wertz
-//A location to hold functions that make canvases or plots, beyond just standard output to root tree
+//A location to hold functions that make canvases or plots, beyond just standard output to root tree. These plots tend to be repeatedly of interest throughout the analysis. Or were used more than once and therefore implemented as functions. Here each function has some basic description.
 
 
 namespace plots{

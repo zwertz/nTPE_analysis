@@ -1,6 +1,6 @@
 //Author: Ezekiel Wertz
 //10/08/2024
-//Purpose: A script that will take real data information and consider position dependent HCal efficiency. Currently it is only compatible with single magnetic field settings.
+//Purpose: A script that will take real data information and consider position dependent HCal efficiency (relative rate) for a given kinematic and single magnetic field setting. Essentially all electron arm cuts are applied to the numerator and the denominator. While the numerator checks if there is an event on HCal by check it was on the HCal face, an HCal energy cut, HCal cluster cut, and HCal spot cut. This script is compatible with both LH2 and LD2 data sets. For more details read my own thesis and P.Datta's thesis. This script is the first step in determining a position dependent HCal efficiency map and an acceptance average HCal efficiency value, which can then be used as factors in weight applied to the MC to correct for position-dependent HCal non-uniformities.
 //This is based off of scripts intially developed by A. Puckett and P.Datta
 
 #include "TF1.h"

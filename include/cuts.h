@@ -2,7 +2,7 @@
 #define CUTS_H
 
 //Author: Ezekiel Wertz
-//namespace to define common cut definitions or functions associated with cuts
+//namespace to define common cut definitions or functions associated with cuts. These cuts are kept in a common place to be used throughout many aspects of the analysis framework. Mostly the parser scripts (i.e. data_elastic_parse, mc_parse).
 
 #include <vector>
 #include "TString.h"

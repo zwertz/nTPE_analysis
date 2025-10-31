@@ -1,8 +1,9 @@
 #ifndef KINEMATIC_OBJ_H
 #define KINEMATIC_OBJ_H
 
-//class to serve as objects to mimic a kinematic. That is to say all the info needed at each kinematic
 //Author: Ezekiel Wertz
+//A class that handles all the information necessary to describe an SBS kinematic for GMN/nTPE. Sort of a companion class to the data_obj.
+//Don't see setter funcitons as necessary
 
 class kinematic_obj{
 private:

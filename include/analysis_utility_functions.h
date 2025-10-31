@@ -8,6 +8,9 @@
 #include "TString.h"
 #include "TMath.h"
 #include <vector>
+//Author: E. Wertz
+//As of Oct. 31, 2025 this header file is largely outdated and not used in any aspects of the current main analysis framework. This header file is kept and left as is for compatibilty with older scripts (that likely need updated if used in future). A lot of information and code in this header file was compartmentalized or better organized in other aspects of the analysis framework. Aspects of the analysis framework were developed from this header file. 
+
 
 //////////////////////////////
 //////Static Detector Parameters

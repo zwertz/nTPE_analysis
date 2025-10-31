@@ -1,3 +1,5 @@
+//Author: E. Wertz
+//This header file is a bit outdated. And it is not implemented anywhere in the current analysis framework. The idea here is that each upper-case and lower-case character of the alphabet is mapped to a number modulo 10. And then based on the input parameter word, that word is converted to a number. The word converted number is then used as a seed value for a random number generator. The random number then generates a multiplicative blinding factor in a predetermined range. This was never fully implemented in the final version as there was no consensus among the collaboration of how best to implement the blinding factor for the GMN/nTPE physics analysis. The ratios of various cross-sections made it a bit nontrivial. I have kept the code for unclear reasons in that it may be useful in the future. If it were to be used it would need to be updated into the common analysis framework.
 #ifndef BLINDFACTOR_H
 #define BLINDFACTOR_H
 #include "TRandom.h"

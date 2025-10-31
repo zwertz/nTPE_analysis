@@ -2,6 +2,7 @@
 #define PARSE_CONFIG_H
 
 //class to handle parsing my config files for all types of analysis
+//The parse_config class is essential as it allows for all user-input config files to be managed and handles the IO for all analysis. Most of the class variables which represent input variables are still relevant. In principle I should go through and remove any variables which are not used anymore.
 //Author: Ezekiel Wertz
 
 #include "TString.h"

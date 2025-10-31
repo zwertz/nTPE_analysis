@@ -6,6 +6,7 @@
 
 //Author: Ezekiel Wertz
 //namespace to hold common fit definitions
+//Largely outdated and depreciated due to the fit_histogram class. Ideally I should come back to this class and see if anything still uses it.
 namespace fits{
 
 //Get the variance on a fit from the quadrature sum of the parameter errors

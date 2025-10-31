@@ -1,5 +1,5 @@
 //author: Ezekiel Wertz
-//short script to to test different scale field values for MC. Created for pass 2 data-simulation peak matching. I did sbs8.
+//The purpose of the script is to quickly and evaluate delta x from a MC simulation file based on the SBS magnet scale field factor used in the MC file. The goal is iteratively perform this script for a given kinematic setting and adjust the scale factor to see how the delta x peak matches with similar distributions from the existing data. This script was primarily used with pass 1 Data files and individually produced MC files. The output root files of this script would be fed into the sf_graph.C script which then describes the distribution between the average deflection of the SBS magnet and the SBS magnet scale field (sf) value. Essentially this task calibrations the delta x peaks of the simulation to the data. Again this was conducted on pass 1 data. Potentially useful to keep around if necessary to optimize or recalibrate later passes of data or MC. I calibrated the SBS-8 kinematic. It should also be noted that this script was created prior to the common analysis framework implemented in this analysis framework. So if used in the future, probably best to rewrite the script to be used in said structure.
 
 #include "TF1.h"
 #include "TChain.h"

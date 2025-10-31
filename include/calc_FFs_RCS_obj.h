@@ -6,7 +6,7 @@
 #include "physics_constants.h"
 
 //Author: Ezekiel Wertz
-//A class to facilite calculating electromagnetic form factors via various supported parameterization. The most critical being what is used in SIMC. The class will also calculate the reduced cross-section. The FFs and the Reduced Cross-Section will be dependent on user-input which will allow for multiple supposed parameterizations. Initially this will include Kelly, Riordan, and Ye. The class object will hold these all as class variables. Public and private functions and the constructor will enable this class to be compatible with other scripts and classes in this analysis framework.
+//A class to facilite calculating electromagnetic form factors via various supported parameterizations. The most critical being what is used in SIMC. The class will also calculate the reduced cross-section. The FFs and the Reduced Cross-Section will be dependent on user-input which will allow for multiple supported parameterizations. Initially this will include Kelly, Riordan, and Ye. The class object will hold these all as class variables. Public and private functions and the constructor will enable this class to be compatible with other scripts and classes in this analysis framework.
 
 //Supported Parameterizations: Ye, Kelly, SIMC (Kelly and Riordan)
 
@@ -21,7 +21,7 @@
 
 class calc_FFs_RCS_obj{
 private:
-//Will need to add class variables
+//class variables
 TString param_type, kin, kinematic_file;
 double reduced_cross_section_n, reduced_cross_section_p, reduced_cross_section_ratio, reduced_cross_section_n_err, reduced_cross_section_p_err, reduced_cross_section_ratio_err;
 double Ebeam, Eprime, BB_angle_rad, tau_p, tau_n, Q2, epsilon_p, epsilon_n;

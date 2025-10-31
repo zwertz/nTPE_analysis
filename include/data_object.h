@@ -2,7 +2,8 @@
 #define DATA_OBJECT_H
 
 //Author: Ezekiel Wertz
-//Class to mimic all the information we would want to know about a particular data run
+//Class to handle all the information associated with a given data run. This class is essential to the data parser script.
+//I have not written setter functions for this class as I have never found a need to.
 
 #include "TString.h"
 
@@ -12,6 +13,7 @@ TString pass,kinematic,target,input_file;
 double Ebeam,bbtheta,bbdist,sbstheta,sbsdist,hcaltheta,hcaldist,Q2,electron_p,nucleon_p;
 int run,sbs_field;
 
+  //Function that forms the input file name for a given run based on the mass-replay pass of the data file
 TString makeInputFileName();
 
 public:
@@ -22,6 +24,8 @@ data_object(int runnum,const char *data_file_name,const char *kinematic_file_nam
 //no dynamically allocated memory or pointers
 ~data_object();
 
+
+  //getter functions to get back a single private class variable as needed.
 int getRun();
 
 TString getPass();

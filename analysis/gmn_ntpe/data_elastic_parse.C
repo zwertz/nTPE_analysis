@@ -1,6 +1,6 @@
 //Author Ezekiel Wertz
 //02/01/2024
-//Purpose: Parsing Script for LD2 data to produce output histograms for later analysis
+//Purpose: Parsing Script for real data files to process either LD2 or LH2 targets. Should be compatible with pass 2 or early mass-replayed data. Script produces an output root tree and histogram which are used in later parts of the overall analysis flow. Most aspects of this script are mostly commented below.
 
 //The exact ordering of this matters. ROOT for some reason cannot handle calls for files that have already been included. 
 #include "TF1.h"

@@ -1,6 +1,6 @@
 //Author: Ezekiel Wertz
 //07/31/2024
-//Purpose: A script to evaluate the stability of various analysis cuts. Ultimately needed to justify final cut decisions. Presumably will evolve to to justify systematic error analysis.
+//Purpose: A script to evaluate the stability of analysis cut variables. The script has two modes (0 and 1). Mode 0 creates narrow slices in the cut variable and is used for defining cut variable regions. Mode 1 creates wide slices in the cut variable and used to address how the cut variable changes at a given cut boundary. Mode 1 is used to quantify the systematic uncertainty associated with a particular cut boundary. This script inherently involves the cutvar and stability_analysis classes which do a lot of the repetative heavy lifting for this analysis. Currently this script creates instances of these classes neccessary for every relevant cut variable of the analysis. The definitions of the slice ranges for each mode are handled by the cutvar class and need to be manipulated in those files respectively.
 
 //The exact ordering of this matters. ROOT for some reason cannot handle calls for files that have already been included.
 #include "TFile.h"

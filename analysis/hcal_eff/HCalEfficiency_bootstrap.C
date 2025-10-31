@@ -1,6 +1,7 @@
 //Author: E. Wertz
 //Script using W2 anticut method to determine HCal proton efficiency
 //Includes acceptance matching, tight elastic cut based on thetapq/dx/dy, in-time clustering algorithm, quadrature sum error for statistics
+//This script is a bit outdated for the purposes in this analysis. It relies on a strategy called the inclusive W2 anticut method in SBS, which is mostly documented in S.Seeds thesis. This method was an early attempt at estimating the HCal detection efficiency, but it ultimately has some challenges. This script also enabled user-input to analyze certain event run ranges, to allow for a statistical bootstrapping assessment. This scriptis mostly kept for historical purposes.
 
 #include "TF1.h"
 #include "TChain.h"
