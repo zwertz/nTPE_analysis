@@ -1,6 +1,7 @@
 //data_object.C
 //Author: Ezekiel Wertz
-//Companion implementation. Class to represent a data object file for GMn/nTPE analysis. Anything we need to know about data files.
+//Companion implementation. Class to handle all the information associated with a given data run. This class is essential to the data parser script.
+//I have not written setter functions for this class as I have never found a need to.
 
 #include "../include/data_object.h"
 #include <iostream>

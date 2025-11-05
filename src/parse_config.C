@@ -2,6 +2,7 @@
 //Author: Ezekiel Wertz
 //The companion implementation for the header file
 //implementation for parsing my config files. Should be able to handle all analysis types.
+//The parse_config class is essential as it allows for all user-input config files to be managed and handles the IO for all analysis. Most of the class variables which represent input variables are still relevant. In principle I should go through and remove any variables which are not used anymore.
 
 #include "../include/parse_config.h"
 #include <iostream>

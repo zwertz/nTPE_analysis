@@ -1,6 +1,6 @@
 //Author Ezekiel Wertz
 //Implementation of fit functions that are common throughout analysis
-
+//Largely outdated and depreciated due to the fit_histogram class. Ideally I should come back to this class and see if anything still uses it.
 
 namespace fits{
 

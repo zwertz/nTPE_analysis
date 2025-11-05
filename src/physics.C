@@ -3,6 +3,8 @@
 
 //Author: Ezekiel Wertz
 //Companion implementation for the phyiscs functions
+//A namespace to hold functions that calculate or update relevant physics analysis variables or quantities
+//Each function has a basic description of what it should do. Most of these will be called by the parser scripts.
 
 namespace physics{
 

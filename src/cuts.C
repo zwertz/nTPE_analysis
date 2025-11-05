@@ -1,7 +1,7 @@
 //cuts.C
 //Author: Ezekiel Wertz
 //The companion implementation for the header file
-//A file to handle implementations for the cuts we need or care about for analysis
+//namespace to define common cut definitions or functions associated with cuts. These cuts are kept in a common place to be used throughout many aspects of the analysis framework. Mostly the parser scripts (i.e. data_elastic_parse, mc_parse).
 
 #include "../include/cuts.h"
 

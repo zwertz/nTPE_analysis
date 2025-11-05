@@ -7,7 +7,7 @@
 
 
 //Author Ezekiel Wertz
-//Implementation for useful task functions
+////A location to hold useful functions that do a task. Mostly this is just a catch-all namespace for functions that are repeatedly used throughout the analysis. But maybe don't have a better location. Each function has a basic description of what it should do.
 
 namespace utility{
   //function to determine if what is found was a number or a string

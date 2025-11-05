@@ -1,6 +1,6 @@
 //cutvar.C
 //Author: Ezekiel Wertz
-//Companion implementation. A class to hold important quanties related to cut stability and systematic studies. utvar should only handle functions/processes on a case-by-case basis for data, mc p, mc n, and not all at once. A companion class to this is stability_analysis.h and stability_analysis.C. Will be modified as stability and systematic studies progress.
+//Companion implementation.A class to hold important quanties related to cut stability and systematic studies. Cutvar should only handle functions/processes on a case-by-case basis for data, mc p, mc n, and not all at once. A companion class to this is stability_analysis.h and stability_analysis.C. The goal of the cutvar class is to organize delta x and the given cut variable of interest and create histograms within the slices of the cut variable of interest. Ideally it will create a delta x distribution for the given range of the cut variable and the function will return a vector of these histograms. This classes supports mode o which is narrow slices and mode 1 which handles very wide slices. This array of histograms is then sent to the stability_analysis class which handles fitting the delta x distributions and determining Rsf values
 
 #include "../include/cutvar.h"
 
@@ -272,6 +272,7 @@ TH2D* cutvar::get2DdxCutHisto(){return dx_hist;}
 
 TH2D* cutvar::get2DW2CutHisto(){return W2_hist;}
 
+//A function that projects the vertical axis of the TH2D into a given xMin, xMax range. In our case the vertical axis is delta x and the horizontal axis is a given cut variable. So this function is what actually handles the generation of the vector of 1-dimensional delta x distributions for a given cut variable value range.
 vector<TH1D*> cutvar::sliceAndProjectHisto_xMinxMax(TH2D* histo2D,TString xAxisName, TString yAxisName ){
 	//create the vector to hold all of our slice histograms
 	vector<TH1D*> myHistVec;

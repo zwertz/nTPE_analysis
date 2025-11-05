@@ -45,7 +45,7 @@ void plot_muGEnGMn_mine(){
   vector<double> muGEnGMn_fit;
   vector<double> dmuGEnGMn_fit;
 
-  //Start io stream to read-in world GEn data. NOTE it is labeled as GEn/GD. This is wrong it is just GEn
+  //Start io stream to read-in world GEn data. NOTE it is labeled as GEn/GD. This is wrong it is just GEn. I have verified this with the referenced data/articles.
   //We will also neglect Experiments marked with the number 7 which seem to be derived from theoretical extractions of elastic electron deuteron scattering. Need to check this topic. A version of this dat is available from the Ye Supplement.
   ifstream in_GEn("World_GEn_no7.dat");
   TString currentline;

@@ -1,6 +1,7 @@
 //kinematic_obj.C
 //Author Ezekiel Wertz
-//Companion implemenation to the hearder file. The purpose is to have an object that holds all the information we care about for each kinematic
+//Companion implemenation to the header file. A class that handles all the information necessary to describe an SBS kinematic for GMN/nTPE. Sort of a companion class to the data_obj.
+//Don't see setter funcitons as necessary
 
 #include "../include/kinematic_obj.h"
 #include "../include/utility.h"

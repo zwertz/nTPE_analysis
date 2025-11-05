@@ -1,7 +1,7 @@
 #include "../include/plots.h"
 
 //Author Ezekiel Wertz
-//Implementations for plots related functions
+//A location to hold functions that make canvases or plots, beyond just standard output to root tree. These plots tend to be repeatedly of interest throughout the analysis. Or were used more than once and therefore implemented as functions. Here each function has some basic description.
 
 
 namespace plots{
@@ -1317,7 +1317,7 @@ TCanvas* plot_HCalEffMap_1D(TH1D* eff_vs_expect,const char *can_name, const char
         eff_vs_expect_clone->GetYaxis()->SetNdivisions(10);
         }else if(mystring.find("yexpect") != string::npos){
         eff_vs_expect_clone->GetXaxis()->SetNdivisions(12);
-        eff_vs_expect_clone->GetYaxis()->SetNdivisions(10);
+        eff_vs_expect_clone->GetYaxis()->SetNdivisions(10);0
         }else{
         cout << "We did not find the substring properly in plot_HCalEffMap_1D. Figure it out!" << endl;
         }	

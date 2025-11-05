@@ -96,7 +96,7 @@ fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_n
         xMax = xmax;
         fitOptions = fit_options;
 
-	//Now fit the data histo with our function with a polynomial background
+	//Now fit the data histo with our function with a background
         vector<pair<double,double>> paramsErrsChi = fitAndFineFit(hist_data,fitName.c_str(),fitType.c_str(),paramCount,xMin,xMax,fitOptions);
 
 	 //Initialize the fit params errs vector. So we can store the original fit information
@@ -126,7 +126,7 @@ fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, const char* fit_n
 	BGscale_err = paramsErrsChi[4].second;
 
 
-        //Handle the polynomial parameters. This should be compatible with N order polynomial
+        //Handle the background parameters.
         for(int j = 4; j < paramCount; j++){
         bkgd_params.push_back(paramsErrsChi[j].first);
         bkgd_param_errs.push_back(paramsErrsChi[j].second);
@@ -193,7 +193,7 @@ fit_histogram::fit_histogram(TH1D *h_data,TH1D *h_p,TH1D *h_n, TH1D *h_bkgd, con
         BGscale_err = paramsErrsChi[4].second;
 
 
-        //Handle the polynomial parameters. This should be compatible with N order polynomial
+        //Handle the background parameters. 
         for(int j = 4; j < paramCount; j++){
         bkgd_params.push_back(paramsErrsChi[j].first);
         bkgd_param_errs.push_back(paramsErrsChi[j].second);
